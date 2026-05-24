@@ -1,0 +1,1 @@
+This is the common folder which hosts all the CSS styling that will be used throughout the webite
