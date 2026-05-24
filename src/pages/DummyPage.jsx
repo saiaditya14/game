@@ -16,6 +16,8 @@ const DummyPage = ({ title }) => {
             title={`Minigame ${i}`} 
             description="It is your turn! The other player is waiting for you to make a move." 
             badge="Your Turn"
+            category="Classic"
+            meta="placeholder"
           />
         ))}
       </div>

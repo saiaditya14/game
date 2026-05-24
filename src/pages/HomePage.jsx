@@ -1,6 +1,60 @@
 import React from 'react';
 import { GameCard } from '../components/GameCard';
 
+const turnGames = [
+  {
+    title: 'Tic-Tac-Toe',
+    description: 'They played top-right. Your move to block the line and keep the match alive.',
+    badge: 'Action Required',
+    category: 'Classic',
+    meta: '1 move waiting',
+  },
+  {
+    title: 'Wordle Race',
+    description: 'They guessed in 4 tries. Take your shot and see if you can beat their score.',
+    badge: 'Action Required',
+    category: 'Word',
+    meta: '1 round waiting',
+  },
+];
+
+const newGames = [
+  {
+    title: 'Connect Four',
+    description: 'A classic game of strategy. Drop your pieces and race to connect four in a row.',
+    badge: 'New',
+    category: 'Classic',
+    meta: '2 player game',
+  },
+  {
+    title: 'Battleship',
+    description: 'Deploy your fleet, hide your ships, and hunt theirs down before they find yours.',
+    category: 'Strategy',
+    meta: 'async turns',
+  },
+  {
+    title: 'Guess Who?',
+    description: 'Ask the right questions, narrow the board, and uncover their secret character.',
+    category: 'Deduction',
+    meta: 'quick match',
+  },
+  {
+    title: 'Checkers',
+    description: 'Jump, capture, and set up the board for a clean little tactical win.',
+    category: 'Classic',
+    meta: 'board game',
+  },
+];
+
+const SectionHeader = ({ title, eyebrow }) => (
+  <div className="mb-5 flex items-end justify-between gap-4">
+    <div>
+      <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
+      <h2 className="mt-1 font-serif text-2xl font-medium text-foreground">{title}</h2>
+    </div>
+  </div>
+);
+
 const HomePage = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12">
@@ -11,54 +65,25 @@ const HomePage = () => {
         </p>
       </header>
 
-      <section className="mb-16">
-        <div className="mb-6 flex items-end justify-between border-b border-border/60 pb-3">
-          <div>
-            <h2 className="text-xl font-semibold">Your Turn</h2>
-            <p className="text-sm font-normal text-[color:var(--muted)]">Games waiting for you</p>
+      <section className="mb-14">
+        <div className="game-section-shell">
+          <SectionHeader title="Your Turn" eyebrow="games waiting" />
+          <div className="game-grid hide-scrollbar">
+            {turnGames.map((game) => (
+              <GameCard key={game.title} {...game} />
+            ))}
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">2 ready</span>
-        </div>
-        <div className="game-grid">
-          <GameCard
-            title="Tic-Tac-Toe"
-            description="They played top-right. Your move to block!"
-            badge="Action Required"
-          />
-          <GameCard
-            title="Wordle Race"
-            description="They guessed in 4 tries. Can you beat them?"
-            badge="Action Required"
-          />
         </div>
       </section>
 
       <section>
-        <div className="mb-6 flex items-end justify-between border-b border-border/60 pb-3">
-          <div>
-            <h2 className="text-xl font-semibold">Start a New Game</h2>
-            <p className="text-sm font-normal text-[color:var(--muted)]">Challenge them</p>
+        <div className="game-section-shell">
+          <SectionHeader title="Start a New Game" eyebrow="fresh picks" />
+          <div className="game-grid hide-scrollbar">
+            {newGames.map((game) => (
+              <GameCard key={game.title} {...game} />
+            ))}
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">fresh picks</span>
-        </div>
-        <div className="game-grid">
-          <GameCard
-            title="Connect Four"
-            description="A classic game of strategy. Drop your pieces to connect four in a row."
-            badge="New"
-          />
-          <GameCard
-            title="Battleship"
-            description="Deploy your fleet and hunt down their ships before they find yours."
-          />
-          <GameCard
-            title="Guess Who?"
-            description="Ask the right questions to guess their secret character."
-          />
-          <GameCard
-            title="Checkers"
-            description="Jump and capture! Who is the better tactician?"
-          />
         </div>
       </section>
     </div>
