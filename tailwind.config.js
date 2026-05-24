@@ -13,6 +13,10 @@ export default {
         secondary: "var(--secondary)",
         accent: "var(--accent)",
         border: "var(--border)",
+        surface: "var(--surface)",
+        "surface-strong": "var(--surface-strong)",
+        muted: "var(--muted)",
+        ring: "var(--ring)",
       },
       borderRadius: {
         theme: "var(--radius)",

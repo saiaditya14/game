@@ -1,5 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { GameCard } from '../components/GameCard';
+import { useTheme } from '../components/ThemeProvider';
+import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp.png';
+import drawOffPinkImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
+import drawOffArcadeImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
 
 const turnGames = [
   {
@@ -46,6 +51,13 @@ const newGames = [
   },
 ];
 
+const drawOffImagesByTheme = {
+  'theme-vanilla': drawOffVanillaImage,
+  'theme-pink': drawOffPinkImage,
+  'theme-arcade': drawOffArcadeImage,
+  'theme-cozy': drawOffVanillaImage,
+};
+
 const SectionHeader = ({ title, eyebrow }) => (
   <div className="mb-5 flex items-end justify-between gap-4">
     <div>
@@ -56,6 +68,9 @@ const SectionHeader = ({ title, eyebrow }) => (
 );
 
 const HomePage = () => {
+  const { theme } = useTheme();
+  const drawOffImage = drawOffImagesByTheme[theme] || drawOffVanillaImage;
+
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12">
       <header className="mb-12 mt-10 flex flex-col items-center gap-3 text-center">
@@ -80,6 +95,16 @@ const HomePage = () => {
         <div className="game-section-shell">
           <SectionHeader title="Start a New Game" eyebrow="fresh picks" />
           <div className="game-grid hide-scrollbar">
+            <Link to="/draw-off" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <GameCard
+                title="Draw Off"
+                description="Sketch against the clock and let the local AI guess what you drew."
+                badge="AI RACING"
+                category="AI Racing"
+                meta="local AI game"
+                imageSrc={drawOffImage}
+              />
+            </Link>
             {newGames.map((game) => (
               <GameCard key={game.title} {...game} />
             ))}

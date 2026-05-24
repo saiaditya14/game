@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import { NavBar } from './components/NavBar';
 import HomePage from './pages/HomePage';
 import DummyPage from './pages/DummyPage';
+import DrawOffSingle from './games/plum/testing/DrawOffSingle';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/pink" element={<DummyPage title="Pink" />} />
             <Route path="/arcade" element={<DummyPage title="Arcade" />} />
             <Route path="/cozy" element={<DummyPage title="Cozy" />} />
+            <Route path="/draw-off" element={<DrawOffSingle />} />
           </Routes>
         </div>
       </BrowserRouter>

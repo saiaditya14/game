@@ -1,10 +1,12 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Gamepad2, Home, Palette } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 
 export const NavBar = () => {
   const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
+  const isGameRoute = pathname.startsWith('/draw-off');
 
   const themes = [
     { id: 'theme-vanilla', label: 'Vanilla' },
@@ -43,21 +45,23 @@ export const NavBar = () => {
             <Home className="h-4 w-4" />
           </NavLink>
 
-          <label className="flex h-9 items-center gap-2 rounded-theme px-2 text-[color:var(--muted)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]">
-            <Palette className="h-4 w-4" />
-            <span className="sr-only">Theme</span>
-            <select
-              value={theme}
-              onChange={(event) => setTheme(event.target.value)}
-              className="theme-select h-full cursor-pointer rounded-theme bg-transparent pr-1 text-sm font-semibold text-primary outline-none"
-            >
-              {themes.map(({ id, label }) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!isGameRoute && (
+            <label className="flex h-9 items-center gap-2 rounded-theme px-2 text-[color:var(--muted)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]">
+              <Palette className="h-4 w-4" />
+              <span className="sr-only">Theme</span>
+              <select
+                value={theme}
+                onChange={(event) => setTheme(event.target.value)}
+                className="theme-select h-full cursor-pointer rounded-theme bg-transparent pr-1 text-sm font-semibold text-primary outline-none"
+              >
+                {themes.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       </div>
     </nav>

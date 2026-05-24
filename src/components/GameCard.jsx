@@ -21,7 +21,7 @@ export const GameCard = ({
     >
       <div className="flex w-full flex-col">
         <div className="relative flex h-[52%] items-center justify-center overflow-hidden" style={{ background: 'var(--card-gradient)' }}>
-          <span className="absolute left-5 top-5 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm">
+          <span className="absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm">
             {label}
           </span>
 
@@ -29,7 +29,7 @@ export const GameCard = ({
             <img
               src={imageSrc}
               alt=""
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="grid h-28 w-28 place-items-center rounded-full border border-white/60 bg-[color:var(--surface)]/45 text-primary shadow-sm backdrop-blur-sm transition duration-300 group-hover:scale-105">
