@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Default spacing */
+    --radius-sm: 0.125rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+  }
+
+  /* Default / Vanilla */
+  .theme-vanilla {
+    --background: #fffaf0;
+    --foreground: #2f3138;
+    --primary: #66513f;
+    --secondary: #f3e7cf;
+    --accent: #d9833f;
+    --border: #dfcdb2;
+    --surface: #fffdf8;
+    --surface-strong: #fff4dd;
+    --muted: #7d7469;
+    --ring: #f1b46d;
+    --shadow: 0 18px 50px rgba(93, 71, 46, 0.13);
+    --card-gradient: radial-gradient(circle at 22% 18%, rgba(255, 229, 181, 0.95), transparent 35%), linear-gradient(135deg, #fff7e7 0%, #f2dfbd 55%, #d9b987 100%);
+    --card-sheen: rgba(255, 255, 255, 0.58);
+    --radius: 0.5rem;
+    --font: 'Inter', sans-serif;
+  }
+
+  /* Pink / Romantic */
+  .theme-pink {
+    --background: #fff0f5;
+    --foreground: #831843;
+    --primary: #be185d;
+    --secondary: #fbcfe8;
+    --accent: #f43f5e;
+    --border: #f9a8d4;
+    --surface: #fff7fb;
+    --surface-strong: #ffe4f0;
+    --muted: #9d174d;
+    --ring: #fb7185;
+    --shadow: 0 18px 50px rgba(190, 24, 93, 0.16);
+    --card-gradient: linear-gradient(135deg, #ffe4f0, #fbcfe8 54%, #fda4af);
+    --card-sheen: rgba(255, 255, 255, 0.45);
+    --radius: var(--radius-lg);
+    --font: 'Nunito', sans-serif;
+  }
+
+  /* Arcade / Retro */
+  .theme-arcade {
+    --background: #000000;
+    --foreground: #39ff14;
+    --primary: #ff00ff;
+    --secondary: #1a1a1a;
+    --accent: #00ffff;
+    --border: #333333;
+    --surface: #080808;
+    --surface-strong: #151515;
+    --muted: #a7ff9a;
+    --ring: #00ffff;
+    --shadow: 0 18px 50px rgba(255, 0, 255, 0.2);
+    --card-gradient: linear-gradient(135deg, #070707, #1b0030 50%, #002c2c);
+    --card-sheen: rgba(57, 255, 20, 0.14);
+    --radius: 0px;
+    --font: 'Press Start 2P', monospace;
+  }
+
+  /* Cozy / Warm */
+  .theme-cozy {
+    --background: #faf4e8;
+    --foreground: #5c4033;
+    --primary: #8b5a2b;
+    --secondary: #e6e3c0;
+    --accent: #cd853f;
+    --border: #d2b48c;
+    --surface: #fff9ec;
+    --surface-strong: #f2e6c9;
+    --muted: #82634f;
+    --ring: #cd853f;
+    --shadow: 0 18px 50px rgba(92, 64, 51, 0.15);
+    --card-gradient: linear-gradient(135deg, #fff7e1, #e6e3c0 58%, #d1b18c);
+    --card-sheen: rgba(255, 255, 255, 0.42);
+    --radius: var(--radius-lg);
+    --font: 'Comic Sans MS', 'Sniglet', cursive;
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 31rem),
+      radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--secondary) 42%, transparent), transparent 27rem);
+  }
+}
+
+@layer components {
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .game-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 1.75rem;
+      row-gap: 2.25rem;
+    }
+  }
+
+  .theme-select,
+  .theme-select option {
+    background-color: var(--surface);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
