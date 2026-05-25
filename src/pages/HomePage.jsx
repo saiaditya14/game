@@ -25,13 +25,6 @@ const turnGames = [
 
 const newGames = [
   {
-    title: 'Connect Four',
-    description: 'A classic game of strategy. Drop your pieces and race to connect four in a row.',
-    badge: 'New',
-    category: 'Classic',
-    meta: '2 player game',
-  },
-  {
     title: 'Battleship',
     description: 'Deploy your fleet, hide your ships, and hunt theirs down before they find yours.',
     category: 'Strategy',
@@ -113,6 +106,15 @@ const HomePage = () => {
                 category="AI Racing"
                 meta="cloud AI game"
                 imageSrc={drawOffImage}
+              />
+            </Link>
+            <Link to="/connect-four" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <GameCard
+                title="Connect Four"
+                description="A classic game of strategy. Drop your pieces and race to connect four in a row."
+                badge="New"
+                category="Classic"
+                meta="2 player game"
               />
             </Link>
             {newGames.map((game) => (

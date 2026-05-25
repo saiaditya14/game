@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import DummyPage from './pages/DummyPage';
 import DrawOffSingle from './games/plum/testing/DrawOffSingle';
 import DrawOffBYOK from './games/plum/testing/DrawOffBYOK';
+import ConnectFour from './games/sugar/ConnectFour';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/cozy" element={<DummyPage title="Cozy" />} />
             <Route path="/draw-off" element={<DrawOffSingle />} />
             <Route path="/draw-off-byok" element={<DrawOffBYOK />} />
+            <Route path="/connect-four" element={<ConnectFour />} />
           </Routes>
         </div>
       </BrowserRouter>
