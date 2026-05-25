@@ -39,23 +39,23 @@ const getLandingRow = (board, column) => {
   return -1;
 };
 
-const countDirection = (board, row, column, rowDelta, columnDelta, player) => {
-  let count = 0;
+const collectDirection = (board, row, column, rowDelta, columnDelta, player) => {
+  const cells = [];
   let nextRow = row + rowDelta;
   let nextColumn = column + columnDelta;
 
   while (nextRow >= 0 && nextRow < ROWS && nextColumn >= 0 && nextColumn < COLUMNS) {
     const index = nextRow * COLUMNS + nextColumn;
     if (board[index] !== player) break;
-    count += 1;
+    cells.push({ row: nextRow, column: nextColumn });
     nextRow += rowDelta;
     nextColumn += columnDelta;
   }
 
-  return count;
+  return cells;
 };
 
-const hasWinningLine = (board, row, column, player) => {
+const getWinningCells = (board, row, column, player) => {
   const directions = [
     [0, 1],
     [1, 0],
@@ -63,14 +63,17 @@ const hasWinningLine = (board, row, column, player) => {
     [1, -1],
   ];
 
-  return directions.some(([rowDelta, columnDelta]) => {
-    const total =
-      1 +
-      countDirection(board, row, column, rowDelta, columnDelta, player) +
-      countDirection(board, row, column, -rowDelta, -columnDelta, player);
+  for (const [rowDelta, columnDelta] of directions) {
+    const cells = [
+      ...collectDirection(board, row, column, -rowDelta, -columnDelta, player).reverse(),
+      { row, column },
+      ...collectDirection(board, row, column, rowDelta, columnDelta, player),
+    ];
 
-    return total >= 4;
-  });
+    if (cells.length >= 4) return cells.slice(0, 4);
+  }
+
+  return [];
 };
 
 const ConnectFour = () => {
@@ -208,7 +211,8 @@ const ConnectFour = () => {
       const index = landingRow * COLUMNS + column;
       board[index] = playerNumber;
 
-      const didWin = hasWinningLine(board, landingRow, column, playerNumber);
+      const winningCells = getWinningCells(board, landingRow, column, playerNumber);
+      const didWin = winningCells.length >= 4;
       const isDraw = !didWin && board.every(Boolean);
       const nextStatus = didWin ? 'won' : isDraw ? 'draw' : 'playing';
 
@@ -219,7 +223,7 @@ const ConnectFour = () => {
           current_player: playerNumber === 1 ? 2 : 1,
           status: nextStatus,
           winner: didWin ? playerNumber : null,
-          last_move: { row: landingRow, column, player: playerNumber, at: new Date().toISOString() },
+          last_move: { row: landingRow, column, player: playerNumber, winning_cells: winningCells, at: new Date().toISOString() },
         })
         .eq('id', room.id)
         .eq('current_player', playerNumber)
@@ -248,7 +252,7 @@ const ConnectFour = () => {
     return <ConnectFourLobby onCreateRoom={createRoom} onJoinRoom={joinRoom} isBusy={isBusy} error={error} roomCode={room?.code} />;
   }
 
-  return <ConnectFourBoard room={room} playerNumber={playerNumber} onDropPiece={dropPiece} onAbortGame={abortGame} />;
+  return <ConnectFourBoard room={room} playerNumber={playerNumber} onDropPiece={dropPiece} onAbortGame={abortGame} onExitGame={() => setRoom(null)} />;
 };
 
 export default ConnectFour;

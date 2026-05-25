@@ -125,3 +125,6 @@ Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)
 Number of rounds could be togglable
+
+FOR CONNECT FOUR
+i want sparkles when the game get over and the congrats box pops up.

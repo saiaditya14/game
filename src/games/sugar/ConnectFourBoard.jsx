@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Settings, XCircle } from 'lucide-react';
 
 const COLUMNS = 7;
@@ -37,7 +37,7 @@ const PlayerBadge = ({ playerNumber, label, timer, isActive }) => (
   </div>
 );
 
-const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame }) => {
+const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame, onExitGame }) => {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -59,6 +59,11 @@ const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame }) => {
   const board = room?.board || Array(COLUMNS * ROWS).fill(null);
   const isMyTurn = room?.status === 'playing' && room?.current_player === playerNumber;
   const hasOpponent = Boolean(room?.player_two);
+  const winningCells = room?.last_move?.winning_cells || [];
+  const winningCellKeys = useMemo(
+    () => new Set(winningCells.map((cell) => `${cell.row}-${cell.column}`)),
+    [winningCells],
+  );
 
   const statusText = useMemo(() => {
     if (!hasOpponent) return 'Waiting for player 2';
@@ -86,15 +91,38 @@ const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame }) => {
 
       <section className="mt-6 flex flex-1 items-center justify-center">
         <div
-          className="grid aspect-[7/6] w-full max-w-[38rem] grid-cols-7 grid-rows-6 gap-2 border bg-[color:var(--surface-strong)] p-3 sm:gap-3 sm:p-4"
+          className="relative grid aspect-[7/6] w-full max-w-[38rem] grid-cols-7 grid-rows-6 gap-2 border bg-[color:var(--surface-strong)] p-3 sm:gap-3 sm:p-4"
           style={{ borderColor: 'var(--ring)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}
           aria-label="Connect Four board"
         >
+          {winningCells.length >= 4 && (
+            <svg
+              className="pointer-events-none absolute inset-3 z-20 sm:inset-4"
+              viewBox={`0 0 ${COLUMNS} ${ROWS}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <motion.line
+                x1={winningCells[0].column + 0.5}
+                y1={winningCells[0].row + 0.5}
+                x2={winningCells[3].column + 0.5}
+                y2={winningCells[3].row + 0.5}
+                stroke="color-mix(in srgb, var(--ring) 76%, gold)"
+                strokeWidth="0.16"
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.45, ease: 'easeOut', delay: 0.2 }}
+              />
+            </svg>
+          )}
+
           {board.map((slot, index) => {
             const column = index % COLUMNS;
             const row = Math.floor(index / COLUMNS);
             const canPlayColumn = isMyTurn && room?.status === 'playing';
             const isLastMove = room?.last_move?.row === row && room?.last_move?.column === column;
+            const isWinningCell = winningCellKeys.has(`${row}-${column}`);
 
             return (
               <button
@@ -113,6 +141,15 @@ const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame }) => {
                     initial={isLastMove ? { y: '-135%', scale: 0.92, opacity: 0.92 } : false}
                     animate={{ y: 0, scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 520, damping: 32, mass: 0.72 }}
+                  />
+                )}
+                {isWinningCell && (
+                  <motion.span
+                    className="pointer-events-none absolute inset-[2%] z-10 rounded-full border-4"
+                    style={{ borderColor: 'color-mix(in srgb, var(--ring) 76%, gold)' }}
+                    initial={{ opacity: 0, scale: 0.82 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.22, delay: 0.15 }}
                   />
                 )}
               </button>
@@ -140,6 +177,51 @@ const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame }) => {
           <Settings className="h-5 w-5" />
         </button>
       </footer>
+
+      <AnimatePresence>
+        {room?.status === 'won' && (
+          <motion.div
+            className="z-50 p-4"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'color-mix(in srgb, var(--background) 74%, transparent)',
+              backdropFilter: 'blur(10px)',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-sm border bg-[color:var(--surface)] p-6 text-center"
+              style={{ borderColor: 'var(--ring)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}
+              initial={{ opacity: 0, y: 18, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.22 }}
+            >
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary">
+                {room.winner === playerNumber ? 'winner' : 'game over'}
+              </p>
+              <h2 className="mt-2 font-serif text-4xl font-medium text-foreground">Congrats!</h2>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                Player {room.winner} connected four.
+              </p>
+              <button
+                type="button"
+                onClick={onExitGame}
+                className="mt-6 inline-flex min-h-12 w-full items-center justify-center bg-primary px-5 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
+                Exit game
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 };
