@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Eraser, Loader2, Play, Sparkles } from 'lucide-react';
+import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 
 const DOODLE_WORDS = ["apple", "cat", "dog", "car", "tree", "bicycle", "book", "camera", "chair", "clock", "cup", "eye", "flower", "glasses", "hat", "house", "key", "pants", "pizza", "shoe", "smiley face", "star", "sun", "umbrella"];
@@ -16,6 +16,19 @@ const getInitialInkBounds = () => ({
   maxX: Number.NEGATIVE_INFINITY,
   maxY: Number.NEGATIVE_INFINITY,
 });
+
+const getCanvasBase64Image = (canvas) => {
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = canvas.width;
+  exportCanvas.height = canvas.height;
+
+  const exportCtx = exportCanvas.getContext('2d');
+  exportCtx.fillStyle = '#FFFFFF';
+  exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  exportCtx.drawImage(canvas, 0, 0);
+
+  return exportCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+};
 
 const DrawOffSingle = () => {
   const canvasRef = useRef(null);
@@ -130,14 +143,17 @@ const DrawOffSingle = () => {
   }, []);
 
   const clearCanvas = useCallback((nextFeedback = 'Waiting for your masterpiece...') => {
+    const feedback = typeof nextFeedback === 'string' ? nextFeedback : 'Waiting for your masterpiece...';
+
     window.clearTimeout(debounceTimer.current);
     judgeRequestRef.current += 1;
+    isDrawingRef.current = false;
     prepareCanvas();
     hasInkRef.current = false;
     inkBoundsRef.current = getInitialInkBounds();
     inkDistanceRef.current = 0;
     strokeCountRef.current = 0;
-    setAiFeedback(nextFeedback);
+    setAiFeedback(feedback);
     setIsJudging(false);
   }, [prepareCanvas]);
 
@@ -186,7 +202,7 @@ const DrawOffSingle = () => {
   const handleDrawingSubmit = useCallback(() => {
     window.clearTimeout(debounceTimer.current);
 
-    debounceTimer.current = window.setTimeout(() => {
+    const submitAfterPause = window.setTimeout(() => {
       const canvas = canvasRef.current;
 
       if (!canvas || !hasInkRef.current || !isGameActive || !targetWord || isJudging) {
@@ -195,7 +211,7 @@ const DrawOffSingle = () => {
 
       const requestId = judgeRequestRef.current + 1;
       judgeRequestRef.current = requestId;
-      const base64Image = canvas.toDataURL('image/png');
+      const base64Image = getCanvasBase64Image(canvas);
 
       const submitDrawing = async () => {
         if (!supabase) {
@@ -207,27 +223,40 @@ const DrawOffSingle = () => {
         setJudgeError('');
 
         try {
+          console.log('Sending Base64 length:', base64Image.length);
           const { data, error } = await supabase.functions.invoke('judge-drawing', {
             body: {
               base64Image,
               targetWord,
+              allGameWords: DOODLE_WORDS,
             },
           });
+          console.log('Raw AI Response:', data);
+          if (data?.raw) {
+            console.log('Raw Gemini Text:', data.raw);
+          }
 
           if (requestId !== judgeRequestRef.current) return;
           if (error) throw error;
 
-          const verdict = String(data || '').trim().toLowerCase();
+          const result = typeof data === 'string' ? { verdict: data, guess: data, reason: '' } : data || {};
+          const verdict = String(result.verdict || result.guess || 'wrong').trim().toLowerCase();
+          const guess = String(result.guess || verdict).trim().toLowerCase();
+          const reason = String(result.reason || '').trim();
 
-          if (verdict === 'match') {
-            setAiFeedback('Nailed it!');
+          if (verdict === 'match' || guess === targetWord) {
+            setAiFeedback(reason ? `Nailed it! ${reason}` : 'Nailed it!');
           } else if (verdict === 'incomplete') {
-            setAiFeedback('Looks incomplete, keep drawing...');
+            setAiFeedback(`Incomplete! Reason: ${reason || 'No reason returned.'}`);
+          } else if (DOODLE_WORDS.includes(guess)) {
+            setAiFeedback(`Nope! AI guessed: ${guess}. Reason: ${reason || 'No reason returned.'}`);
+          } else if (guess && guess !== 'wrong') {
+            setAiFeedback(`Nope! AI guessed: ${guess}. Reason: ${reason || 'No reason returned.'}`);
           } else {
-            setAiFeedback("Nope, that's not it!");
+            setAiFeedback(`Nope! AI guessed: ${guess || 'wrong'}. Reason: ${reason || 'No reason returned.'}`);
           }
 
-          if (verdict !== 'match') return;
+          if (verdict !== 'match' && guess !== targetWord) return;
 
           setScore((currentScore) => {
             const nextScore = currentScore + 1;
@@ -245,6 +274,8 @@ const DrawOffSingle = () => {
           });
         } catch (error) {
           if (requestId !== judgeRequestRef.current) return;
+          console.error('Draw Off judge request failed:', error);
+          setAiFeedback('Network/API Error: Check console.');
           setJudgeError(error?.message || 'The judge could not read that drawing.');
         } finally {
           if (requestId === judgeRequestRef.current) {
@@ -254,7 +285,9 @@ const DrawOffSingle = () => {
       };
 
       submitDrawing();
-    }, 600);
+    }, 120);
+
+    debounceTimer.current = submitAfterPause;
   }, [clearCanvas, isGameActive, isJudging, targetWord]);
 
   const startDrawing = (event) => {
@@ -304,7 +337,6 @@ const DrawOffSingle = () => {
 
     canvasRef.current?.releasePointerCapture?.(event.pointerId);
     isDrawingRef.current = false;
-    handleDrawingSubmit();
   };
 
   return (
@@ -441,7 +473,7 @@ const DrawOffSingle = () => {
 
             <motion.button
               type="button"
-              onClick={clearCanvas}
+              onClick={() => clearCanvas()}
               className="w-full py-4 mt-4 text-lg font-bold bg-surface-strong text-foreground border-2 border-ring hover:opacity-80 rounded-xl transition-opacity"
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.99 }}
@@ -449,6 +481,21 @@ const DrawOffSingle = () => {
               <span className="inline-flex items-center justify-center gap-2">
                 <Eraser className="h-5 w-5" />
                 Clear Canvas
+              </span>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={handleDrawingSubmit}
+              disabled={isJudging}
+              className="mt-3 w-full border-2 border-primary bg-primary px-5 py-4 text-lg font-bold text-[color:var(--surface)] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ borderRadius: 'var(--radius)' }}
+              whileHover={isJudging ? undefined : { y: -2 }}
+              whileTap={isJudging ? undefined : { scale: 0.99 }}
+            >
+              <span className="inline-flex items-center justify-center gap-2">
+                {isJudging ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                Submit Drawing
               </span>
             </motion.button>
 
