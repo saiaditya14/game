@@ -17,6 +17,10 @@ const getInitialInkBounds = () => ({
   maxY: Number.NEGATIVE_INFINITY,
 });
 
+const actionButtonBase = 'inline-flex min-h-14 w-full items-center justify-center gap-2 border-2 px-5 py-3 text-base font-extrabold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-55';
+const primaryActionClass = `${actionButtonBase} border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)] shadow-sm hover:brightness-95`;
+const secondaryActionClass = `${actionButtonBase} border-[color:var(--ring)] bg-[color:var(--surface-strong)] text-foreground hover:bg-[color:var(--surface)]`;
+
 const getCanvasBase64Image = (canvas) => {
   const exportCanvas = document.createElement('canvas');
   exportCanvas.width = canvas.width;
@@ -345,7 +349,7 @@ const DrawOffSingle = () => {
         <p className="text-[0.68rem] font-bold uppercase tracking-[0.24em] text-primary">single player sprint</p>
         <h1 className="mt-2 font-serif text-4xl font-medium sm:text-5xl">Draw Off</h1>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
-          Draw the prompt, lift your cursor, and race the AI to three correct guesses.
+          Draw the prompt, submit when it is ready, and race the AI to three correct guesses.
         </p>
       </header>
 
@@ -367,7 +371,7 @@ const DrawOffSingle = () => {
             <motion.button
               type="button"
               onClick={startSprint}
-              className="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-3 text-sm font-bold text-[color:var(--surface)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+              className={`mx-auto mt-6 max-w-56 ${primaryActionClass}`}
               style={{ borderRadius: 'var(--radius)' }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -394,7 +398,7 @@ const DrawOffSingle = () => {
             <motion.button
               type="button"
               onClick={startSprint}
-              className="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-3 text-sm font-bold text-[color:var(--surface)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+              className={`mx-auto mt-6 max-w-56 ${primaryActionClass}`}
               style={{ borderRadius: 'var(--radius)' }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -440,12 +444,6 @@ const DrawOffSingle = () => {
               </div>
             </div>
 
-            <div className="mb-4 border border-border/70 bg-[color:var(--surface-strong)] p-4 text-center" style={{ borderRadius: 'var(--radius)' }}>
-              <p className="font-serif text-2xl font-medium">
-                {isJudging ? 'AI is squinting at your drawing...' : aiFeedback}
-              </p>
-            </div>
-
             <div className="relative overflow-hidden border border-border/70 bg-[color:var(--surface-strong)] p-3" style={{ borderRadius: 'var(--radius)' }}>
               <div
                 className="relative overflow-hidden border border-border/70 bg-[color:var(--surface)]"
@@ -471,33 +469,32 @@ const DrawOffSingle = () => {
               </div>
             </div>
 
-            <motion.button
-              type="button"
-              onClick={() => clearCanvas()}
-              className="w-full py-4 mt-4 text-lg font-bold bg-surface-strong text-foreground border-2 border-ring hover:opacity-80 rounded-xl transition-opacity"
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <span className="inline-flex items-center justify-center gap-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
+              <motion.button
+                type="button"
+                onClick={() => clearCanvas()}
+                className={secondaryActionClass}
+                style={{ borderRadius: 'var(--radius)' }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.99 }}
+              >
                 <Eraser className="h-5 w-5" />
                 Clear Canvas
-              </span>
-            </motion.button>
+              </motion.button>
 
-            <motion.button
-              type="button"
-              onClick={handleDrawingSubmit}
-              disabled={isJudging}
-              className="mt-3 w-full border-2 border-primary bg-primary px-5 py-4 text-lg font-bold text-[color:var(--surface)] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-              style={{ borderRadius: 'var(--radius)' }}
-              whileHover={isJudging ? undefined : { y: -2 }}
-              whileTap={isJudging ? undefined : { scale: 0.99 }}
-            >
-              <span className="inline-flex items-center justify-center gap-2">
+              <motion.button
+                type="button"
+                onClick={handleDrawingSubmit}
+                disabled={isJudging}
+                className={primaryActionClass}
+                style={{ borderRadius: 'var(--radius)' }}
+                whileHover={isJudging ? undefined : { y: -2 }}
+                whileTap={isJudging ? undefined : { scale: 0.99 }}
+              >
                 {isJudging ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                 Submit Drawing
-              </span>
-            </motion.button>
+              </motion.button>
+            </div>
 
             {judgeError && (
               <p className="mt-4 border border-border/70 bg-[color:var(--surface-strong)] p-4 text-sm text-[color:var(--muted)]" style={{ borderRadius: 'var(--radius)' }}>
