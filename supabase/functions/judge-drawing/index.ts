@@ -13,60 +13,6 @@ const jsonResponse = (body: unknown, status = 200) =>
     },
   });
 
-const DEFAULT_GAME_WORDS = [
-  'apple',
-  'cat',
-  'dog',
-  'car',
-  'tree',
-  'bicycle',
-  'book',
-  'camera',
-  'chair',
-  'clock',
-  'cup',
-  'eye',
-  'flower',
-  'glasses',
-  'hat',
-  'house',
-  'key',
-  'pants',
-  'pizza',
-  'shoe',
-  'smiley face',
-  'star',
-  'sun',
-  'umbrella',
-];
-
-const CLASS_HINTS: Record<string, string> = {
-  apple: 'round fruit outline, stem, leaf, apple shape',
-  cat: 'cat face or body, pointy ears, whiskers, eyes, tail',
-  dog: 'dog face or body, ears, snout, nose, legs, tail',
-  car: 'vehicle body, wheels, windows, side view',
-  tree: 'trunk with leafy top, branches, canopy',
-  bicycle: 'two wheels connected by frame, handlebar, seat',
-  book: 'rectangle cover, pages, spine, open book shape',
-  camera: 'rectangle body, circular lens, top button/viewfinder',
-  chair: 'seat, legs, backrest',
-  clock: 'circle or square clock face with hands or tick marks',
-  cup: 'cup or mug shape, open top, handle, base',
-  eye: 'eye outline, iris or pupil, eyelids',
-  flower: 'petals around center, stem, leaves',
-  glasses: 'two lenses connected by bridge, eyeglass frame',
-  hat: 'brim with crown/top, cap or hat silhouette',
-  house: 'square/rectangle building, roof, door, window',
-  key: 'loop/ring, shaft, teeth at the end',
-  pants: 'two trouser legs, waistband, pants outline',
-  pizza: 'triangular slice with toppings or whole round pizza divided into slices',
-  shoe: 'footwear side profile, sole, opening, sneaker shape',
-  'smiley face': 'face circle with eyes and smiling mouth',
-  star: 'five-point star or recognizable star shape',
-  sun: 'circle or round center with rays/lines around it',
-  umbrella: 'curved canopy with handle or umbrella outline',
-};
-
 const buildResult = (value: string, targetWord: string, gameWords: string[]) => {
   const verdict = value.trim().toLowerCase();
   const jsonMatch = value.match(/\{[\s\S]*\}/);
@@ -171,13 +117,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { base64Image, targetWord } = await req.json();
+    const { base64Image, targetWord, classHints } = await req.json();
 
-    if (!base64Image || !targetWord) {
+    if (!base64Image || !targetWord || !classHints) {
       return jsonResponse({
         verdict: 'wrong',
         guess: 'unknown',
-        reason: 'Missing image or target word in request.',
+        reason: 'Missing image, target word, or class hints in request.',
         raw: 'missing_request_fields',
       });
     }
@@ -193,11 +139,11 @@ Deno.serve(async (req) => {
     }
 
     const model = Deno.env.get('GEMINI_MODEL') || 'gemini-2.5-flash';
-    const gameWords = DEFAULT_GAME_WORDS;
+    const gameWords = Object.keys(classHints);
     const imageData = String(base64Image).replace(/^data:image\/\w+;base64,/, '');
     const systemPrompt =
       'You are a strict visual classifier for a Pictionary game. ' +
-      'The drawings are crude black-on-white sketches. ' +
+      'The drawings are crude sketches (often using various colors and line thicknesses) on a solid white background. ' +
       'Return exactly three plain text lines and nothing else. ' +
       'Do not use JSON. Do not use markdown. Do not add a preface. ' +
       'Line 1 must be VERDICT: match OR incomplete OR wrong. ' +
@@ -205,7 +151,7 @@ Deno.serve(async (req) => {
       'Line 3 must be REASON: a specific visual explanation.';
     const prompt =
       `Target word: "${targetWord}"\n` +
-      `Valid game classes: ${Object.keys(CLASS_HINTS).join(', ')}\n\n` +
+      `Valid game classes: ${gameWords.join(', ')}\n\n` +
       `Instructions:\n` +
       `1. Analyze the sketch. Identify what it most looks like from the valid game classes.\n` +
       `2. Set "guess" to that valid game class (or "unknown" if it matches none).\n` +

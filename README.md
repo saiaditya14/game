@@ -119,11 +119,9 @@ http://localhost:5173/draw-off
 Todolist:
 Need an overhaul of UI in general
 Need an overhaul of button UI in draw off
-Iterate until system prompt for draw off is stronger though it is ok so far
+Play test system prompt for draw off a little but seems fine and fun to babie
 
 Babie feedback:
 
-Thinner brushes
-Maybe colours
-5 rounds
-harder categories
+Thinner brushes (better UI for the same otherwise done)
+Number of rounds could be togglable

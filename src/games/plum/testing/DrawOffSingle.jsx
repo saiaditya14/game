@@ -3,10 +3,57 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 
-const DOODLE_WORDS = ["apple", "cat", "dog", "car", "tree", "bicycle", "book", "camera", "chair", "clock", "cup", "eye", "flower", "glasses", "hat", "house", "key", "pants", "pizza", "shoe", "smiley face", "star", "sun", "umbrella"];
+// const DOODLE_WORDS = ["apple", "cat", "dog", "car", "tree", "bicycle", "book", "camera", "chair", "clock", "cup", "eye", "flower", "glasses", "hat", "house", "key", "pants", "pizza", "shoe", "smiley face", "star", "sun", "umbrella"];
 
-const pickTargetWord = (previousWord) => {
-  const choices = DOODLE_WORDS.filter((word) => word !== previousWord);
+const EASY_CLASS_HINTS = {
+  apple: 'round fruit outline, stem, leaf, apple shape',
+  cat: 'cat face or body, pointy ears, whiskers, eyes, tail',
+  dog: 'dog face or body, ears, snout, nose, legs, tail',
+  car: 'vehicle body, wheels, windows, side view',
+  tree: 'trunk with leafy top, branches, canopy',
+  bicycle: 'two wheels connected by frame, handlebar, seat',
+  book: 'rectangle cover, pages, spine, open book shape',
+  camera: 'rectangle body, circular lens, top button/viewfinder',
+  chair: 'seat, legs, backrest',
+  clock: 'circle or square clock face with hands or tick marks',
+  cup: 'cup or mug shape, open top, handle, base',
+  eye: 'eye outline, iris or pupil, eyelids',
+  flower: 'petals around center, stem, leaves',
+  glasses: 'two lenses connected by bridge, eyeglass frame',
+  hat: 'brim with crown/top, cap or hat silhouette',
+  house: 'square/rectangle building, roof, door, window',
+  key: 'loop/ring, shaft, teeth at the end',
+  pants: 'two trouser legs, waistband, pants outline',
+  pizza: 'triangular slice with toppings or whole round pizza divided into slices',
+  shoe: 'footwear side profile, sole, opening, sneaker shape',
+  'smiley face': 'face circle with eyes and smiling mouth',
+  star: 'five-point star or recognizable star shape',
+  sun: 'circle or round center with rays/lines around it',
+  umbrella: 'curved canopy with handle or umbrella outline',
+};
+
+const HARD_CLASS_HINTS = {
+  // Classic Simple (Keep a few as warm-ups)
+  apple: 'round fruit, stem, leaf', 
+  cat: 'cat face, pointy ears, whiskers', 
+  car: 'vehicle body, wheels',
+  
+  // The New "Intricate but Fun" Tier
+  'sunset behind mountains': 'two or more triangular mountains, half-circle sun peeking behind them, sun rays',
+  rabbit: 'animal with very long ears, fluffy tail, whiskers, small nose',
+  dinosaur: 'reptilian body, either tiny arms and big head (t-rex) or plates on back (stegosaurus)',
+  helicopter: 'aircraft cabin/bubble, top rotor blades, tail rotor, landing skids',
+  'eiffel tower': 'tall tapering lattice structure, wide base with arches, tiers',
+  lighthouse: 'tall tapering cylinder building, light beams radiating from top, stripes',
+  'spider web': 'radial lines extending outward, connected by concentric circles or hexagons',
+  campfire: 'crossed rectangular logs at the base, jagged flame shapes on top',
+  mermaid: 'human torso and arms, long fish tail with fins, long hair',
+  sailboat: 'boat hull, one or more large triangular sails, mast, sitting on water line',
+  castle: 'stone walls, towers with jagged crenellations on top, arched gate or drawbridge'
+};
+
+const pickTargetWord = (previousWord, activeHints) => {
+  const choices = Object.keys(activeHints).filter((word) => word !== previousWord);
   return choices[Math.floor(Math.random() * choices.length)];
 };
 
@@ -49,6 +96,10 @@ const DrawOffSingle = () => {
 
   const [targetWord, setTargetWord] = useState(null);
   const [score, setScore] = useState(0);
+  const [targetScore] = useState(3);
+  const [difficulty, setDifficulty] = useState('easy');
+  const [brushColor, setBrushColor] = useState('#0f172a');
+  const [brushSize, setBrushSize] = useState(5);
   const [isGameActive, setIsGameActive] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -56,10 +107,6 @@ const DrawOffSingle = () => {
   const [aiFeedback, setAiFeedback] = useState('Waiting for your masterpiece...');
   const [judgeError, setJudgeError] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-
-  const getStrokeColor = useCallback((canvas) => {
-    return getComputedStyle(canvas).getPropertyValue('--stroke-color').trim() || '#0f172a';
-  }, []);
 
   const getCanvasBackground = useCallback((canvas) => {
     return getComputedStyle(canvas).getPropertyValue('--canvas-bg').trim() || '#ffffff';
@@ -88,11 +135,12 @@ const DrawOffSingle = () => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = getCanvasBackground(canvas);
     ctx.fillRect(0, 0, width, height);
+    
+    // We intentionally don't set strokeStyle/lineWidth here 
+    // because `draw()` sets them dynamically every stroke using brushColor/brushSize.
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 11;
-    ctx.strokeStyle = getStrokeColor(canvas);
-  }, [getCanvasBackground, getDisplaySize, getStrokeColor]);
+  }, [getCanvasBackground, getDisplaySize]);
 
   const ensureCanvasReady = useCallback(() => {
     const canvas = canvasRef.current;
@@ -164,14 +212,14 @@ const DrawOffSingle = () => {
   useEffect(() => () => window.clearTimeout(debounceTimer.current), []);
 
   useEffect(() => {
-    if (score !== 3) return;
-
-    window.clearTimeout(debounceTimer.current);
-    judgeRequestRef.current += 1;
-    setIsJudging(false);
-    setIsGameActive(false);
-    setIsComplete(true);
-  }, [score]);
+    if (score === targetScore && score > 0) {
+      window.clearTimeout(debounceTimer.current);
+      judgeRequestRef.current += 1;
+      setIsJudging(false);
+      setIsGameActive(false);
+      setIsComplete(true);
+    }
+  }, [score, targetScore]);
 
   useEffect(() => {
     if (!isGameActive) return undefined;
@@ -196,7 +244,8 @@ const DrawOffSingle = () => {
     setAiFeedback('Waiting for your masterpiece...');
     setJudgeError('');
     setIsComplete(false);
-    const nextTarget = pickTargetWord(null);
+    const activeHints = difficulty === 'hard' ? HARD_CLASS_HINTS : EASY_CLASS_HINTS;
+    const nextTarget = pickTargetWord(null, activeHints);
     setTargetWord(nextTarget);
     targetStartedAtRef.current = Date.now();
     setStartTime(Date.now());
@@ -227,12 +276,13 @@ const DrawOffSingle = () => {
         setJudgeError('');
 
         try {
+          const activeHints = difficulty === 'hard' ? HARD_CLASS_HINTS : EASY_CLASS_HINTS;
           console.log('Sending Base64 length:', base64Image.length);
           const { data, error } = await supabase.functions.invoke('judge-drawing', {
             body: {
               base64Image,
               targetWord,
-              allGameWords: DOODLE_WORDS,
+              classHints: activeHints,
             },
           });
           console.log('Raw AI Response:', data);
@@ -252,7 +302,7 @@ const DrawOffSingle = () => {
             setAiFeedback(reason ? `Nailed it! ${reason}` : 'Nailed it!');
           } else if (verdict === 'incomplete') {
             setAiFeedback(`Incomplete! Reason: ${reason || 'No reason returned.'}`);
-          } else if (DOODLE_WORDS.includes(guess)) {
+          } else if (Object.keys(activeHints).includes(guess)) {
             setAiFeedback(`Nope! AI guessed: ${guess}. Reason: ${reason || 'No reason returned.'}`);
           } else if (guess && guess !== 'wrong') {
             setAiFeedback(`Nope! AI guessed: ${guess}. Reason: ${reason || 'No reason returned.'}`);
@@ -266,9 +316,10 @@ const DrawOffSingle = () => {
             const nextScore = currentScore + 1;
             clearCanvas('Nailed it!');
 
-            if (nextScore < 3) {
+            if (nextScore < targetScore) {
               setTargetWord((currentTarget) => {
-                const nextTarget = pickTargetWord(currentTarget);
+                const activeHints = difficulty === 'hard' ? HARD_CLASS_HINTS : EASY_CLASS_HINTS;
+                const nextTarget = pickTargetWord(currentTarget, activeHints);
                 targetStartedAtRef.current = Date.now();
                 return nextTarget;
               });
@@ -292,7 +343,7 @@ const DrawOffSingle = () => {
     }, 120);
 
     debounceTimer.current = submitAfterPause;
-  }, [clearCanvas, isGameActive, isJudging, targetWord]);
+  }, [clearCanvas, isGameActive, isJudging, targetWord, targetScore, difficulty]);
 
   const startDrawing = (event) => {
     if (isJudging) return;
@@ -320,8 +371,8 @@ const DrawOffSingle = () => {
     const point = getCanvasPoint(event);
     const lastPoint = lastPointRef.current;
 
-    ctx.strokeStyle = getStrokeColor(canvas);
-    ctx.lineWidth = 11;
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -357,28 +408,59 @@ const DrawOffSingle = () => {
         {!isGameActive && !isComplete && (
           <motion.div
             key="start"
-            className="mx-auto max-w-xl border border-border/70 bg-[color:var(--surface)] p-8 text-center shadow-[var(--shadow)]"
-            style={{ borderRadius: 'var(--radius)' }}
+            className="mx-auto max-w-xl shadow-[var(--shadow)]"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
           >
-            <Sparkles className="mx-auto h-9 w-9 text-primary" />
-            <h2 className="mt-4 font-serif text-3xl font-medium">Ready to sprint?</h2>
-            <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
-              Get three target words past the sketch judge as fast as you can.
-            </p>
-            <motion.button
-              type="button"
-              onClick={startSprint}
-              className={`mx-auto mt-6 max-w-56 ${primaryActionClass}`}
-              style={{ borderRadius: 'var(--radius)' }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Play className="h-4 w-4" />
-              Start Sprint
-            </motion.button>
+            <div className="border border-border/70 bg-[color:var(--surface)] p-8 text-center" style={{ borderRadius: 'var(--radius) var(--radius) 0 0' }}>
+              <Sparkles className="mx-auto h-9 w-9 text-primary" />
+              <h2 className="mt-4 font-serif text-3xl font-medium">Ready to sprint?</h2>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                Get {targetScore} target words past the sketch judge as fast as you can.
+              </p>
+              <motion.button
+                type="button"
+                onClick={startSprint}
+                className={`mx-auto mt-6 max-w-56 ${primaryActionClass}`}
+                style={{ borderRadius: 'var(--radius)' }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Play className="h-4 w-4" />
+                Start Sprint
+              </motion.button>
+            </div>
+            
+            <div className="border border-t-0 border-border/70 bg-[color:var(--surface-strong)] p-5" style={{ borderRadius: '0 0 var(--radius) var(--radius)' }}>
+              <label className="text-[0.8rem] font-bold uppercase tracking-[0.1em] text-[color:var(--muted)] mb-3 flex items-center justify-center gap-2">
+                Difficulty
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDifficulty('easy')}
+                  className={`flex-1 rounded border py-2 text-sm font-bold transition-colors ${
+                    difficulty === 'easy' 
+                      ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)]' 
+                      : 'border-border/70 bg-[color:var(--surface)] text-[color:var(--muted)] hover:border-[color:var(--primary)]'
+                  }`}
+                >
+                  Easy Mode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDifficulty('hard')}
+                  className={`flex-1 rounded border py-2 text-sm font-bold transition-colors ${
+                    difficulty === 'hard' 
+                      ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)]' 
+                      : 'border-border/70 bg-[color:var(--surface)] text-[color:var(--muted)] hover:border-[color:var(--primary)]'
+                  }`}
+                >
+                  Hard Mode
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -394,7 +476,7 @@ const DrawOffSingle = () => {
             <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
             <h2 className="mt-4 font-serif text-3xl font-medium">Sprint Complete!</h2>
             <p className="mt-3 text-lg font-semibold">Final time: {elapsedTime.toFixed(1)} seconds</p>
-            <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">You got 3 out of 3. Very tidy chaos.</p>
+            <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">You got {targetScore} out of {targetScore}. Very tidy chaos.</p>
             <motion.button
               type="button"
               onClick={startSprint}
@@ -431,7 +513,7 @@ const DrawOffSingle = () => {
               </div>
               <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
                 <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">score</p>
-                <p className="mt-1 font-serif text-3xl font-medium">{score} / 3</p>
+                <p className="mt-1 font-serif text-3xl font-medium">{score} / {targetScore}</p>
               </div>
               <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
                 <div className="flex items-center justify-between gap-3">
@@ -469,30 +551,68 @@ const DrawOffSingle = () => {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
+            <div className="mt-4 flex flex-wrap items-center gap-6 rounded border border-border/70 bg-[color:var(--surface-strong)] p-4 shadow-sm" style={{ borderRadius: 'var(--radius)' }}>
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[color:var(--muted)]" htmlFor="brushColor">Ink Color</label>
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-[color:var(--ring)] shadow-sm transition-transform hover:scale-105">
+                  <input
+                    id="brushColor"
+                    type="color"
+                    value={brushColor}
+                    onChange={(e) => setBrushColor(e.target.value)}
+                    className="absolute -inset-2 h-12 w-12 cursor-pointer border-0 bg-transparent p-0"
+                  />
+                </div>
+              </div>
+              
+              <div className="h-6 w-px bg-border/40 hidden sm:block"></div>
+
+              <div className="flex flex-1 items-center gap-3">
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[color:var(--muted)]" htmlFor="brushSize">Thickness</label>
+                <div className="flex flex-1 items-center gap-3 rounded-full bg-[color:var(--surface)] px-3 py-1 border border-border/60">
+                  <input
+                    id="brushSize"
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={brushSize}
+                    onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                    className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-border/50 accent-[color:var(--primary)]"
+                  />
+                  <div className="flex w-6 justify-center">
+                    <div 
+                      className="rounded-full bg-[color:var(--foreground)]" 
+                      style={{ width: `${brushSize}px`, height: `${brushSize}px`, backgroundColor: brushColor }} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
               <motion.button
                 type="button"
                 onClick={() => clearCanvas()}
-                className={secondaryActionClass}
+                className={`${secondaryActionClass} sm:w-1/3`}
                 style={{ borderRadius: 'var(--radius)' }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <Eraser className="h-5 w-5" />
-                Clear Canvas
+                Clear
               </motion.button>
 
               <motion.button
                 type="button"
                 onClick={handleDrawingSubmit}
                 disabled={isJudging}
-                className={primaryActionClass}
+                className={`${primaryActionClass} sm:w-2/3`}
                 style={{ borderRadius: 'var(--radius)' }}
                 whileHover={isJudging ? undefined : { y: -2 }}
                 whileTap={isJudging ? undefined : { scale: 0.99 }}
               >
                 {isJudging ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                Submit Drawing
+                {isJudging ? 'Judging...' : 'Submit Drawing'}
               </motion.button>
             </div>
 
