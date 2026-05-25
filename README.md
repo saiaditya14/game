@@ -119,3 +119,4 @@ http://localhost:5173/draw-off
 Todolist:
 Need an overhaul of UI in general
 Need an overhaul of button UI in draw off
+Iterate until system prompt for draw off is stronger though it is ok so far
