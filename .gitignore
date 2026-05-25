@@ -9,6 +9,7 @@ dist/
 .vite-temp/
 node_modules/.vite/
 node_modules/.vite-temp/
+.tmp/
 
 # Environment files
 .env

@@ -71,3 +71,46 @@ dist/
 ```
 
 Commit `package-lock.json` when dependencies change so both partners install the same versions.
+
+## Draw Off Local Judge Setup
+
+`DrawOffSingle` uses a Supabase Edge Function named `judge-drawing` to judge sketches with Gemini. The helper script only writes local environment files; it does not start Vite or Supabase.
+
+Run this from the repo root in PowerShell:
+
+```powershell
+.\scripts\start-drawoff-local.ps1 `
+  -SupabaseAnonKey "YOUR_SUPABASE_ANON_KEY" `
+  -GeminiApiKey "YOUR_GEMINI_API_KEY"
+```
+
+Optional arguments:
+
+```powershell
+.\scripts\start-drawoff-local.ps1 `
+  -SupabaseAnonKey "YOUR_SUPABASE_ANON_KEY" `
+  -GeminiApiKey "YOUR_GEMINI_API_KEY" `
+  -SupabaseUrl "http://127.0.0.1:54321" `
+  -GeminiModel "gemini-2.5-flash"
+```
+
+The script writes:
+
+```txt
+.env.local
+supabase/.env.local
+```
+
+To run the full local stack:
+
+```powershell
+supabase start
+supabase functions serve judge-drawing --env-file supabase/.env.local
+npm run dev
+```
+
+Then open:
+
+```txt
+http://localhost:5173/draw-off
+```
