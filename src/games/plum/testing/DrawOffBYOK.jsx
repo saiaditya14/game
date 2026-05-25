@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles, KeyRound, X } from 'lucide-react';
+import { useTheme } from '../../../components/ThemeProvider';
 
 // const DOODLE_WORDS = ["apple", "cat", "dog", "car", "tree", "bicycle", "book", "camera", "chair", "clock", "cup", "eye", "flower", "glasses", "hat", "house", "key", "pants", "pizza", "shoe", "smiley face", "star", "sun", "umbrella"];
 
@@ -183,8 +184,15 @@ const DrawOffBYOK = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [targetScore] = useState(3);
   const [difficulty, setDifficulty] = useState('easy');
-  const [brushColor, setBrushColor] = useState('#0f172a');
+  
+  const { theme } = useTheme();
+  const defaultColor = theme === 'theme-arcade' ? '#39ff14' : '#0f172a';
+  const [brushColor, setBrushColor] = useState(defaultColor);
   const [brushSize, setBrushSize] = useState(5);
+
+  useEffect(() => {
+    setBrushColor(theme === 'theme-arcade' ? '#39ff14' : '#0f172a');
+  }, [theme]);
 
   // Key operations
   const saveKey = () => {

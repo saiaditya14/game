@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
+import { useTheme } from '../../../components/ThemeProvider';
 
 // const DOODLE_WORDS = ["apple", "cat", "dog", "car", "tree", "bicycle", "book", "camera", "chair", "clock", "cup", "eye", "flower", "glasses", "hat", "house", "key", "pants", "pizza", "shoe", "smiley face", "star", "sun", "umbrella"];
 
@@ -98,8 +99,16 @@ const DrawOffSingle = () => {
   const [score, setScore] = useState(0);
   const [targetScore] = useState(3);
   const [difficulty, setDifficulty] = useState('easy');
-  const [brushColor, setBrushColor] = useState('#0f172a');
+  
+  const { theme } = useTheme();
+  const defaultColor = theme === 'theme-arcade' ? '#39ff14' : '#0f172a';
+  const [brushColor, setBrushColor] = useState(defaultColor);
   const [brushSize, setBrushSize] = useState(5);
+
+  useEffect(() => {
+    setBrushColor(theme === 'theme-arcade' ? '#39ff14' : '#0f172a');
+  }, [theme]);
+
   const [isGameActive, setIsGameActive] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
