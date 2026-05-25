@@ -11,7 +11,7 @@ import ConnectFour from './games/sugar/ConnectFour';
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <div className="min-h-screen transition-colors duration-300">
           <NavBar />
           <Routes>
