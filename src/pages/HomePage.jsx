@@ -105,6 +105,16 @@ const HomePage = () => {
                 imageSrc={drawOffImage}
               />
             </Link>
+            <Link to="/draw-off-byok" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <GameCard
+                title="Draw Off: BYOK"
+                description="Bring Your Own Key variant of Draw Off. Connect manually via Gemini."
+                badge="API"
+                category="AI Racing"
+                meta="cloud AI game"
+                imageSrc={drawOffImage}
+              />
+            </Link>
             {newGames.map((game) => (
               <GameCard key={game.title} {...game} />
             ))}

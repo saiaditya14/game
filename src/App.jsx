@@ -5,6 +5,7 @@ import { NavBar } from './components/NavBar';
 import HomePage from './pages/HomePage';
 import DummyPage from './pages/DummyPage';
 import DrawOffSingle from './games/plum/testing/DrawOffSingle';
+import DrawOffBYOK from './games/plum/testing/DrawOffBYOK';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/arcade" element={<DummyPage title="Arcade" />} />
             <Route path="/cozy" element={<DummyPage title="Cozy" />} />
             <Route path="/draw-off" element={<DrawOffSingle />} />
+            <Route path="/draw-off-byok" element={<DrawOffBYOK />} />
           </Routes>
         </div>
       </BrowserRouter>
