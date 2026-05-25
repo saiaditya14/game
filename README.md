@@ -114,3 +114,8 @@ Then open:
 ```txt
 http://localhost:5173/draw-off
 ```
+
+
+Todolist:
+Need an overhaul of UI in general
+Need an overhaul of button UI in draw off
