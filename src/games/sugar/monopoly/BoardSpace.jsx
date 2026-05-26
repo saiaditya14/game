@@ -2,14 +2,18 @@ import React from 'react';
 import { Car, Gift, Heart, Landmark, Sparkles, Train, Umbrella, WandSparkles } from 'lucide-react';
 
 const COLOR_TILES = {
-  cocoa: '#d9a38e',
-  sky: '#a9dff3',
-  blush: '#f6aacb',
-  peach: '#ffc48f',
-  berry: '#ff9aa8',
-  lemon: '#fff08a',
-  mint: '#aee7bd',
-  lilac: '#b9b6ff',
+  darkOlive: '#c7d99a',
+  crimson: '#f9a8b7',
+  darkGreen: '#a7e8b2',
+  darkBlue: '#a9d7ff',
+  steelGray: '#d5d9e3',
+  deepViolet: '#d8c4ff',
+  burntAmber: '#ffc48f',
+  babyBlue: '#aee9ff',
+  paleGreen: '#d7f5bd',
+  deepIndigo: '#b9b6ff',
+  flameOrange: '#ffb48f',
+  white: '#fff8fb',
 };
 
 const ICONS = {
