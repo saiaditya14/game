@@ -122,10 +122,15 @@
 @layer components {
   .sugaropoly-page {
     --monopoly-board-size: min(88vmin, 1020px, calc(100vw - 22rem));
+    --monopoly-board-padding: clamp(0.55rem, 1.4vmin, 0.9rem);
+    --monopoly-board-border: clamp(4px, 0.7vmin, 7px);
     --monopoly-side-content-scale: 62%;
     --monopoly-tile-name-size: clamp(0.38rem, 0.82vmin, 0.62rem);
     --monopoly-tile-price-size: clamp(0.38rem, 0.78vmin, 0.62rem);
     --monopoly-icon-size: clamp(0.5rem, 0.98vmin, 0.78rem);
+    --monopoly-band-size: clamp(0.82rem, 18%, 1.18rem);
+    --monopoly-center-title-size: clamp(2rem, 5.6vmin, 4.2rem);
+    --monopoly-center-ribbon-size: clamp(0.68rem, 1.3vmin, 0.9rem);
     min-height: 100vh;
     padding: 1.5rem 0.75rem;
     background:
@@ -155,7 +160,11 @@
   .sugaropoly-board-pane {
     min-width: 0;
     display: flex;
-    justify-content: center;
+    justify-content: safe center;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.75rem;
+    container-type: inline-size;
   }
 
   .sugaropoly-sidebar-pane {
@@ -167,8 +176,9 @@
     width: var(--monopoly-board-size);
     aspect-ratio: 1;
     margin-inline: auto;
-    padding: clamp(0.55rem, 1.4vmin, 0.9rem);
-    border: clamp(4px, 0.7vmin, 7px) solid #f0a9c8;
+    flex: 0 0 auto;
+    padding: var(--monopoly-board-padding);
+    border: var(--monopoly-board-border) solid #f0a9c8;
     border-radius: 0.5rem;
     background: #fff8fb;
     box-shadow: 0 24px 70px rgba(190, 24, 93, 0.18), inset 0 0 0 2px rgba(255, 255, 255, 0.9);
@@ -280,7 +290,7 @@
   .property-band-bottom {
     left: 0;
     width: 100%;
-    height: clamp(0.82rem, 18%, 1.18rem);
+    height: var(--monopoly-band-size);
   }
 
   .property-band-top {
@@ -297,7 +307,7 @@
   .property-band-right {
     top: 0;
     height: 100%;
-    width: clamp(0.82rem, 18%, 1.18rem);
+    width: var(--monopoly-band-size);
   }
 
   .property-band-left {
@@ -330,7 +340,7 @@
   .center-script {
     color: #9d174d;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(2rem, 5.6vmin, 4.2rem);
+    font-size: var(--monopoly-center-title-size);
     font-weight: 850;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -344,13 +354,21 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.72);
     color: #be185d;
-    font-size: clamp(0.68rem, 1.3vmin, 0.9rem);
+    font-size: var(--monopoly-center-ribbon-size);
     font-weight: 750;
   }
 
   @media (max-width: 760px) {
     .sugaropoly-page {
-      --monopoly-board-size: min(96vw, 700px);
+      --monopoly-board-size: 1020px;
+      --monopoly-board-padding: 0.9rem;
+      --monopoly-board-border: 7px;
+      --monopoly-tile-name-size: 0.62rem;
+      --monopoly-tile-price-size: 0.62rem;
+      --monopoly-icon-size: 0.78rem;
+      --monopoly-band-size: 1.18rem;
+      --monopoly-center-title-size: 4.2rem;
+      --monopoly-center-ribbon-size: 0.9rem;
       padding: 1rem 0.5rem;
     }
 
@@ -364,6 +382,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
+    }
+
+    .sugaropoly-board-pane {
+      width: 100%;
+      justify-content: flex-start;
     }
 
     .sugaropoly-sidebar-pane {
@@ -371,23 +395,48 @@
       min-width: 0;
     }
 
-    .monopoly-board {
-      width: var(--monopoly-board-size);
-      padding: 0.42rem;
-    }
-
-    .monopoly-grid {
-      grid-template-columns: minmax(40px, 1.22fr) repeat(13, minmax(0, 1fr)) minmax(40px, 1.22fr);
-      grid-template-rows: minmax(40px, 1.22fr) repeat(13, minmax(0, 1fr)) minmax(40px, 1.22fr);
-    }
-
-    .space-icon {
-      display: none;
-    }
-
     .center-ribbon {
       max-width: 75%;
       text-align: center;
+    }
+  }
+
+  @container (max-width: 1020px) {
+    .monopoly-board {
+      width: 1020px;
+      padding: 0.9rem;
+      border-width: 7px;
+    }
+
+    .monopoly-board .space-name {
+      font-size: 0.62rem;
+    }
+
+    .monopoly-board .space-price {
+      font-size: 0.62rem;
+    }
+
+    .monopoly-board .space-icon {
+      width: 0.78rem;
+      height: 0.78rem;
+    }
+
+    .monopoly-board .property-band-top,
+    .monopoly-board .property-band-bottom {
+      height: 1.18rem;
+    }
+
+    .monopoly-board .property-band-left,
+    .monopoly-board .property-band-right {
+      width: 1.18rem;
+    }
+
+    .monopoly-board .center-script {
+      font-size: 4.2rem;
+    }
+
+    .monopoly-board .center-ribbon {
+      font-size: 0.9rem;
     }
   }
 
