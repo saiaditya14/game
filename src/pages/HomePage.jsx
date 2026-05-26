@@ -107,6 +107,16 @@ const HomePage = () => {
                 meta="2 player game"
               />
             </Link>
+            <Link to="/monopoly" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <GameCard
+                title="Sugaropoly"
+                description="A super cutesy, pastel property trading game. Buy properties, build bakeries, and collect pastry rent!"
+                badge="Cutesy"
+                category="Board Game"
+                meta="multiplayer"
+                imageSrc={drawOffPinkImage}
+              />
+            </Link>
             {newGames.map((game) => (
               <GameCard key={game.title} {...game} />
             ))}

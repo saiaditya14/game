@@ -9,6 +9,7 @@ import DrawOffSingle from './games/plum/testing/DrawOffSingle';
 import DrawOffBYOK from './games/plum/testing/DrawOffBYOK';
 import DrawOffCoop from './games/plum/DrawOffCoop';
 import ConnectFour from './games/sugar/ConnectFour';
+import PastelMonopoly from './games/sugar/monopoly/PastelMonopoly';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/draw-off-coop" element={<DrawOffCoop />} />
             <Route path="/draw-off-byok" element={<DrawOffBYOK />} />
             <Route path="/connect-four" element={<ConnectFour />} />
+            <Route path="/monopoly" element={<PastelMonopoly />} />
           </Routes>
         </div>
       </BrowserRouter>
