@@ -46,3 +46,24 @@
 - Proposed scoring fixes: require enough ink before scoring, use target-specific complexity gates, require the target to beat the runner-up by a confidence margin, and optionally require two consecutive matching classifications before awarding a point.
 - Proposed completeness checks should be cheap canvas metrics first: stroke count, total stroke distance, bounding-box spread, width/height coverage, time since target appeared, and possibly direction/turn count. These should decide whether a drawing is complete enough before accepting CLIP's label.
 - A prompted small VLM is not currently the preferred path: likely heavier/slower than CLIP in-browser and not guaranteed to understand rough doodle completeness. A future higher-quality option would be a custom small sketch classifier trained on the game categories plus null/incomplete/scribble examples, exported for browser inference.
+
+**Connect Four Notes / Current Implementation**:
+- "Connect Four" is authored under the Sugar folder and lives in `src/games/sugar/`.
+- The active route is `/connect-four`, wired in `src/App.jsx`, and the home catalog card in `src/pages/HomePage.jsx` links to that route.
+- Main wrapper: `src/games/sugar/ConnectFour.jsx`. It owns room creation, room joining, player identity, realtime subscription, move validation, turn changes, win/draw detection, abort handling, and the exit-back-to-lobby behavior.
+- Lobby component: `src/games/sugar/ConnectFourLobby.jsx`. It shows the instruction page, "Create a Game", and "Join a Game" controls. Room codes are generated client-side as 4-6 character uppercase codes.
+- Board component: `src/games/sugar/ConnectFourBoard.jsx`. It renders the 7x6 board, player badges/timers, turn indicator, abort/settings controls, animated piece drops, winning strike, and the winner modal.
+- Supabase schema lives in `src/games/sugar/connect-four-schema.sql`. A matching migration was also added at `supabase/migrations/20260525120000_create_connect_four_rooms.sql`.
+- Database table: `public.connect_four_rooms`. Important fields are `code`, `board`, `current_player`, `status`, `winner`, `player_one`, `player_two`, `last_move`, `started_at`, `created_at`, and `updated_at`.
+- The board is stored as a 1D array of 42 slots in `board`, using `null`, `1`, and `2`. Index math is `row * 7 + column`.
+- Player identity is stored locally in `localStorage` under `lovelyland-connect-four-player-id`. `player_one` and `player_two` store those client IDs.
+- Supabase Realtime uses `postgres_changes` on `public.connect_four_rooms` filtered by the current room `id`. This syncs board state, turn state, joins, wins, draws, and aborts.
+- The create flow inserts a waiting room with `player_one`; the join flow finds by `code`, writes `player_two`, sets `status` to `playing`, and starts the match for both clients through realtime.
+- The move flow checks that the local player matches `current_player`, finds the lowest empty row in the clicked column, updates the board, checks for a win/draw, flips `current_player`, and writes the move to Supabase.
+- Winning cells are stored inside existing `last_move.winning_cells` JSON, so no extra database columns are needed for the gold strike overlay.
+- The win UI draws a gold strike over the four winning coins, highlights those coins, and shows a centered "Congrats!" modal with a blurred game backdrop and an "Exit game" button returning the current browser to the Connect Four lobby.
+- Board rendering notes: pieces must stay true circles. The board uses a fixed `aspect-[7/6]`, explicit rows/columns, clipped circular slots, and absolute inset disc spans. Avoid changing this back to unconstrained per-button sizing because it previously caused stretched coins and floating drop artifacts.
+- Piece colors intentionally use theme variables via inline style (`--primary` for Player 1 and `--accent` for Player 2) instead of dynamic Tailwind class names. This avoids Player 1 disappearing in some builds/themes.
+- Only the newest move should animate. Stable piece keys are important because keying every piece to `last_move.at` caused old coins to reanimate on every realtime update.
+- Current schema policies are permissive for the prototype (`anon`/`authenticated` can select, insert, and update rooms). Before production, tighten RLS so only the two room participants can update their room and only valid state transitions are allowed.
+- Do not put the Supabase service role key in `.env` or browser code. The frontend should use only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
