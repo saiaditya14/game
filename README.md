@@ -122,7 +122,7 @@ Need an overhaul of button UI in draw off
 Play test system prompt for draw off a little but seems fine and fun to babie
 Security issues in joining such as what if more than two join? what if one leaves how to come back? 
 Sidebar for monopoly needs revamp, also for small screens do what rich.io does with a bottom moved sidebar or maybe togglable? and otherwise have it visible on side
-
+Monopoly board interacts slightly weirdly with zoom, dont really know how to fix that but predict that it will get fixed with sidebar changes cos sidebar keeps zipping around so if im being honest it was prolly sidebar.
 Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)
