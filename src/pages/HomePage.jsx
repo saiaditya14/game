@@ -91,20 +91,10 @@ const HomePage = () => {
             <Link to="/draw-off" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
               <GameCard
                 title="Draw Off"
-                description="Sketch against the clock and let the local AI guess what you drew."
+                description="Sketch against the clock, play with a friend, or experiment in testing modes."
                 badge="AI RACING"
                 category="AI Racing"
-                meta="local AI game"
-                imageSrc={drawOffImage}
-              />
-            </Link>
-            <Link to="/draw-off-byok" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
-              <GameCard
-                title="Draw Off: BYOK"
-                description="Bring Your Own Key variant of Draw Off. Connect manually via Gemini."
-                badge="API"
-                category="AI Racing"
-                meta="cloud AI game"
+                meta="multiple modes"
                 imageSrc={drawOffImage}
               />
             </Link>

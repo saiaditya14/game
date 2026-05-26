@@ -14,8 +14,10 @@
 - Lovelyland is the current product name for the minigame hub.
 - Current UI refinement workflow: iterate theme-by-theme, starting with Vanilla, then apply learnings to Pink, Arcade, and Cozy after review.
 - Shared UI now expects richer theme tokens in `src/styles/index.css`: `--surface`, `--surface-strong`, `--muted`, `--ring`, `--shadow`, `--card-gradient`, and `--card-sheen`.
+- **Multiplayer Role Selection Constraint:** When users join a multiplayer room (e.g. Draw Off Co-op), a player who has already selected their preferred role must be shown a "Waiting for Partner" state, removing their ability to switch choices or claim both roles while ensuring they do not advance to the empty playing canvas until their partner selects the remaining role.
 - The top navigation and game cards are designed as reusable themed components, so component structure should stay shared while each style's personality comes from CSS variables.
 - Current Vanilla feedback: prefer sleeker/lighter text, clearly visible gaps between game cards both across rows and between rows, theme selection as a dropdown instead of individual buttons, and no "four little worlds" eyebrow in the home header.
+- **Layout Conformance Constraint:** All central UI elements (Lobbies, Mode Selectors, Canvas Containers, Start Prompts) must NOT stretch edge-to-edge on large desktop screens. Regardless of the container size (e.g. `max-w-6xl`), the inner card/box itself must be constrained (e.g. `max-w-xl mx-auto` or `max-w-[52rem] mx-auto`) to ensure it always looks properly bounded, cute, and gives plenty of visual breathing room to the sides, matching the Main Hub spacing.
 - Game card spacing is controlled by the shared `.game-grid` class in `src/styles/index.css`; use that class instead of ad hoc grid gap utilities so card spacing remains visibly separated across pages.
 - Theme dropdown styling is controlled by `.theme-select`; keep both the select and option colors tied to theme variables so dark themes like Arcade remain readable.
 - Game cards should follow the sleek catalog-card direction: three cards per row on wide screens, horizontal side scrolling on smaller screens, quiet serif titles, small uppercase category chips, and an image/placeholder area instead of emojis. Real per-game images can be passed through `imageSrc` on `GameCard`.
@@ -24,8 +26,9 @@
 - The "Draw Off" catalog card uses dynamic theme-based images mapped to the active CSS-variable theme, defaults Cozy to the Vanilla image, and follows the catalog-card direction with full-bleed cropped imagery, uppercase chips, and no emojis.
 
 **Current Features**:
-- "Draw Off" lives in `src/games/plum/DrawOff.jsx`; the active single-player sprint route uses Transformers.js CLIP zero-shot image classification locally in the browser.
-- The active `/draw-off` route currently points to the Single Player Sprint testing version at `src/games/plum/testing/DrawOffSingle.jsx`.
+- "Draw Off" is accessed through a mode selector Hub (`src/games/plum/DrawOffHub.jsx`) which splits into Single Player Sprint, 2-Player Co-op, and BYOK.
+- Single Player (`/draw-off-single`) uses Transformers.js CLIP zero-shot image classification locally in the browser.
+- Co-op Mode (`/draw-off-coop`) uses Supabase Realtime broadcast channels to stream drawing strokes between a drawer and a guesser instantly, circumventing database writes for mouse movements.
 
 **Multiplayer Development Strategy**:
 1. We build "Single Player Sprint" testing versions of every game first to validate the core game loop, UI, and local state.
