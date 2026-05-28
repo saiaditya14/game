@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { MonopolyBoard } from './MonopolyBoard';
-// import { MonopolySidebar } from './MonopolySidebar';
+import { MonopolySidebar } from './MonopolySidebar';
 
 export const PastelMonopoly = () => {
   const layoutRef = useRef(null);
@@ -51,9 +51,9 @@ export const PastelMonopoly = () => {
           <MonopolyBoard />
         </div>
 
-        {/* <div className="sugaropoly-sidebar-pane">
+        <div className="sugaropoly-sidebar-pane">
           <MonopolySidebar />
-        </div> */}
+        </div>
       </div>
     </div>
   );
