@@ -121,18 +121,18 @@
 
 @layer components {
   .sugaropoly-page {
-    --monopoly-board-size: min(88vmin, 1020px, calc(100vw - 22rem));
+    --monopoly-board-size: min(94vmin, 1080px, calc(100vw - 22rem));
     --monopoly-board-padding: clamp(0.55rem, 1.4vmin, 0.9rem);
     --monopoly-board-border: clamp(4px, 0.7vmin, 7px);
-    --monopoly-side-content-scale: 62%;
-    --monopoly-tile-name-size: clamp(0.38rem, 0.82vmin, 0.62rem);
-    --monopoly-tile-price-size: clamp(0.38rem, 0.78vmin, 0.62rem);
-    --monopoly-icon-size: clamp(0.5rem, 0.98vmin, 0.78rem);
+    --monopoly-side-content-scale: 72%;
+    --monopoly-tile-name-size: clamp(0.48rem, 1.02vmin, 0.78rem);
+    --monopoly-tile-price-size: clamp(0.44rem, 0.92vmin, 0.7rem);
+    --monopoly-icon-size: clamp(0.56rem, 1.08vmin, 0.86rem);
     --monopoly-band-size: clamp(0.82rem, 18%, 1.18rem);
     --monopoly-center-title-size: clamp(2rem, 5.6vmin, 4.2rem);
     --monopoly-center-ribbon-size: clamp(0.68rem, 1.3vmin, 0.9rem);
     min-height: 100vh;
-    padding: 1.5rem 0.75rem;
+    padding: 0.75rem;
     background:
       linear-gradient(135deg, rgba(255, 245, 250, 0.96), rgba(234, 250, 255, 0.96) 48%, rgba(255, 251, 224, 0.96)),
       repeating-linear-gradient(45deg, rgba(244, 114, 182, 0.08) 0 1px, transparent 1px 18px);
@@ -141,10 +141,43 @@
 
   .sugaropoly-header {
     max-width: 1320px;
-    margin: 0 auto 1.25rem;
+    margin: 0 auto 0.75rem;
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+
+  .sugaropoly-fullscreen-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.86);
+    color: #be185d;
+    font-size: 0.86rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    box-shadow: 0 12px 28px rgba(190, 24, 93, 0.12);
+    transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .sugaropoly-fullscreen-button:hover {
+    border-color: #e879ad;
+    background: #fff7fb;
+  }
+
+  .sugaropoly-fullscreen-button:active {
+    transform: scale(0.98);
+  }
+
+  .sugaropoly-page:fullscreen {
+    overflow: auto;
   }
 
   .sugaropoly-layout {
@@ -229,24 +262,24 @@
 
   .space-face {
     position: absolute;
-    inset: 0.28rem;
+    inset: 0.18rem;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(0.08rem, 0.4vmin, 0.22rem);
+    gap: clamp(0.04rem, 0.24vmin, 0.16rem);
     text-align: center;
     color: #7d1744;
     transform-origin: center;
   }
 
   .space-face-top {
-    inset-block: 0.34rem 1.25rem;
+    inset-block: 0.24rem 1.18rem;
   }
 
   .space-face-bottom {
-    inset-block: 1.25rem 0.34rem;
+    inset-block: 1.18rem 0.24rem;
   }
 
   .space-face-left,
@@ -266,7 +299,7 @@
   .space-name {
     width: 100%;
     font-size: var(--monopoly-tile-name-size);
-    line-height: 0.96;
+    line-height: 0.9;
     font-weight: 850;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -275,7 +308,7 @@
 
   .space-price {
     font-size: var(--monopoly-tile-price-size);
-    line-height: 1;
+    line-height: 0.92;
     font-weight: 900;
     color: #2f855a;
   }
@@ -366,9 +399,10 @@
       --monopoly-board-size: 1020px;
       --monopoly-board-padding: 0.9rem;
       --monopoly-board-border: 7px;
-      --monopoly-tile-name-size: 0.62rem;
-      --monopoly-tile-price-size: 0.62rem;
-      --monopoly-icon-size: 0.78rem;
+      --monopoly-side-content-scale: 72%;
+      --monopoly-tile-name-size: 0.78rem;
+      --monopoly-tile-price-size: 0.7rem;
+      --monopoly-icon-size: 0.86rem;
       --monopoly-band-size: 1.18rem;
       --monopoly-center-title-size: 4.2rem;
       --monopoly-center-ribbon-size: 0.9rem;
@@ -376,9 +410,16 @@
     }
 
     .sugaropoly-header {
-      display: block;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
       text-align: center;
       margin-bottom: 1rem;
+    }
+
+    .sugaropoly-fullscreen-button {
+      width: min(100%, 18rem);
     }
 
     .sugaropoly-layout {
@@ -412,16 +453,16 @@
     }
 
     .monopoly-board .space-name {
-      font-size: 0.62rem;
+      font-size: 0.78rem;
     }
 
     .monopoly-board .space-price {
-      font-size: 0.62rem;
+      font-size: 0.7rem;
     }
 
     .monopoly-board .space-icon {
-      width: 0.78rem;
-      height: 0.78rem;
+      width: 0.86rem;
+      height: 0.86rem;
     }
 
     .monopoly-board .property-band-top,
