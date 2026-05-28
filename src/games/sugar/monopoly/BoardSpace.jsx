@@ -49,12 +49,17 @@ export const BoardSpace = ({
   colorGroup,
   edge = 'bottom',
   isCorner = false,
-  corner = 'go',
+  corner,
 }) => {
-  const Icon = ICONS[corner] || ICONS[kind] || Sparkles;
+  const Icon = isCorner ? ICONS[corner] || Sparkles : ICONS[kind] || Sparkles;
   const hasBand = Boolean(colorGroup);
   const bandColor = COLOR_TILES[colorGroup] || '#f6c4d6';
   const bandSide = bandPlacement[edge];
+  const hasVisiblePrice = price !== undefined && price !== null;
+  const shouldReservePriceSlot = !isCorner && !hasVisiblePrice;
+  const nameWords = name.split(' ');
+  const longestWordLength = Math.max(...nameWords.map((word) => word.length));
+  const nameFitClass = longestWordLength >= 9 ? 'space-name-tight' : longestWordLength >= 7 ? 'space-name-compact' : '';
 
   return (
     <div className={`monopoly-space ${isCorner ? 'monopoly-corner' : 'monopoly-tile'}`}>
@@ -70,8 +75,16 @@ export const BoardSpace = ({
         style={{ transform: isCorner ? 'rotate(0deg)' : edgeRotation[edge] }}
       >
         <Icon className="space-icon" strokeWidth={2.4} />
-        <div className="space-name">{name}</div>
-        {price ? <div className="space-price">${price}</div> : null}
+        <div className={`space-name ${nameFitClass}`}>
+          {nameWords.map((word, index) => (
+            <span key={`${word}-${index}`}>{word}</span>
+          ))}
+        </div>
+        {hasVisiblePrice ? (
+          <div className="space-price">${price}</div>
+        ) : shouldReservePriceSlot ? (
+          <div className="space-price space-price-placeholder" aria-hidden="true">$000</div>
+        ) : null}
       </div>
     </div>
   );

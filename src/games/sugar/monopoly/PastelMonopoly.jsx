@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { MonopolyBoard } from './MonopolyBoard';
-import { MonopolySidebar } from './MonopolySidebar';
+// import { MonopolySidebar } from './MonopolySidebar';
 
 export const PastelMonopoly = () => {
+  const layoutRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === layoutRef.current);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!layoutRef.current) return;
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await layoutRef.current.requestFullscreen();
+  };
+
   return (
     <div className="sugaropoly-page">
       <header className="sugaropoly-header">
@@ -12,14 +36,24 @@ export const PastelMonopoly = () => {
         </div>
       </header>
 
-      <div className="sugaropoly-layout">
+      <div ref={layoutRef} className="sugaropoly-layout">
+        <button
+          type="button"
+          className="sugaropoly-fullscreen-button"
+          onClick={toggleFullscreen}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+        </button>
+
         <div className="sugaropoly-board-pane">
           <MonopolyBoard />
         </div>
 
-        <div className="sugaropoly-sidebar-pane">
+        {/* <div className="sugaropoly-sidebar-pane">
           <MonopolySidebar />
-        </div>
+        </div> */}
       </div>
     </div>
   );

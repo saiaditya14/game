@@ -121,16 +121,17 @@
 
 @layer components {
   .sugaropoly-page {
-    --monopoly-board-size: min(88vmin, 1020px, calc(100vw - 22rem));
-    --monopoly-board-padding: clamp(0.55rem, 1.4vmin, 0.9rem);
-    --monopoly-board-border: clamp(4px, 0.7vmin, 7px);
-    --monopoly-side-content-scale: 62%;
-    --monopoly-tile-name-size: clamp(0.38rem, 0.82vmin, 0.62rem);
-    --monopoly-tile-price-size: clamp(0.38rem, 0.78vmin, 0.62rem);
-    --monopoly-icon-size: clamp(0.5rem, 0.98vmin, 0.78rem);
-    --monopoly-band-size: clamp(0.82rem, 18%, 1.18rem);
-    --monopoly-center-title-size: clamp(2rem, 5.6vmin, 4.2rem);
-    --monopoly-center-ribbon-size: clamp(0.68rem, 1.3vmin, 0.9rem);
+    --monopoly-board-width: 1360px;
+    --monopoly-board-height: 804px;
+    --monopoly-board-padding: 1rem;
+    --monopoly-board-border: 7px;
+    --monopoly-side-content-scale: 68%;
+    --monopoly-tile-name-size: 0.78rem;
+    --monopoly-tile-price-size: 0.72rem;
+    --monopoly-icon-size: 0.95rem;
+    --monopoly-band-size: 1.38rem;
+    --monopoly-center-title-size: 4.8rem;
+    --monopoly-center-ribbon-size: 1rem;
     min-height: 100vh;
     padding: 1.5rem 0.75rem;
     background:
@@ -148,13 +149,27 @@
   }
 
   .sugaropoly-layout {
+    position: relative;
     width: min(100%, 1440px);
     margin-inline: auto;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 20rem;
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     justify-content: center;
     gap: 1.25rem;
+  }
+
+  .sugaropoly-layout:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 1rem;
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(135deg, rgba(255, 245, 250, 0.98), rgba(234, 250, 255, 0.98) 48%, rgba(255, 251, 224, 0.98)),
+      repeating-linear-gradient(45deg, rgba(244, 114, 182, 0.08) 0 1px, transparent 1px 18px);
   }
 
   .sugaropoly-board-pane {
@@ -167,14 +182,55 @@
     container-type: inline-size;
   }
 
+  .sugaropoly-layout:fullscreen .sugaropoly-board-pane {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sugaropoly-fullscreen-button {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    background: rgba(255, 248, 251, 0.9);
+    color: #be185d;
+    box-shadow: 0 10px 28px rgba(190, 24, 93, 0.14);
+    transition: transform 150ms ease, background-color 150ms ease;
+  }
+
+  .sugaropoly-fullscreen-button:hover {
+    transform: translateY(-1px);
+    background: #ffffff;
+  }
+
+  .sugaropoly-fullscreen-button:focus-visible {
+    outline: 3px solid rgba(244, 114, 182, 0.45);
+    outline-offset: 2px;
+  }
+
+  .sugaropoly-fullscreen-button svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    stroke-width: 2.4;
+  }
+
   .sugaropoly-sidebar-pane {
     width: 20rem;
     min-width: 20rem;
   }
 
   .monopoly-board {
-    width: var(--monopoly-board-size);
-    aspect-ratio: 1;
+    width: var(--monopoly-board-width);
+    height: var(--monopoly-board-height);
     margin-inline: auto;
     flex: 0 0 auto;
     padding: var(--monopoly-board-padding);
@@ -188,8 +244,8 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: minmax(54px, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(54px, 1.28fr);
-    grid-template-rows: minmax(54px, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(54px, 1.28fr);
+    grid-template-columns: minmax(54px, 1.28fr) repeat(17, minmax(0, 1fr)) minmax(54px, 1.28fr);
+    grid-template-rows: minmax(54px, 1.28fr) repeat(9, minmax(0, 1fr)) minmax(54px, 1.28fr);
     gap: 0;
     border: 2px solid #d86a9a;
     background: #d86a9a;
@@ -227,6 +283,12 @@
       linear-gradient(145deg, #fffaff, #ffe4f0 58%, #eafaff);
   }
 
+  .monopoly-corner .space-face {
+    inset: 0.34rem;
+    width: auto;
+    height: auto;
+  }
+
   .space-face {
     position: absolute;
     inset: 0.28rem;
@@ -235,7 +297,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(0.08rem, 0.4vmin, 0.22rem);
+    gap: 0.12rem;
     text-align: center;
     color: #7d1744;
     transform-origin: center;
@@ -253,7 +315,18 @@
   .space-face-right {
     width: var(--monopoly-side-content-scale);
     height: var(--monopoly-side-content-scale);
-    inset: calc((100% - var(--monopoly-side-content-scale)) / 2);
+  }
+
+  .space-face-left {
+    left: 0.3rem;
+    right: auto;
+    top: calc((100% - var(--monopoly-side-content-scale)) / 2);
+  }
+
+  .space-face-right {
+    left: auto;
+    right: 0.3rem;
+    top: calc((100% - var(--monopoly-side-content-scale)) / 2);
   }
 
   .space-icon {
@@ -266,11 +339,23 @@
   .space-name {
     width: 100%;
     font-size: var(--monopoly-tile-name-size);
-    line-height: 0.96;
+    line-height: 0.9;
     font-weight: 850;
     text-transform: uppercase;
     letter-spacing: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+  }
+
+  .space-name span {
+    display: block;
+  }
+
+  .space-name-compact {
+    font-size: calc(var(--monopoly-tile-name-size) * 0.88);
+  }
+
+  .space-name-tight {
+    font-size: calc(var(--monopoly-tile-name-size) * 0.78);
   }
 
   .space-price {
@@ -278,6 +363,10 @@
     line-height: 1;
     font-weight: 900;
     color: #2f855a;
+  }
+
+  .space-price-placeholder {
+    visibility: hidden;
   }
 
   .property-band {
@@ -337,7 +426,7 @@
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover;
+    object-fit: fill;
   }
 
   .center-script {
@@ -363,15 +452,16 @@
 
   @media (max-width: 760px) {
     .sugaropoly-page {
-      --monopoly-board-size: 1020px;
-      --monopoly-board-padding: 0.9rem;
+      --monopoly-board-width: 1360px;
+      --monopoly-board-height: 804px;
+      --monopoly-board-padding: 1rem;
       --monopoly-board-border: 7px;
-      --monopoly-tile-name-size: 0.62rem;
-      --monopoly-tile-price-size: 0.62rem;
-      --monopoly-icon-size: 0.78rem;
-      --monopoly-band-size: 1.18rem;
-      --monopoly-center-title-size: 4.2rem;
-      --monopoly-center-ribbon-size: 0.9rem;
+      --monopoly-tile-name-size: 0.78rem;
+      --monopoly-tile-price-size: 0.72rem;
+      --monopoly-icon-size: 0.95rem;
+      --monopoly-band-size: 1.38rem;
+      --monopoly-center-title-size: 4.8rem;
+      --monopoly-center-ribbon-size: 1rem;
       padding: 1rem 0.5rem;
     }
 
@@ -404,42 +494,43 @@
     }
   }
 
-  @container (max-width: 1020px) {
+  @container (max-width: 1360px) {
     .monopoly-board {
-      width: 1020px;
-      padding: 0.9rem;
+      width: 1360px;
+      height: 804px;
+      padding: 1rem;
       border-width: 7px;
     }
 
     .monopoly-board .space-name {
-      font-size: 0.62rem;
+      font-size: 0.78rem;
     }
 
     .monopoly-board .space-price {
-      font-size: 0.62rem;
+      font-size: 0.72rem;
     }
 
     .monopoly-board .space-icon {
-      width: 0.78rem;
-      height: 0.78rem;
+      width: 0.95rem;
+      height: 0.95rem;
     }
 
     .monopoly-board .property-band-top,
     .monopoly-board .property-band-bottom {
-      height: 1.18rem;
+      height: 1.38rem;
     }
 
     .monopoly-board .property-band-left,
     .monopoly-board .property-band-right {
-      width: 1.18rem;
+      width: 1.38rem;
     }
 
     .monopoly-board .center-script {
-      font-size: 4.2rem;
+      font-size: 4.8rem;
     }
 
     .monopoly-board .center-ribbon {
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
   }
 

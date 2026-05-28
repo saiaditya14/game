@@ -3,26 +3,26 @@ import { BoardSpace } from './BoardSpace';
 import monopolyBoardCenterImage from '../../../../images/monopoly_board.jpeg';
 
 const spaces = [
-  { id: 0, name: 'GO', kind: 'corner', corner: 'go', isCorner: true, gridArea: '15 / 15 / 16 / 16', edge: 'bottom' },
-  { id: 1, name: 'Snarl Swamp', price: 60, colorGroup: 'darkOlive', gridArea: '15 / 14 / 16 / 15', edge: 'bottom' },
-  { id: 2, name: 'Charm Chest', kind: 'chest', gridArea: '15 / 13 / 16 / 14', edge: 'bottom' },
-  { id: 3, name: 'Rotroot Fen', price: 70, colorGroup: 'darkOlive', gridArea: '15 / 12 / 16 / 13', edge: 'bottom' },
-  { id: 4, name: 'Cupcake Tax', kind: 'tax', price: 200, gridArea: '15 / 11 / 16 / 12', edge: 'bottom' },
-  { id: 5, name: 'Ribbon Rail', kind: 'station', price: 200, gridArea: '15 / 10 / 16 / 11', edge: 'bottom' },
-  { id: 6, name: 'Ember Peak', price: 90, colorGroup: 'crimson', gridArea: '15 / 9 / 16 / 10', edge: 'bottom' },
-  { id: 7, name: 'Chance', kind: 'chance', gridArea: '15 / 8 / 16 / 9', edge: 'bottom' },
-  { id: 8, name: 'Dragon Valley', price: 90, colorGroup: 'crimson', gridArea: '15 / 7 / 16 / 8', edge: 'bottom' },
-  { id: 9, name: 'Lava Roost', price: 100, colorGroup: 'crimson', gridArea: '15 / 6 / 16 / 7', edge: 'bottom' },
-  { id: 10, name: 'Scrapy Hollow', price: 120, colorGroup: 'darkGreen', gridArea: '15 / 5 / 16 / 6', edge: 'bottom' },
-  { id: 11, name: 'Sprinkle Stop', kind: 'station', price: 150, gridArea: '15 / 4 / 16 / 5', edge: 'bottom' },
-  { id: 12, name: 'Goblin Camp', price: 120, colorGroup: 'darkGreen', gridArea: '15 / 3 / 16 / 4', edge: 'bottom' },
-  { id: 13, name: 'Grim Burrows', price: 130, colorGroup: 'darkGreen', gridArea: '15 / 2 / 16 / 3', edge: 'bottom' },
+  { id: 0, name: 'GO', kind: 'corner', corner: 'go', isCorner: true, gridArea: '11 / 19 / 12 / 20', edge: 'bottom' },
+  { id: 1, name: 'Snarl Swamp', price: 60, colorGroup: 'darkOlive', gridArea: '11 / 18 / 12 / 19', edge: 'bottom' },
+  { id: 2, name: 'Charm Chest', kind: 'chest', gridArea: '11 / 17 / 12 / 18', edge: 'bottom' },
+  { id: 3, name: 'Rotroot Fen', price: 70, colorGroup: 'darkOlive', gridArea: '11 / 16 / 12 / 17', edge: 'bottom' },
+  { id: 4, name: 'Cupcake Tax', kind: 'tax', price: 200, gridArea: '11 / 15 / 12 / 16', edge: 'bottom' },
+  { id: 5, name: 'Ribbon Rail', kind: 'station', price: 200, gridArea: '11 / 14 / 12 / 15', edge: 'bottom' },
+  { id: 6, name: 'Ember Peak', price: 90, colorGroup: 'crimson', gridArea: '11 / 13 / 12 / 14', edge: 'bottom' },
+  { id: 7, name: 'Chance', kind: 'chance', gridArea: '11 / 12 / 12 / 13', edge: 'bottom' },
+  { id: 8, name: 'Dragon Valley', price: 90, colorGroup: 'crimson', gridArea: '11 / 11 / 12 / 12', edge: 'bottom' },
+  { id: 9, name: 'Lava Roost', price: 100, colorGroup: 'crimson', gridArea: '11 / 10 / 12 / 11', edge: 'bottom' },
+  { id: 10, name: 'Scrapy Hollow', price: 120, colorGroup: 'darkGreen', gridArea: '11 / 9 / 12 / 10', edge: 'bottom' },
+  { id: 11, name: 'Sprinkle Stop', kind: 'station', price: 150, gridArea: '11 / 8 / 12 / 9', edge: 'bottom' },
+  { id: 12, name: 'Goblin Camp', price: 120, colorGroup: 'darkGreen', gridArea: '11 / 7 / 12 / 8', edge: 'bottom' },
+  { id: 13, name: 'Grim Burrows', price: 130, colorGroup: 'darkGreen', gridArea: '11 / 6 / 12 / 7', edge: 'bottom' },
 
-  { id: 14, name: 'Visiting', kind: 'corner', corner: 'jail', isCorner: true, gridArea: '15 / 1 / 16 / 2', edge: 'left' },
-  { id: 15, name: 'Moon Shine', price: 150, colorGroup: 'darkBlue', gridArea: '14 / 1 / 15 / 2', edge: 'left' },
-  { id: 16, name: 'Glitter Co.', kind: 'utility', price: 150, gridArea: '13 / 1 / 14 / 2', edge: 'left' },
-  { id: 17, name: 'Starlit Bay', price: 150, colorGroup: 'darkBlue', gridArea: '12 / 1 / 13 / 2', edge: 'left' },
-  { id: 18, name: 'Dew Hollow', price: 160, colorGroup: 'darkBlue', gridArea: '11 / 1 / 12 / 2', edge: 'left' },
+  { id: 15, name: 'Moon Shine', price: 150, colorGroup: 'darkBlue', gridArea: '11 / 5 / 12 / 6', edge: 'bottom' },
+  { id: 16, name: 'Glitter Co.', kind: 'utility', price: 150, gridArea: '11 / 4 / 12 / 5', edge: 'bottom' },
+  { id: 17, name: 'Starlit Bay', price: 150, colorGroup: 'darkBlue', gridArea: '11 / 3 / 12 / 4', edge: 'bottom' },
+  { id: 18, name: 'Dew Hollow', price: 160, colorGroup: 'darkBlue', gridArea: '11 / 2 / 12 / 3', edge: 'bottom' },
+  { id: 14, name: 'Visiting', kind: 'corner', corner: 'jail', isCorner: true, gridArea: '11 / 1 / 12 / 2', edge: 'left' },
   { id: 19, name: 'Pearl Rail', kind: 'station', price: 200, gridArea: '10 / 1 / 11 / 2', edge: 'left' },
   { id: 20, name: 'Iron Mine', price: 180, colorGroup: 'steelGray', gridArea: '9 / 1 / 10 / 2', edge: 'left' },
   { id: 21, name: 'Charm Chest', kind: 'chest', gridArea: '8 / 1 / 9 / 2', edge: 'left' },
@@ -47,21 +47,21 @@ const spaces = [
   { id: 39, name: 'Sparkle Stop', kind: 'station', price: 300, gridArea: '1 / 12 / 2 / 13', edge: 'top' },
   { id: 40, name: 'Faerie Haven', price: 300, colorGroup: 'paleGreen', gridArea: '1 / 13 / 2 / 14', edge: 'top' },
   { id: 41, name: 'Elven Court', price: 300, colorGroup: 'paleGreen', gridArea: '1 / 14 / 2 / 15', edge: 'top' },
+  { id: 43, name: 'Hidden Vale', price: 310, colorGroup: 'paleGreen', gridArea: '1 / 15 / 2 / 16', edge: 'top' },
+  { id: 44, name: 'Dusk Gate', price: 330, colorGroup: 'deepIndigo', gridArea: '1 / 16 / 2 / 17', edge: 'top' },
+  { id: 45, name: 'Charm Chest', kind: 'chest', gridArea: '1 / 17 / 2 / 18', edge: 'top' },
+  { id: 46, name: 'Shadow Reach', price: 330, colorGroup: 'deepIndigo', gridArea: '1 / 18 / 2 / 19', edge: 'top' },
 
-  { id: 42, name: 'Go To Time Out', kind: 'corner', corner: 'gotojail', isCorner: true, gridArea: '1 / 15 / 2 / 16', edge: 'right' },
-  { id: 43, name: 'Hidden Vale', price: 310, colorGroup: 'paleGreen', gridArea: '2 / 15 / 3 / 16', edge: 'right' },
-  { id: 44, name: 'Dusk Gate', price: 330, colorGroup: 'deepIndigo', gridArea: '3 / 15 / 4 / 16', edge: 'right' },
-  { id: 45, name: 'Charm Chest', kind: 'chest', gridArea: '4 / 15 / 5 / 16', edge: 'right' },
-  { id: 46, name: 'Shadow Reach', price: 330, colorGroup: 'deepIndigo', gridArea: '5 / 15 / 6 / 16', edge: 'right' },
-  { id: 47, name: 'Velvet Rail', kind: 'station', price: 200, gridArea: '6 / 15 / 7 / 16', edge: 'right' },
-  { id: 48, name: 'Chance', kind: 'chance', gridArea: '7 / 15 / 8 / 16', edge: 'right' },
-  { id: 49, name: 'Black Hollow', price: 340, colorGroup: 'deepIndigo', gridArea: '8 / 15 / 9 / 16', edge: 'right' },
-  { id: 50, name: 'Luxury Sprinkles', kind: 'tax', price: 100, gridArea: '9 / 15 / 10 / 16', edge: 'right' },
-  { id: 51, name: 'Ashy Coast', price: 360, colorGroup: 'flameOrange', gridArea: '10 / 15 / 11 / 16', edge: 'right' },
-  { id: 52, name: 'Ember Isle', price: 360, colorGroup: 'flameOrange', gridArea: '11 / 15 / 12 / 16', edge: 'right' },
-  { id: 53, name: 'Sunlit Bay', price: 370, colorGroup: 'flameOrange', gridArea: '12 / 15 / 13 / 16', edge: 'right' },
-  { id: 54, name: 'Heavens Keep', price: 390, colorGroup: 'white', gridArea: '13 / 15 / 14 / 16', edge: 'right' },
-  { id: 55, name: 'Sky Palace', price: 400, colorGroup: 'white', gridArea: '14 / 15 / 15 / 16', edge: 'right' },
+  { id: 42, name: 'Go To Time Out', kind: 'corner', corner: 'gotojail', isCorner: true, gridArea: '1 / 19 / 2 / 20', edge: 'right' },
+  { id: 47, name: 'Velvet Rail', kind: 'station', price: 200, gridArea: '2 / 19 / 3 / 20', edge: 'right' },
+  { id: 48, name: 'Chance', kind: 'chance', gridArea: '3 / 19 / 4 / 20', edge: 'right' },
+  { id: 49, name: 'Black Hollow', price: 340, colorGroup: 'deepIndigo', gridArea: '4 / 19 / 5 / 20', edge: 'right' },
+  { id: 50, name: 'Luxury Sprinkles', kind: 'tax', price: 100, gridArea: '5 / 19 / 6 / 20', edge: 'right' },
+  { id: 51, name: 'Ashy Coast', price: 360, colorGroup: 'flameOrange', gridArea: '6 / 19 / 7 / 20', edge: 'right' },
+  { id: 52, name: 'Ember Isle', price: 360, colorGroup: 'flameOrange', gridArea: '7 / 19 / 8 / 20', edge: 'right' },
+  { id: 53, name: 'Sunlit Bay', price: 370, colorGroup: 'flameOrange', gridArea: '8 / 19 / 9 / 20', edge: 'right' },
+  { id: 54, name: 'Heavens Keep', price: 390, colorGroup: 'white', gridArea: '9 / 19 / 10 / 20', edge: 'right' },
+  { id: 55, name: 'Sky Palace', price: 400, colorGroup: 'white', gridArea: '10 / 19 / 11 / 20', edge: 'right' },
 ];
 
 export const MonopolyBoard = () => {
@@ -74,7 +74,7 @@ export const MonopolyBoard = () => {
           </div>
         ))}
 
-        <div className="monopoly-center" style={{ gridArea: '2 / 2 / 15 / 15' }}>
+        <div className="monopoly-center" style={{ gridArea: '2 / 2 / 11 / 19' }}>
           <img
             className="monopoly-center-image"
             src={monopolyBoardCenterImage}
