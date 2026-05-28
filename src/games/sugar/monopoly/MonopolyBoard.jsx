@@ -1,5 +1,6 @@
 import React from 'react';
 import { BoardSpace } from './BoardSpace';
+import monopolyBoardCenterImage from '../../../../images/monopoly_board.jpeg';
 
 const spaces = [
   { id: 0, name: 'GO', kind: 'corner', corner: 'go', isCorner: true, gridArea: '15 / 15 / 16 / 16', edge: 'bottom' },
@@ -74,8 +75,11 @@ export const MonopolyBoard = () => {
         ))}
 
         <div className="monopoly-center" style={{ gridArea: '2 / 2 / 15 / 15' }}>
-          <div className="center-script">sweet property day</div>
-          <div className="center-ribbon">Collect rent, trade treats, keep it cute.</div>
+          <img
+            className="monopoly-center-image"
+            src={monopolyBoardCenterImage}
+            alt="Faerie Kingdom Quest board art"
+          />
         </div>
       </div>
     </section>

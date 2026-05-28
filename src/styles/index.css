@@ -322,19 +322,22 @@
 
   .monopoly-center {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(0.5rem, 1.6vmin, 1rem);
     min-width: 0;
     min-height: 0;
+    overflow: hidden;
     border: 1px solid #d86a9a;
     background:
       radial-gradient(circle at 22% 22%, rgba(255, 196, 216, 0.46), transparent 22%),
       radial-gradient(circle at 78% 26%, rgba(186, 230, 253, 0.58), transparent 24%),
       radial-gradient(circle at 52% 78%, rgba(254, 240, 138, 0.42), transparent 25%),
       linear-gradient(135deg, #fff9fc, #fdf2f8 44%, #effcff);
+  }
+
+  .monopoly-center-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
   }
 
   .center-script {
