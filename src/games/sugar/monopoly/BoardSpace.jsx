@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Car, CloudSun, Earth, Gem, Gift, Heart, Landmark, Sparkles, Train, Umbrella, WandSparkles } from 'lucide-react';
+import { Car, CloudSun, Earth, Gem, Gift, Heart, Landmark, Sparkles, Train, Umbrella, WandSparkles } from 'lucide-react';
 
 const COLOR_TILES = {
   darkOlive: '#c7d99a',
@@ -47,6 +47,7 @@ const bandPlacement = {
 
 const COMPACT_NAME_SPACES = new Set(['Tribute Tax', 'Grim Burrows', 'Rotroot Fen', 'Emerald']);
 const RAISED_NAME_SPACES = new Set(['Emerald']);
+const CORNER_FIT_SPACES = new Set(['Visiting', 'Go To Time Out']);
 
 export const BoardSpace = ({
   kind = 'property',
@@ -71,20 +72,24 @@ export const BoardSpace = ({
     'space-name',
     COMPACT_NAME_SPACES.has(name) ? 'space-name-compact' : '',
     RAISED_NAME_SPACES.has(name) ? 'space-name-raised' : '',
+    CORNER_FIT_SPACES.has(name) ? 'space-name-corner-fit' : '',
   ].filter(Boolean).join(' ');
   const displayName = name === 'GO'
     ? (
       <span className="go-corner-label">
         <span className="go-corner-word">GO</span>
-        <ArrowLeft className="go-corner-arrow" strokeWidth={3} />
+        <svg className="go-corner-arrow" viewBox="0 0 72 18" aria-hidden="true">
+          <path d="M70 9H8" />
+          <path d="M13 4L7 9L13 14" />
+        </svg>
       </span>
     )
     : name === 'Go To Time Out'
     ? (
       <>
-        Go To
+        <span className="corner-line">Go To</span>
         <br />
-        Time Out
+        <span className="corner-line">Time Out</span>
       </>
     )
     : name;
