@@ -31,7 +31,7 @@ const ICONS = {
 const edgeRotation = {
   bottom: 'rotate(0deg)',
   top: 'rotate(0deg)',
-  right: 'rotate(90deg)',
+  right: 'rotate(270deg)',
   left: 'rotate(90deg)',
 };
 
@@ -42,6 +42,8 @@ const bandPlacement = {
   left: 'right',
 };
 
+const COMPACT_NAME_SPACES = new Set(['Sprinkle Stop', 'Grim Burrows', 'Rotroot Fen', 'Cupcake Tax']);
+
 export const BoardSpace = ({
   kind = 'property',
   name,
@@ -49,15 +51,24 @@ export const BoardSpace = ({
   colorGroup,
   edge = 'bottom',
   isCorner = false,
-  corner = 'go',
+  corner,
 }) => {
-  const Icon = ICONS[corner] || ICONS[kind] || Sparkles;
+  const Icon = isCorner ? ICONS[corner] || Sparkles : ICONS[kind] || Sparkles;
   const hasBand = Boolean(colorGroup);
   const bandColor = COLOR_TILES[colorGroup] || '#f6c4d6';
   const bandSide = bandPlacement[edge];
+  const spaceClassName = [
+    'monopoly-space',
+    isCorner ? 'monopoly-corner' : 'monopoly-tile',
+    isCorner && corner ? `monopoly-corner-${corner}` : '',
+  ].filter(Boolean).join(' ');
+  const nameClassName = [
+    'space-name',
+    COMPACT_NAME_SPACES.has(name) ? 'space-name-compact' : '',
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className={`monopoly-space ${isCorner ? 'monopoly-corner' : 'monopoly-tile'}`}>
+    <div className={spaceClassName}>
       {hasBand && (
         <div
           className={`property-band property-band-${bandSide}`}
@@ -70,7 +81,7 @@ export const BoardSpace = ({
         style={{ transform: isCorner ? 'rotate(0deg)' : edgeRotation[edge] }}
       >
         <Icon className="space-icon" strokeWidth={2.4} />
-        <div className="space-name">{name}</div>
+        <div className={nameClassName}>{name}</div>
         {price ? <div className="space-price">${price}</div> : null}
       </div>
     </div>

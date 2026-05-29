@@ -260,6 +260,16 @@
       linear-gradient(145deg, #fffaff, #ffe4f0 58%, #eafaff);
   }
 
+  .monopoly-corner .space-face {
+    inset: 0.18rem;
+    width: auto;
+    height: auto;
+  }
+
+  .monopoly-corner-go .space-face {
+    inset-block: 0.08rem 0.42rem;
+  }
+
   .space-face {
     position: absolute;
     inset: 0.18rem;
@@ -289,6 +299,16 @@
     inset: calc((100% - var(--monopoly-side-content-scale)) / 2);
   }
 
+  .space-face-left {
+    left: 0.22rem;
+    right: auto;
+  }
+
+  .space-face-right {
+    left: auto;
+    right: 0.22rem;
+  }
+
   .space-icon {
     width: var(--monopoly-icon-size);
     height: var(--monopoly-icon-size);
@@ -304,6 +324,12 @@
     text-transform: uppercase;
     letter-spacing: 0;
     overflow-wrap: anywhere;
+  }
+
+  .space-name-compact {
+    font-size: calc(var(--monopoly-tile-name-size) * 0.86);
+    overflow-wrap: normal;
+    word-break: keep-all;
   }
 
   .space-price {
