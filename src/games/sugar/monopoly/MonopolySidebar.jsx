@@ -1,59 +1,168 @@
 import React from 'react';
-import { Dice5, Heart, UserRound } from 'lucide-react';
-import { PropertyCard } from './PropertyCard';
+import {
+  Crown,
+  Flag,
+  Gem,
+  Gift,
+  Heart,
+  Plus,
+  Sparkles,
+  UserRound,
+  WandSparkles,
+} from 'lucide-react';
 
-export const MonopolySidebar = () => {
+const ICONS = {
+  crown: Crown,
+  gem: Gem,
+  gift: Gift,
+  heart: Heart,
+  sparkles: Sparkles,
+  user: UserRound,
+  wand: WandSparkles,
+};
+
+const PROPERTY_COLORS = {
+  darkOlive: '#c7d99a',
+  crimson: '#f9a8b7',
+  darkGreen: '#a7e8b2',
+  darkBlue: '#a9d7ff',
+  steelGray: '#d9bf9e',
+  deepViolet: '#d8c4ff',
+  burntAmber: '#ffc48f',
+  babyBlue: '#aee9ff',
+  paleGreen: '#ffe66d',
+  deepIndigo: '#b9b6ff',
+  flameOrange: '#ffb48f',
+  white: '#e5e7eb',
+};
+
+export const DEFAULT_PLAYERS = [
+  { id: 'you', name: 'You', money: 1500, icon: 'heart', color: '#f9a8d4' },
+  { id: 'partner', name: 'Partner', money: 1500, icon: 'crown', color: '#a7e8b2' },
+  { id: 'fae', name: 'Moon Fae', money: 1420, icon: 'sparkles', color: '#aee9ff' },
+  { id: 'mage', name: 'Berry Mage', money: 1360, icon: 'wand', color: '#d8c4ff' },
+];
+
+export const DEFAULT_PROPERTIES = [
+  { id: 38, name: 'Faerie Haven', colorGroup: 'paleGreen', price: 300 },
+  { id: 40, name: 'Elven Court', colorGroup: 'paleGreen', price: 300 },
+  { id: 36, name: 'Glacier Castle', colorGroup: 'babyBlue', price: 270 },
+  { id: 12, name: 'Ruby', colorGroup: 'crimson', price: 150 },
+];
+
+const formatMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
+
+const SidebarSection = ({ title, icon: Icon, action, children, className = '' }) => (
+  <section className={`monopoly-sidebar-section ${className}`}>
+    <div className="monopoly-sidebar-section-header">
+      <div className="monopoly-sidebar-title">
+        {Icon ? <Icon className="monopoly-sidebar-title-icon" strokeWidth={2.5} /> : null}
+        <h2>{title}</h2>
+      </div>
+      {action}
+    </div>
+    {children}
+  </section>
+);
+
+export const MonopolySidebar = ({
+  players = DEFAULT_PLAYERS.slice(0, 8),
+  trades = [],
+  properties = DEFAULT_PROPERTIES,
+  currentPlayerId = 'you',
+  onBankruptcy,
+}) => {
+  const visiblePlayers = players.slice(0, 8);
+
   return (
-    <aside className="w-full lg:w-80 h-full max-h-[800px] flex flex-col gap-5 font-sans">
-      <div className="bg-white/90 border-4 border-rose-200 rounded-lg p-4 shadow-md">
-        <h2 className="text-xl font-bold text-rose-400 mb-4 uppercase text-center">Players</h2>
-
-        <div className="flex justify-between items-center bg-rose-50 p-3 rounded-lg border-2 border-rose-100 mb-3 hover:bg-rose-100 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-pink-300 border-2 border-pink-400 shadow-sm flex items-center justify-center">
-              <Heart className="h-4 w-4 text-white" fill="currentColor" />
-            </div>
-            <span className="font-bold text-rose-900">Partner</span>
-          </div>
-          <div className="font-bold text-green-600 text-lg">$1500</div>
-        </div>
-
-        <div className="flex justify-between items-center bg-rose-50 p-3 rounded-lg border-2 border-rose-100 hover:bg-rose-100 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-200 border-2 border-blue-300 shadow-sm flex items-center justify-center">
-              <UserRound className="h-4 w-4 text-sky-700" />
-            </div>
-            <span className="font-bold text-rose-900">You</span>
-          </div>
-          <div className="font-bold text-green-600 text-lg">$1500</div>
-        </div>
-      </div>
-
-      <div className="bg-white/90 border-4 border-rose-200 rounded-lg p-4 flex flex-col items-center justify-center shadow-md flex-1">
-        <h3 className="text-sm font-bold text-rose-300 uppercase mb-4">Inspection</h3>
-        <PropertyCard
-          name="Rose Parade"
-          colorSection="pink"
-          price={140}
-          rent={10}
-        />
-        <div className="mt-6 flex gap-2">
-          <button className="bg-green-400 hover:bg-green-500 text-white font-bold py-2 px-5 rounded-full shadow-sm transition-transform active:scale-95">
-            Buy Property
+    <aside className="monopoly-sidebar" aria-label="Monopoly game sidebar">
+      <SidebarSection
+        title="Players"
+        icon={Crown}
+        className="monopoly-players-section"
+        action={
+          <button className="monopoly-bankruptcy-button" type="button" onClick={onBankruptcy}>
+            <Flag className="h-3.5 w-3.5" strokeWidth={2.7} />
+            <span>Bankrupt</span>
           </button>
-          <button className="bg-rose-300 hover:bg-rose-400 text-white font-bold py-2 px-4 rounded-full shadow-sm transition-transform active:scale-95">
-            Pass
-          </button>
-        </div>
-      </div>
+        }
+      >
+        <div className="monopoly-player-list" aria-label="Players and money">
+          {visiblePlayers.map((player) => {
+            const Icon = ICONS[player.icon] || UserRound;
+            const isActive = player.id === currentPlayerId;
 
-      <div className="bg-white/90 border-4 border-rose-200 rounded-lg p-4 shadow-md text-center">
-        <button className="w-full bg-pink-400 hover:bg-pink-500 text-white font-extrabold text-xl py-4 rounded-lg shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
-          <Dice5 className="h-6 w-6" />
-          <span>Roll Dice</span>
-        </button>
-        <p className="text-xs text-rose-300 mt-3 font-semibold uppercase">It is your turn!</p>
-      </div>
+            return (
+              <div
+                className={`monopoly-player-row ${isActive ? 'is-active' : ''}`}
+                key={player.id}
+              >
+                <div className="monopoly-player-identity">
+                  <div
+                    className="monopoly-player-avatar"
+                    style={{ '--player-color': player.color || '#f9a8d4' }}
+                  >
+                    <Icon className="monopoly-player-icon" strokeWidth={2.4} />
+                  </div>
+                  <span className="monopoly-player-name">{player.name}</span>
+                </div>
+                <span className="monopoly-player-money">{formatMoney(player.money)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </SidebarSection>
+
+      <SidebarSection
+        title="Trades"
+        icon={WandSparkles}
+        action={
+          <button className="monopoly-create-trade-button" type="button">
+            <Plus className="h-4 w-4" strokeWidth={3} />
+            <span>Create</span>
+          </button>
+        }
+      >
+        {trades.length ? (
+          <div className="monopoly-trade-list">
+            {trades.map((trade) => (
+              <div className="monopoly-trade-row" key={trade.id}>
+                <span>{trade.title}</span>
+                <strong>{trade.status}</strong>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="monopoly-empty-trades">
+            <Gift className="monopoly-empty-trades-icon" strokeWidth={2.3} />
+            <p>Make trades with other players to exchange properties, money, and bonus cards.</p>
+          </div>
+        )}
+      </SidebarSection>
+
+      <SidebarSection title={`My Properties (${properties.length})`} icon={Gem} className="monopoly-properties-section">
+        {properties.length ? (
+          <div className="monopoly-property-list" aria-label="Owned properties">
+            {properties.map((property) => (
+              <div className="monopoly-property-row" key={property.id}>
+                <span
+                  className="monopoly-property-chip"
+                  style={{ '--property-color': PROPERTY_COLORS[property.colorGroup] || '#f6c4d6' }}
+                >
+                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.7} />
+                </span>
+                <span className="monopoly-property-name">{property.name}</span>
+                <span className="monopoly-property-price">{formatMoney(property.price)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="monopoly-empty-properties">
+            <Gem className="h-5 w-5" strokeWidth={2.4} />
+            <span>No properties yet</span>
+          </div>
+        )}
+      </SidebarSection>
     </aside>
   );
 };
