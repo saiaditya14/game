@@ -401,13 +401,18 @@
   }
 
   .monopoly-property-popover-button {
-    width: 2.15rem;
-    height: 2.15rem;
+    width: 4rem;
+    height: 4rem;
     min-width: 0;
     padding: 0;
     border-color: #f0a9c8;
     background: linear-gradient(135deg, #fff7fb, #f9a8d4);
     color: #be185d;
+  }
+
+  .monopoly-property-popover-button svg {
+    width: 2.15rem;
+    height: 2.15rem;
   }
 
   .monopoly-create-trade-button:hover,
