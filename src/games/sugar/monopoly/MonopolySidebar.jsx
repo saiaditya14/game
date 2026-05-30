@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Crown,
   Flag,
   Gem,
   Gift,
   Heart,
+  Home,
+  Landmark,
   Plus,
+  ScrollText,
   Sparkles,
   UserRound,
   WandSparkles,
@@ -41,6 +44,8 @@ export const DEFAULT_PLAYERS = [
   { id: 'partner', name: 'Partner', money: 1500, icon: 'crown', color: '#a7e8b2' },
   { id: 'fae', name: 'Moon Fae', money: 1420, icon: 'sparkles', color: '#aee9ff' },
   { id: 'mage', name: 'Berry Mage', money: 1360, icon: 'wand', color: '#d8c4ff' },
+  { id: 'sprite', name: 'Sugar Sprite', money: 1280, icon: 'gem', color: '#ffe66d' },
+  { id: 'duke', name: 'Candy Duke', money: 1190, icon: 'user', color: '#ffc48f' },
 ];
 
 export const DEFAULT_PROPERTIES = [
@@ -48,6 +53,17 @@ export const DEFAULT_PROPERTIES = [
   { id: 40, name: 'Elven Court', colorGroup: 'paleGreen', price: 300 },
   { id: 36, name: 'Glacier Castle', colorGroup: 'babyBlue', price: 270 },
   { id: 12, name: 'Ruby', colorGroup: 'crimson', price: 150 },
+];
+
+export const DEFAULT_EVENTS = [
+  { id: 'turn-8', player: 'You', action: 'bought Faerie Haven', kind: 'buy' },
+  { id: 'turn-7', player: 'Moon Fae', action: 'paid $50 in moon tolls', kind: 'tax' },
+  { id: 'turn-6', player: 'Partner', action: 'visited Ruby and passed through', kind: 'visit' },
+  { id: 'turn-5', player: 'Berry Mage', action: 'built a tiny cottage on Glacier Castle', kind: 'build' },
+  { id: 'turn-4', player: 'You', action: 'collected $200 for passing GO', kind: 'money' },
+  { id: 'turn-3', player: 'Moon Fae', action: 'drew a Chance card', kind: 'card' },
+  { id: 'turn-2', player: 'Partner', action: 'paid rent at Elven Court', kind: 'rent' },
+  { id: 'turn-1', player: 'Berry Mage', action: 'landed on Sweet Tax', kind: 'tax' },
 ];
 
 const formatMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
@@ -68,7 +84,7 @@ const SidebarSection = ({ title, icon: Icon, action, children, className = '' })
 export const MonopolySidebar = ({
   players = DEFAULT_PLAYERS.slice(0, 8),
   trades = [],
-  properties = DEFAULT_PROPERTIES,
+  events = DEFAULT_EVENTS,
   currentPlayerId = 'you',
   onBankruptcy,
 }) => {
@@ -140,29 +156,99 @@ export const MonopolySidebar = ({
         )}
       </SidebarSection>
 
-      <SidebarSection title={`My Properties (${properties.length})`} icon={Gem} className="monopoly-properties-section">
-        {properties.length ? (
-          <div className="monopoly-property-list" aria-label="Owned properties">
-            {properties.map((property) => (
-              <div className="monopoly-property-row" key={property.id}>
-                <span
-                  className="monopoly-property-chip"
-                  style={{ '--property-color': PROPERTY_COLORS[property.colorGroup] || '#f6c4d6' }}
-                >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.7} />
-                </span>
-                <span className="monopoly-property-name">{property.name}</span>
-                <span className="monopoly-property-price">{formatMoney(property.price)}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="monopoly-empty-properties">
-            <Gem className="h-5 w-5" strokeWidth={2.4} />
-            <span>No properties yet</span>
-          </div>
-        )}
+      <SidebarSection
+        title="Event Log"
+        icon={ScrollText}
+        className="monopoly-event-section"
+      >
+        <div className="monopoly-event-list" aria-label="Recent turn events">
+          {events.map((event) => (
+            <div className={`monopoly-event-row monopoly-event-${event.kind || 'visit'}`} key={event.id}>
+              <span className="monopoly-event-icon">
+                <Landmark className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </span>
+              <span className="monopoly-event-copy">
+                <strong>{event.player}</strong>
+                <span>{event.action}</span>
+              </span>
+            </div>
+          ))}
+        </div>
       </SidebarSection>
     </aside>
+  );
+};
+
+export const MonopolyPropertyButton = ({ properties = DEFAULT_PROPERTIES }) => {
+  const [isPropertyPopoverOpen, setIsPropertyPopoverOpen] = useState(false);
+  const propertyPopoverRef = useRef(null);
+
+  useEffect(() => {
+    if (!isPropertyPopoverOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (propertyPopoverRef.current?.contains(event.target)) {
+        return;
+      }
+
+      setIsPropertyPopoverOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isPropertyPopoverOpen]);
+
+  return (
+    <div className="monopoly-property-popover-anchor" ref={propertyPopoverRef}>
+      <button
+        className="monopoly-property-popover-button"
+        type="button"
+        onClick={() => setIsPropertyPopoverOpen((isOpen) => !isOpen)}
+        aria-label="Show my properties"
+        aria-expanded={isPropertyPopoverOpen}
+        title="My properties"
+      >
+        <Home className="h-4 w-4" strokeWidth={2.8} />
+      </button>
+
+      {isPropertyPopoverOpen ? (
+        <div className="monopoly-property-popover" role="dialog" aria-label="My properties">
+          <div className="monopoly-property-popover-header">
+            <div className="monopoly-sidebar-title">
+              <Gem className="monopoly-sidebar-title-icon" strokeWidth={2.5} />
+              <h2>My Properties</h2>
+            </div>
+            <span>{properties.length}</span>
+          </div>
+
+          {properties.length ? (
+            <div className="monopoly-property-list" aria-label="Owned properties">
+              {properties.map((property) => (
+                <div className="monopoly-property-row" key={property.id}>
+                  <span
+                    className="monopoly-property-chip"
+                    style={{ '--property-color': PROPERTY_COLORS[property.colorGroup] || '#f6c4d6' }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" strokeWidth={2.7} />
+                  </span>
+                  <span className="monopoly-property-name">{property.name}</span>
+                  <span className="monopoly-property-price">{formatMoney(property.price)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="monopoly-empty-properties">
+              <Gem className="h-5 w-5" strokeWidth={2.4} />
+              <span>No properties yet</span>
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 };
