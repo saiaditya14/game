@@ -970,6 +970,14 @@
       position: static;
     }
 
+    .sugaropoly-property-control,
+    .sugaropoly-page:fullscreen .sugaropoly-property-control {
+      position: static;
+      width: max-content;
+      height: auto;
+      margin: 0 0 0.75rem 0.5rem;
+    }
+
     .center-ribbon {
       max-width: 75%;
       text-align: center;

@@ -123,6 +123,8 @@ Play test system prompt for draw off a little but seems fine and fun to babie
 Security issues in joining such as what if more than two join? what if one leaves how to come back? 
 Monopoly sidebar now has desktop/fullscreen Players, Trades, and My Properties panels. Future small-screen pass should move it into a rich.io-style bottom drawer or toggleable panel instead of always showing the side rail.
 Monopoly board zoom/sidebar stability should be rechecked after the sidebar revamp; desktop side rail is now fixed-width and sticky, but mobile/tablet responsive guards are still future work.
+Monopoly board and sidebar should eventually size independently with the viewport instead of being tightly tethered; the current fixed relationship has served its purpose for the first layout pass.
+NAVBAR needs an overhaul bro
 Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)
