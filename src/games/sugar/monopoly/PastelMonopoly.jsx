@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { MonopolyBoard } from './MonopolyBoard';
-import { MonopolyPropertyButton, MonopolySidebar } from './MonopolySidebar';
+import { MonopolySidebar } from './MonopolySidebar';
 
 export const PastelMonopoly = () => {
   const pageRef = useRef(null);
@@ -30,10 +30,6 @@ export const PastelMonopoly = () => {
 
   return (
     <div className="sugaropoly-page" ref={pageRef}>
-      <div className="sugaropoly-property-control">
-        <MonopolyPropertyButton />
-      </div>
-
       <header className="sugaropoly-header">
         <button
           className="sugaropoly-fullscreen-button"

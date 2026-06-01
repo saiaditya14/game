@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Crown,
   Flag,
@@ -53,6 +53,17 @@ export const DEFAULT_PROPERTIES = [
   { id: 40, name: 'Elven Court', colorGroup: 'paleGreen', price: 300 },
   { id: 36, name: 'Glacier Castle', colorGroup: 'babyBlue', price: 270 },
   { id: 12, name: 'Ruby', colorGroup: 'crimson', price: 150 },
+  { id: 4, name: 'Grim Burrows', colorGroup: 'darkGreen', price: 130 },
+  { id: 6, name: 'Goblin Camp', colorGroup: 'darkGreen', price: 120 },
+  { id: 8, name: 'Scrappy Hollow', colorGroup: 'darkGreen', price: 120 },
+  { id: 10, name: 'Lava Roost', colorGroup: 'flameOrange', price: 100 },
+  { id: 14, name: 'Dragon Valley', colorGroup: 'deepViolet', price: 90 },
+  { id: 16, name: 'Ember Peak', colorGroup: 'deepViolet', price: 90 },
+  { id: 20, name: 'Rotroot Fen', colorGroup: 'steelGray', price: 70 },
+  { id: 22, name: 'Charm Chest', colorGroup: 'crimson', price: 60 },
+  { id: 24, name: 'Snarl Swamp', colorGroup: 'darkOlive', price: 60 },
+  { id: 30, name: 'Ancient Runes', colorGroup: 'deepIndigo', price: 260 },
+  { id: 32, name: 'Winter Ridge', colorGroup: 'babyBlue', price: 270 },
 ];
 
 export const DEFAULT_EVENTS = [
@@ -84,11 +95,14 @@ const SidebarSection = ({ title, icon: Icon, action, children, className = '' })
 export const MonopolySidebar = ({
   players = DEFAULT_PLAYERS.slice(0, 8),
   trades = [],
+  properties = DEFAULT_PROPERTIES,
   events = DEFAULT_EVENTS,
   currentPlayerId = 'you',
   onBankruptcy,
 }) => {
+  const [activeLowerPanel, setActiveLowerPanel] = useState('events');
   const visiblePlayers = players.slice(0, 8);
+  const isPropertiesPanelActive = activeLowerPanel === 'properties';
 
   return (
     <aside className="monopoly-sidebar" aria-label="Monopoly game sidebar">
@@ -157,76 +171,27 @@ export const MonopolySidebar = ({
       </SidebarSection>
 
       <SidebarSection
-        title="Event Log"
-        icon={ScrollText}
+        title={isPropertiesPanelActive ? `My Properties (${properties.length})` : 'Event Log'}
+        icon={isPropertiesPanelActive ? Gem : ScrollText}
         className="monopoly-event-section"
+        action={
+          <button
+            className={`monopoly-property-popover-button ${isPropertiesPanelActive ? 'is-active' : ''}`}
+            type="button"
+            onClick={() => setActiveLowerPanel(isPropertiesPanelActive ? 'events' : 'properties')}
+            aria-label={isPropertiesPanelActive ? 'Show event log' : 'Show my properties'}
+            title={isPropertiesPanelActive ? 'Event log' : 'My properties'}
+          >
+            {isPropertiesPanelActive ? (
+              <ScrollText className="h-4 w-4" strokeWidth={2.8} />
+            ) : (
+              <Home className="h-4 w-4" strokeWidth={2.8} />
+            )}
+          </button>
+        }
       >
-        <div className="monopoly-event-list" aria-label="Recent turn events">
-          {events.map((event) => (
-            <div className={`monopoly-event-row monopoly-event-${event.kind || 'visit'}`} key={event.id}>
-              <span className="monopoly-event-icon">
-                <Landmark className="h-3.5 w-3.5" strokeWidth={2.5} />
-              </span>
-              <span className="monopoly-event-copy">
-                <strong>{event.player}</strong>
-                <span>{event.action}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      </SidebarSection>
-    </aside>
-  );
-};
-
-export const MonopolyPropertyButton = ({ properties = DEFAULT_PROPERTIES }) => {
-  const [isPropertyPopoverOpen, setIsPropertyPopoverOpen] = useState(false);
-  const propertyPopoverRef = useRef(null);
-
-  useEffect(() => {
-    if (!isPropertyPopoverOpen) {
-      return undefined;
-    }
-
-    const handlePointerDown = (event) => {
-      if (propertyPopoverRef.current?.contains(event.target)) {
-        return;
-      }
-
-      setIsPropertyPopoverOpen(false);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-    };
-  }, [isPropertyPopoverOpen]);
-
-  return (
-    <div className="monopoly-property-popover-anchor" ref={propertyPopoverRef}>
-      <button
-        className="monopoly-property-popover-button"
-        type="button"
-        onClick={() => setIsPropertyPopoverOpen((isOpen) => !isOpen)}
-        aria-label="Show my properties"
-        aria-expanded={isPropertyPopoverOpen}
-        title="My properties"
-      >
-        <Home className="h-4 w-4" strokeWidth={2.8} />
-      </button>
-
-      {isPropertyPopoverOpen ? (
-        <div className="monopoly-property-popover" role="dialog" aria-label="My properties">
-          <div className="monopoly-property-popover-header">
-            <div className="monopoly-sidebar-title">
-              <Gem className="monopoly-sidebar-title-icon" strokeWidth={2.5} />
-              <h2>My Properties</h2>
-            </div>
-            <span>{properties.length}</span>
-          </div>
-
-          {properties.length ? (
+        {isPropertiesPanelActive ? (
+          properties.length ? (
             <div className="monopoly-property-list" aria-label="Owned properties">
               {properties.map((property) => (
                 <div className="monopoly-property-row" key={property.id}>
@@ -246,9 +211,23 @@ export const MonopolyPropertyButton = ({ properties = DEFAULT_PROPERTIES }) => {
               <Gem className="h-5 w-5" strokeWidth={2.4} />
               <span>No properties yet</span>
             </div>
-          )}
-        </div>
-      ) : null}
-    </div>
+          )
+        ) : (
+          <div className="monopoly-event-list" aria-label="Recent turn events">
+            {events.map((event) => (
+              <div className={`monopoly-event-row monopoly-event-${event.kind || 'visit'}`} key={event.id}>
+                <span className="monopoly-event-icon">
+                  <Landmark className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </span>
+                <span className="monopoly-event-copy">
+                  <strong>{event.player}</strong>
+                  <span>{event.action}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </SidebarSection>
+    </aside>
   );
 };
