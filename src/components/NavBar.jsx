@@ -7,6 +7,11 @@ export const NavBar = () => {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
   const isGameRoute = pathname.startsWith('/draw-off');
+  const isMonopolyRoute = pathname.startsWith('/monopoly');
+
+  if (isMonopolyRoute) {
+    return null;
+  }
 
   const themes = [
     { id: 'theme-vanilla', label: 'Vanilla' },

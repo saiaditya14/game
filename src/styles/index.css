@@ -121,17 +121,26 @@
 
 @layer components {
   .sugaropoly-page {
-    --monopoly-board-size: min(94vmin, 1080px, calc(100vw - 23.75rem));
-    --monopoly-sidebar-width: 20.5rem;
-    --monopoly-board-padding: clamp(0.55rem, 1.4vmin, 0.9rem);
-    --monopoly-board-border: clamp(4px, 0.7vmin, 7px);
+    --monopoly-layout-gap: clamp(1rem, 1.4vw, 1.5rem);
+    --monopoly-sidebar-width: clamp(17.5rem, 23vw, 20.5rem);
+    --monopoly-board-size: clamp(
+      24rem,
+      min(
+        1080px,
+        calc(100vh - 5.5rem),
+        calc(100vw - var(--monopoly-sidebar-width) - var(--monopoly-layout-gap) - 1.5rem)
+      ),
+      1080px
+    );
+    --monopoly-board-padding: clamp(0.38rem, calc(var(--monopoly-board-size) * 0.0135), 0.9rem);
+    --monopoly-board-border: clamp(3px, calc(var(--monopoly-board-size) * 0.0065), 7px);
     --monopoly-side-content-scale: 72%;
-    --monopoly-tile-name-size: clamp(0.48rem, 1.02vmin, 0.78rem);
-    --monopoly-tile-price-size: clamp(0.44rem, 0.92vmin, 0.7rem);
-    --monopoly-icon-size: clamp(0.56rem, 1.08vmin, 0.86rem);
-    --monopoly-band-size: clamp(0.82rem, 18%, 1.18rem);
-    --monopoly-center-title-size: clamp(2rem, 5.6vmin, 4.2rem);
-    --monopoly-center-ribbon-size: clamp(0.68rem, 1.3vmin, 0.9rem);
+    --monopoly-tile-name-size: clamp(0.42rem, calc(var(--monopoly-board-size) * 0.011), 0.78rem);
+    --monopoly-tile-price-size: clamp(0.38rem, calc(var(--monopoly-board-size) * 0.01), 0.7rem);
+    --monopoly-icon-size: clamp(0.48rem, calc(var(--monopoly-board-size) * 0.0118), 0.86rem);
+    --monopoly-band-size: clamp(0.55rem, calc(var(--monopoly-board-size) * 0.018), 1.18rem);
+    --monopoly-center-title-size: clamp(1.45rem, calc(var(--monopoly-board-size) * 0.055), 4.2rem);
+    --monopoly-center-ribbon-size: clamp(0.52rem, calc(var(--monopoly-board-size) * 0.012), 0.9rem);
     min-height: 100vh;
     padding: 0.75rem;
     position: relative;
@@ -141,41 +150,154 @@
     color: #7a2046;
   }
 
-  .sugaropoly-header {
-    max-width: 1320px;
+  .sugaropoly-topbar {
+    width: 100%;
+    min-height: 3.35rem;
     margin: 0 auto 0.75rem;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, auto) minmax(0, 1fr);
     align-items: center;
-    justify-content: flex-end;
-    gap: 1rem;
-  }
-
-  .sugaropoly-fullscreen-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    flex: 0 0 auto;
-    min-height: 2.75rem;
-    padding: 0.65rem 1rem;
+    gap: clamp(0.45rem, 1.1vw, 0.8rem);
+    padding: 0.38rem 0.48rem;
     border: 2px solid #f0a9c8;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.86);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 240, 248, 0.88) 56%, rgba(238, 251, 255, 0.86));
+    box-shadow: 0 16px 34px rgba(190, 24, 93, 0.13), inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    color: #7a2046;
+    font-family: 'Nunito', 'Inter', sans-serif;
+  }
+
+  .sugaropoly-brand-link {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.62rem;
+    justify-self: start;
+    padding: 0.32rem 0.45rem;
+    border-radius: 0.45rem;
+    color: #8a1f4d;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .sugaropoly-brand-link:hover,
+  .sugaropoly-nav-icon-button:hover,
+  .sugaropoly-theme-control:hover {
+    background: rgba(255, 247, 251, 0.88);
+  }
+
+  .sugaropoly-brand-mark,
+  .sugaropoly-nav-icon-button {
+    width: clamp(2.25rem, 3.6vw, 2.45rem);
+    height: clamp(2.25rem, 3.6vw, 2.45rem);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    background:
+      radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.9), transparent 30%),
+      linear-gradient(135deg, #fff7fb, #f9a8d4);
     color: #be185d;
-    font-size: 0.86rem;
-    font-weight: 850;
-    text-transform: uppercase;
-    box-shadow: 0 12px 28px rgba(190, 24, 93, 0.12);
+    box-shadow: 0 10px 22px rgba(190, 24, 93, 0.13);
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
   }
 
-  .sugaropoly-fullscreen-button:hover {
-    border-color: #e879ad;
-    background: #fff7fb;
+  .sugaropoly-brand-mark svg,
+  .sugaropoly-nav-icon-button svg,
+  .sugaropoly-title-lockup svg,
+  .sugaropoly-theme-control svg {
+    width: 1.12rem;
+    height: 1.12rem;
+    flex: 0 0 auto;
   }
 
-  .sugaropoly-fullscreen-button:active {
+  .sugaropoly-brand-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .sugaropoly-brand-copy span,
+  .sugaropoly-title-lockup span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sugaropoly-brand-copy span {
+    font-size: 0.98rem;
+    font-weight: 950;
+  }
+
+  .sugaropoly-brand-copy small {
+    margin-top: 0.16rem;
+    color: #9d4a70;
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-title-lockup {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    justify-self: center;
+    max-width: 100%;
+    color: #8a1f4d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.05rem, 2vw, 1.45rem);
+    font-weight: 850;
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-title-lockup svg {
+    color: #be185d;
+  }
+
+  .sugaropoly-topbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: clamp(0.32rem, 0.8vw, 0.45rem);
+    justify-self: end;
+    min-width: 0;
+  }
+
+  .sugaropoly-nav-icon-button:active {
     transform: scale(0.98);
+  }
+
+  .sugaropoly-theme-control {
+    min-width: 0;
+    display: flex;
+    height: clamp(2.25rem, 3.6vw, 2.45rem);
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0.58rem;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.72);
+    color: #be185d;
+    box-shadow: 0 10px 22px rgba(190, 24, 93, 0.09);
+  }
+
+  .sugaropoly-theme-control select {
+    height: 100%;
+    max-width: 7.5rem;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    color: #8a1f4d;
+    font-size: 0.82rem;
+    font-weight: 900;
+    outline: none;
   }
 
   .sugaropoly-page:fullscreen {
@@ -183,21 +305,19 @@
   }
 
   .sugaropoly-layout {
-    width: min(100%, 1440px);
+    width: 100%;
     margin-inline: auto;
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--monopoly-sidebar-width);
     align-items: start;
-    justify-content: center;
-    gap: 1.25rem;
+    gap: var(--monopoly-layout-gap);
   }
 
   .sugaropoly-board-pane {
     min-width: 0;
     display: flex;
-    justify-content: safe center;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    justify-content: center;
+    overflow: visible;
     padding-bottom: 0.75rem;
     container-type: inline-size;
   }
@@ -205,10 +325,11 @@
   .sugaropoly-sidebar-pane {
     position: sticky;
     top: 0.75rem;
+    justify-self: end;
     width: var(--monopoly-sidebar-width);
     min-width: var(--monopoly-sidebar-width);
     height: min(calc(100vh - 1.5rem), var(--monopoly-board-size));
-    min-height: 42rem;
+    min-height: min(34rem, var(--monopoly-board-size));
   }
 
   .monopoly-sidebar {
@@ -596,8 +717,8 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: minmax(54px, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(54px, 1.28fr);
-    grid-template-rows: minmax(54px, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(54px, 1.28fr);
+    grid-template-columns: minmax(0, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(0, 1.28fr);
+    grid-template-rows: minmax(0, 1.28fr) repeat(13, minmax(0, 1fr)) minmax(0, 1.28fr);
     gap: 0;
     border: 2px solid #d86a9a;
     background: #d86a9a;
@@ -843,32 +964,28 @@
     font-weight: 750;
   }
 
-  @media (max-width: 760px) {
+  @media (max-width: 980px) {
     .sugaropoly-page {
-      --monopoly-board-size: 1020px;
-      --monopoly-board-padding: 0.9rem;
-      --monopoly-board-border: 7px;
-      --monopoly-side-content-scale: 72%;
-      --monopoly-tile-name-size: 0.78rem;
-      --monopoly-tile-price-size: 0.7rem;
-      --monopoly-icon-size: 0.86rem;
-      --monopoly-band-size: 1.18rem;
-      --monopoly-center-title-size: 4.2rem;
-      --monopoly-center-ribbon-size: 0.9rem;
-      padding: 1rem 0.5rem;
+      --monopoly-board-size: min(1080px, calc(100vw - 1rem), calc(100vh - 5.25rem));
+      padding: 0.5rem;
     }
 
-    .sugaropoly-header {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      text-align: center;
-      margin-bottom: 1rem;
+    .sugaropoly-topbar {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      margin-bottom: 0.6rem;
     }
 
-    .sugaropoly-fullscreen-button {
-      width: min(100%, 18rem);
+    .sugaropoly-brand-copy {
+      display: none;
+    }
+
+    .sugaropoly-brand-link {
+      padding-inline: 0;
+    }
+
+    .sugaropoly-title-lockup {
+      min-width: 0;
+      font-size: clamp(0.86rem, 2.35vw, 1.08rem);
     }
 
     .sugaropoly-layout {
@@ -880,7 +997,7 @@
 
     .sugaropoly-board-pane {
       width: 100%;
-      justify-content: flex-start;
+      justify-content: center;
     }
 
     .sugaropoly-sidebar-pane {
@@ -897,42 +1014,29 @@
     }
   }
 
-  @container (max-width: 1020px) {
-    .monopoly-board {
-      width: 1020px;
-      padding: 0.9rem;
-      border-width: 7px;
+  @media (max-width: 760px) {
+    .sugaropoly-title-lockup svg,
+    .sugaropoly-theme-control svg {
+      display: none;
     }
 
-    .monopoly-board .space-name {
-      font-size: 0.78rem;
+    .sugaropoly-theme-control {
+      padding-inline: 0.42rem;
     }
 
-    .monopoly-board .space-price {
-      font-size: 0.7rem;
+    .sugaropoly-theme-control select {
+      max-width: 5.7rem;
+      font-size: 0.76rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .sugaropoly-title-lockup span {
+      max-width: 11rem;
     }
 
-    .monopoly-board .space-icon {
-      width: 0.86rem;
-      height: 0.86rem;
-    }
-
-    .monopoly-board .property-band-top,
-    .monopoly-board .property-band-bottom {
-      height: 1.18rem;
-    }
-
-    .monopoly-board .property-band-left,
-    .monopoly-board .property-band-right {
-      width: 1.18rem;
-    }
-
-    .monopoly-board .center-script {
-      font-size: 4.2rem;
-    }
-
-    .monopoly-board .center-ribbon {
-      font-size: 0.9rem;
+    .sugaropoly-theme-control select {
+      max-width: 4.9rem;
     }
   }
 
