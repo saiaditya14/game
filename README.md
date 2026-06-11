@@ -121,10 +121,11 @@ Need an overhaul of UI in general
 Need an overhaul of button UI in draw off
 Play test system prompt for draw off a little but seems fine and fun to babie
 Security issues in joining such as what if more than two join? what if one leaves how to come back? 
-Monopoly sidebar now has desktop/fullscreen Players, Trades, and My Properties panels. Future small-screen pass should move it into a rich.io-style bottom drawer or toggleable panel instead of always showing the side rail.
-Monopoly board zoom/sidebar stability should be rechecked after the sidebar revamp; desktop side rail is now fixed-width and sticky, but mobile/tablet responsive guards are still future work.
+Monopoly sidebar now has desktop/fullscreen Players, Trades, and My Properties panels. Future cramped-layout pass should move it into a rich.io-style bottom drawer or toggleable panel instead of always showing the side rail.
+Monopoly board zoom/sidebar stability should be rechecked after the sidebar revamp; desktop side rail is now fixed-width and sticky, but narrow desktop/tablet responsive guards are still future work.
 Monopoly board and sidebar should eventually size independently with the viewport instead of being tightly tethered; the current fixed relationship has served its purpose for the first layout pass.
 After the Monopoly fullscreen button is redesigned/repositioned, align the board top edge and sidebar top edge consistently in both normal and fullscreen modes.
+Run a Monte Carlo simulation to find optimal Monopoly dice dimensions so every cell is equiprobable while also deciding based on the expected number of turns needed to go across the board.
 NAVBAR needs an overhaul bro
 Babie feedback:
 
@@ -133,3 +134,6 @@ Number of rounds could be togglable
 
 FOR CONNECT FOUR
 i want sparkles when the game get over and the congrats box pops up.
+
+Future Future:
+Monopoly could eventually get a dedicated phone interaction pattern instead of trying to make the full 15x15 board readable at extremely tiny viewport sizes, but phone is not the intended base target right now.
