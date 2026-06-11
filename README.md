@@ -125,7 +125,7 @@ Monopoly sidebar now has desktop/fullscreen Players, Trades, and My Properties p
 Monopoly board zoom/sidebar stability should be rechecked after the sidebar revamp; desktop side rail is now fixed-width and sticky, but narrow desktop/tablet responsive guards are still future work.
 Monopoly board and sidebar should eventually size independently with the viewport instead of being tightly tethered; the current fixed relationship has served its purpose for the first layout pass.
 After the Monopoly fullscreen button is redesigned/repositioned, align the board top edge and sidebar top edge consistently in both normal and fullscreen modes.
-Run a Monte Carlo simulation to find optimal Monopoly dice dimensions so every cell is equiprobable while also deciding based on the expected number of turns needed to go across the board.
+Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement. Next: implement simple 2d8 dice rolling and circular board movement before adding special rules.
 NAVBAR needs an overhaul bro
 Babie feedback:
 
