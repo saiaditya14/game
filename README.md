@@ -121,10 +121,6 @@ Need an overhaul of UI in general
 Need an overhaul of button UI in draw off
 Play test system prompt for draw off a little but seems fine and fun to babie
 Security issues in joining such as what if more than two join? what if one leaves how to come back? 
-Monopoly sidebar now has desktop/fullscreen Players, Trades, and My Properties panels. Future cramped-layout pass should move it into a rich.io-style bottom drawer or toggleable panel instead of always showing the side rail.
-Monopoly board zoom/sidebar stability should be rechecked after the sidebar revamp; desktop side rail is now fixed-width and sticky, but narrow desktop/tablet responsive guards are still future work.
-Monopoly board and sidebar should eventually size independently with the viewport instead of being tightly tethered; the current fixed relationship has served its purpose for the first layout pass.
-After the Monopoly fullscreen button is redesigned/repositioned, align the board top edge and sidebar top edge consistently in both normal and fullscreen modes.
 Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement. Next: implement simple 2d8 dice rolling and circular board movement before adding special rules.
 NAVBAR needs an overhaul bro
 Babie feedback:
