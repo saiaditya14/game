@@ -79,7 +79,7 @@ const getPlayersByPosition = (players) => {
 
 export const MonopolyBoard = ({
   players = [],
-  latestRoll,
+  diceRoll,
   canRoll = false,
   isRolling = false,
   onRoll,
@@ -120,7 +120,7 @@ export const MonopolyBoard = ({
             alt="Faerie Kingdom Quest board art"
           />
           <MonopolyDiceOverlay
-            latestRoll={latestRoll}
+            roll={diceRoll}
             canRoll={canRoll}
             isRolling={isRolling}
             onRoll={onRoll}

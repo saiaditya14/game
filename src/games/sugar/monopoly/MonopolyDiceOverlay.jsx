@@ -1,20 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Dices, Sparkles } from 'lucide-react';
 
 const randomD8 = () => Math.floor(Math.random() * 8) + 1;
 
-export const MonopolyDiceOverlay = ({ latestRoll, canRoll, onRoll, isRolling }) => {
-  const [visibleRoll, setVisibleRoll] = useState(null);
+export const MonopolyDiceOverlay = ({ roll, canRoll, onRoll, isRolling }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayDice, setDisplayDice] = useState([1, 1]);
-  const lastRollIdRef = useRef(null);
 
   useEffect(() => {
-    if (!latestRoll?.id || latestRoll.id === lastRollIdRef.current) return undefined;
+    if (!isRolling || roll) return undefined;
 
-    lastRollIdRef.current = latestRoll.id;
-    setVisibleRoll(latestRoll);
+    setIsAnimating(true);
+    const intervalId = window.setInterval(() => {
+      setDisplayDice([randomD8(), randomD8()]);
+    }, 90);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isRolling, roll]);
+
+  useEffect(() => {
+    if (!roll?.id) return undefined;
+
     setIsAnimating(true);
     setDisplayDice([randomD8(), randomD8()]);
 
@@ -24,25 +33,21 @@ export const MonopolyDiceOverlay = ({ latestRoll, canRoll, onRoll, isRolling }) 
 
     const revealId = window.setTimeout(() => {
       window.clearInterval(intervalId);
-      setDisplayDice(latestRoll.dice || [1, 1]);
+      setDisplayDice(roll.dice || [1, 1]);
       setIsAnimating(false);
-    }, 820);
-
-    const hideId = window.setTimeout(() => {
-      setVisibleRoll(null);
-    }, 2600);
+    }, 620);
 
     return () => {
       window.clearInterval(intervalId);
       window.clearTimeout(revealId);
-      window.clearTimeout(hideId);
     };
-  }, [latestRoll]);
+  }, [roll]);
 
-  if (!canRoll && !visibleRoll) return null;
+  if (!canRoll && !isRolling && !roll) return null;
 
-  const dice = visibleRoll ? displayDice : ['?', '?'];
-  const total = visibleRoll?.total;
+  const dice = roll || isRolling ? displayDice : ['?', '?'];
+  const total = roll?.total;
+  const shouldShowRolling = roll ? isAnimating : isRolling;
 
   return (
     <div className="monopoly-dice-overlay" aria-live="polite">
@@ -63,14 +68,14 @@ export const MonopolyDiceOverlay = ({ latestRoll, canRoll, onRoll, isRolling }) 
           <span className="monopoly-die">{dice[1]}</span>
         </div>
 
-        {visibleRoll ? (
+        {roll || isRolling ? (
           <div className="monopoly-dice-result">
-            {isAnimating ? (
+            {shouldShowRolling ? (
               <span>Rolling...</span>
             ) : (
               <>
                 <strong>{total}</strong>
-                <span>{visibleRoll.playerName} moved {total} spaces</span>
+                <span>{roll.playerName} moved {total} spaces</span>
               </>
             )}
           </div>

@@ -62,6 +62,7 @@ export const PastelMonopoly = () => {
   const [error, setError] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
+  const [localDiceRoll, setLocalDiceRoll] = useState(null);
   const themes = [
     { id: 'theme-vanilla', label: 'Vanilla' },
     { id: 'theme-pink', label: 'Pink' },
@@ -107,6 +108,18 @@ export const PastelMonopoly = () => {
       supabase.removeChannel(channel);
     };
   }, [room?.id]);
+
+  useEffect(() => {
+    if (!localDiceRoll?.id) return undefined;
+
+    const hideId = window.setTimeout(() => {
+      setLocalDiceRoll(null);
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(hideId);
+    };
+  }, [localDiceRoll?.id]);
 
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
@@ -289,6 +302,8 @@ export const PastelMonopoly = () => {
       to,
       at: new Date().toISOString(),
     };
+    setLocalDiceRoll(latestRoll);
+
     const nextEvents = [
       buildRollEvent({ id: rollId, playerName: currentPlayer.name, total, to }),
       ...(Array.isArray(room.event_log) ? room.event_log : []),
@@ -398,7 +413,7 @@ export const PastelMonopoly = () => {
             <div className="sugaropoly-board-pane">
               <MonopolyBoard
                 players={players}
-                latestRoll={room.latest_roll}
+                diceRoll={localDiceRoll}
                 canRoll={canRoll}
                 isRolling={isRolling}
                 onRoll={rollDice}
