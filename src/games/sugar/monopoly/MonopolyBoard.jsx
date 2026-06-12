@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BoardSpace } from './BoardSpace';
 import { MonopolyDiceOverlay } from './MonopolyDiceOverlay';
 import monopolyBoardCenterImage from '../../../../images/monopoly_board.jpeg';
@@ -77,6 +77,20 @@ const getPlayersByPosition = (players) => {
   }, {});
 };
 
+const getTeleportEffect = (rollId = '') => {
+  const effects = ['burst', 'ring'];
+  const hash = String(rollId).split('').reduce((total, character) => (
+    Math.imul(total ^ character.charCodeAt(0), 16777619) >>> 0
+  ), 2166136261);
+  return effects[hash % effects.length];
+};
+
+const TeleportEffect = ({ effect, phase }) => (
+  <span className={`monopoly-teleport-effect monopoly-teleport-${effect} is-${phase}`} aria-hidden="true">
+    {[0, 1, 2, 3, 4].map((spark) => <span key={spark} />)}
+  </span>
+);
+
 export const MonopolyBoard = ({
   players = [],
   diceRoll,
@@ -87,6 +101,33 @@ export const MonopolyBoard = ({
 }) => {
   const playersByPosition = getPlayersByPosition(players);
   const playerCount = Math.min(Math.max(players.length || 1, 1), 8);
+  const [activeTeleportRoll, setActiveTeleportRoll] = useState(null);
+  const teleportFromId = activeTeleportRoll ? Number(activeTeleportRoll.from || 0) % BOARD_SPACE_COUNT : null;
+  const teleportToId = activeTeleportRoll ? Number(activeTeleportRoll.to || 0) % BOARD_SPACE_COUNT : null;
+  const teleportEffect = getTeleportEffect(activeTeleportRoll?.id);
+  const previousPlayersByPosition = activeTeleportRoll
+    ? getPlayersByPosition(players.map((player) => (
+      player.id === activeTeleportRoll.playerId
+        ? { ...player, position: activeTeleportRoll.from }
+        : player
+    )))
+    : null;
+
+  useEffect(() => {
+    if (!movementRoll?.id) return undefined;
+
+    setActiveTeleportRoll(movementRoll);
+
+    const clearId = window.setTimeout(() => {
+      setActiveTeleportRoll((currentRoll) => (
+        currentRoll?.id === movementRoll.id ? null : currentRoll
+      ));
+    }, 1450);
+
+    return () => {
+      window.clearTimeout(clearId);
+    };
+  }, [movementRoll?.id, movementRoll]);
 
   return (
     <section
@@ -95,25 +136,39 @@ export const MonopolyBoard = ({
     >
       <div className="monopoly-grid">
         {spaces.map((space) => {
-          const spacePlayers = playersByPosition[space.id] || [];
+          const currentSpacePlayers = playersByPosition[space.id] || [];
+          const spacePlayers = activeTeleportRoll && space.id === teleportFromId
+            ? previousPlayersByPosition?.[space.id] || []
+            : currentSpacePlayers;
 
           return (
             <div className="monopoly-space-holder" key={space.id} style={{ gridArea: space.gridArea }}>
               <BoardSpace {...space} />
               {spacePlayers.length ? (
-                <div className="monopoly-token-cluster" aria-label={`Players on ${space.name}`}>
+                <div
+                  className={`monopoly-token-cluster monopoly-token-cluster-${space.edge} monopoly-token-stack-${Math.min(spacePlayers.length, 8)}`}
+                  aria-label={`Players on ${space.name}`}
+                >
                   {spacePlayers.slice(0, 8).map((player) => {
-                    const isMovingToken = movementRoll?.playerId === player.id && movementRoll?.to === space.id;
+                    const isTeleportingPlayer = activeTeleportRoll?.playerId === player.id;
+                    const isDepartingToken = isTeleportingPlayer && space.id === teleportFromId;
+                    const isArrivingToken = isTeleportingPlayer && space.id === teleportToId;
 
                     return (
-                    <span
-                      className={`monopoly-token ${isMovingToken ? 'is-moving' : ''}`}
-                      key={`${player.id}${isMovingToken ? `-${movementRoll.id}` : ''}`}
-                      title={`${player.name} on ${space.name}`}
-                      style={{ '--player-color': player.color || '#f9a8d4' }}
-                    >
-                      {String(player.name || '?').charAt(0)}
-                    </span>
+                      <span
+                        className="monopoly-token-slot"
+                        key={player.id}
+                        style={{ '--player-color': player.color || '#f9a8d4' }}
+                      >
+                        {isDepartingToken ? <TeleportEffect effect={teleportEffect} phase="departing" /> : null}
+                        <span
+                          className={`monopoly-token ${isDepartingToken ? 'is-departing' : ''} ${isArrivingToken ? 'is-moving' : ''}`}
+                          title={`${player.name} on ${space.name}`}
+                        >
+                          {String(player.name || '?').charAt(0)}
+                        </span>
+                        {isArrivingToken ? <TeleportEffect effect={teleportEffect} phase="arriving" /> : null}
+                      </span>
                     );
                   })}
                 </div>

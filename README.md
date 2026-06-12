@@ -146,8 +146,9 @@ http://127.0.0.1:5173/game/monopoly
 - Topbar and sidebar show a clearer current-turn prompt.
 - Local players can leave a waiting or active room without deleting the room for everyone else.
 - Full and already-started rooms show friendlier join feedback.
-- Moved tokens do a small hop after a synced roll.
-- Local dice rolls show tiny pastel sparkle feedback.
+- Tokens render as larger circular player-color coins on the board-space rail with controlled overlap for crowded tiles.
+- Rolled tokens use a short magic teleport beat with player-color ring/particle effects anchored to the exact token slot.
+- Local dice rolls show bright pastel sparkle feedback.
 
 ### Sugaropoly Manual Test Notes
 
@@ -156,10 +157,11 @@ Use two browser tabs at `http://127.0.0.1:5173/game/monopoly` after `supabase st
 - Tab 1: create a room and confirm the waiting room shows the room code and host.
 - Tab 2: join with the room code and confirm both tabs show `2/8 players joined`.
 - Tab 1: start the game and confirm both tabs show whose turn it is in the topbar/sidebar.
-- Active player tab: roll 2d8 and confirm only that tab sees the dice overlay/sparkles, while both tabs see the token land with a small hop and the turn advance.
+- Active player tab: roll 2d8 and confirm only that tab sees the dice overlay/sparkles, while both tabs see the moving token disappear/reappear with ring or particle teleport effects and the turn advance.
 - Non-active player tab: confirm the roll button is unavailable until that player's turn.
 - Leave flow: click Leave Room from a waiting or active tab and confirm that tab returns to the lobby while the other tab keeps the room state.
 - Join feedback: try joining an already-started room, and try joining a room with 8 players, to confirm the clear blocked-state message.
+- Crowded coin tile: with 2-8 joined players, get multiple players onto the same board space and confirm circular coins remain readable, overlap intentionally, stay attached to the correct rail/slot, and teleport effects appear on the moving coin's slot.
 
 ### Sugaropoly Blocked Until Property/Card Data Exists
 
@@ -180,6 +182,7 @@ Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly
 NAVBAR needs an overhaul bro
 - Add a small "copy room code" control in the waiting room/topbar.
 - Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
+- Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
 Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)

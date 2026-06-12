@@ -1059,8 +1059,9 @@
   }
 
   .monopoly-board {
-    --monopoly-token-size: clamp(0.72rem, calc(var(--monopoly-board-size) * 0.022), 1.28rem);
-    --monopoly-token-font-size: clamp(0.4rem, calc(var(--monopoly-board-size) * 0.01), 0.7rem);
+    --monopoly-token-size: clamp(1rem, calc(var(--monopoly-board-size) * 0.031), 1.82rem);
+    --monopoly-token-font-size: clamp(0.54rem, calc(var(--monopoly-board-size) * 0.0138), 0.98rem);
+    --monopoly-token-overlap: 0rem;
     width: var(--monopoly-board-size);
     aspect-ratio: 1;
     margin-inline: auto;
@@ -1074,23 +1075,27 @@
 
   .monopoly-board-players-3,
   .monopoly-board-players-4 {
-    --monopoly-token-size: clamp(0.64rem, calc(var(--monopoly-board-size) * 0.019), 1.12rem);
-    --monopoly-token-font-size: clamp(0.36rem, calc(var(--monopoly-board-size) * 0.009), 0.62rem);
+    --monopoly-token-size: clamp(0.88rem, calc(var(--monopoly-board-size) * 0.026), 1.5rem);
+    --monopoly-token-font-size: clamp(0.48rem, calc(var(--monopoly-board-size) * 0.0118), 0.8rem);
+    --monopoly-token-overlap: calc(var(--monopoly-token-size) * -0.22);
   }
 
   .monopoly-board-players-5,
   .monopoly-board-players-6 {
-    --monopoly-token-size: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.017), 0.98rem);
-    --monopoly-token-font-size: clamp(0.32rem, calc(var(--monopoly-board-size) * 0.008), 0.56rem);
+    --monopoly-token-size: clamp(0.78rem, calc(var(--monopoly-board-size) * 0.023), 1.3rem);
+    --monopoly-token-font-size: clamp(0.43rem, calc(var(--monopoly-board-size) * 0.0104), 0.7rem);
+    --monopoly-token-overlap: calc(var(--monopoly-token-size) * -0.34);
   }
 
   .monopoly-board-players-7,
   .monopoly-board-players-8 {
-    --monopoly-token-size: clamp(0.52rem, calc(var(--monopoly-board-size) * 0.015), 0.86rem);
-    --monopoly-token-font-size: clamp(0.3rem, calc(var(--monopoly-board-size) * 0.0072), 0.5rem);
+    --monopoly-token-size: clamp(0.7rem, calc(var(--monopoly-board-size) * 0.0205), 1.14rem);
+    --monopoly-token-font-size: clamp(0.38rem, calc(var(--monopoly-board-size) * 0.0092), 0.62rem);
+    --monopoly-token-overlap: calc(var(--monopoly-token-size) * -0.42);
   }
 
   .monopoly-grid {
+    position: relative;
     width: 100%;
     height: 100%;
     display: grid;
@@ -1336,14 +1341,67 @@
   .monopoly-token-cluster {
     position: absolute;
     z-index: 5;
-    right: 0.12rem;
-    bottom: 0.12rem;
     display: flex;
-    flex-wrap: wrap-reverse;
-    justify-content: flex-end;
-    gap: 0.06rem;
-    max-width: 78%;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: max(0.02rem, calc(var(--monopoly-token-size) * 0.08));
+    max-width: 112%;
     pointer-events: none;
+  }
+
+  .monopoly-token-cluster-bottom {
+    left: 50%;
+    bottom: 0.05rem;
+    flex-direction: row;
+    transform: translateX(-50%);
+  }
+
+  .monopoly-token-cluster-top {
+    left: 50%;
+    top: 0.05rem;
+    flex-direction: row;
+    transform: translateX(-50%);
+  }
+
+  .monopoly-token-cluster-left {
+    left: 0.05rem;
+    top: 50%;
+    flex-direction: column;
+    transform: translateY(-50%);
+  }
+
+  .monopoly-token-cluster-right {
+    right: 0.05rem;
+    top: 50%;
+    flex-direction: column;
+    transform: translateY(-50%);
+  }
+
+  .monopoly-token-stack-5,
+  .monopoly-token-stack-6,
+  .monopoly-token-stack-7,
+  .monopoly-token-stack-8 {
+    z-index: 6;
+  }
+
+  .monopoly-token-slot {
+    position: relative;
+    width: var(--monopoly-token-size);
+    height: var(--monopoly-token-size);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+  }
+
+  .monopoly-token-slot:not(:first-child) {
+    margin-left: var(--monopoly-token-overlap);
+  }
+
+  .monopoly-token-cluster-left .monopoly-token-slot:not(:first-child),
+  .monopoly-token-cluster-right .monopoly-token-slot:not(:first-child) {
+    margin-left: 0;
+    margin-top: var(--monopoly-token-overlap);
   }
 
   .monopoly-token {
@@ -1360,29 +1418,284 @@
     font-size: var(--monopoly-token-font-size);
     font-weight: 950;
     line-height: 1;
-    box-shadow: 0 4px 10px rgba(122, 32, 70, 0.18);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.88),
+      0 5px 12px rgba(122, 32, 70, 0.24);
+  }
+
+  .monopoly-token-slot:has(.monopoly-token.is-departing),
+  .monopoly-token-slot:has(.monopoly-token.is-moving) {
+    z-index: 8;
+  }
+
+  .monopoly-token.is-departing {
+    animation: monopoly-token-teleport-out 760ms ease-out both;
   }
 
   .monopoly-token.is-moving {
-    animation: monopoly-token-hop 520ms cubic-bezier(0.2, 0.82, 0.28, 1.12);
-    box-shadow: 0 7px 16px rgba(190, 24, 93, 0.24);
+    animation: monopoly-token-teleport-in 1450ms ease-out both;
   }
 
-  @keyframes monopoly-token-hop {
+  @keyframes monopoly-token-teleport-out {
     0% {
-      transform: translateY(0) scale(0.92);
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
     }
 
-    38% {
-      transform: translateY(-0.42rem) scale(1.08);
-    }
-
-    68% {
-      transform: translateY(0.06rem) scale(0.98);
+    44% {
+      opacity: 1;
+      transform: scale(1.1) rotate(-5deg);
     }
 
     100% {
-      transform: translateY(0) scale(1);
+      opacity: 0;
+      transform: scale(0.58) rotate(8deg);
+    }
+  }
+
+  @keyframes monopoly-token-teleport-in {
+    0%,
+    58% {
+      opacity: 0;
+      transform: scale(0.72) rotate(-8deg);
+    }
+
+    74% {
+      opacity: 1;
+      transform: scale(1.12) rotate(5deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .monopoly-teleport-effect {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 9;
+    width: calc(var(--monopoly-token-size) * 5.75);
+    height: calc(var(--monopoly-token-size) * 5.75);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+
+  .monopoly-teleport-effect span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    opacity: 0;
+  }
+
+  .monopoly-teleport-whisp span {
+    width: calc(var(--monopoly-token-size) * 0.72);
+    height: calc(var(--monopoly-token-size) * 2.35);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.95), transparent 34%),
+      linear-gradient(180deg, color-mix(in srgb, var(--player-color) 92%, #ffffff), color-mix(in srgb, var(--player-color) 30%, transparent));
+    filter:
+      drop-shadow(0 0 4px #ffffff)
+      drop-shadow(0 0 12px color-mix(in srgb, var(--player-color) 84%, transparent))
+      drop-shadow(0 6px 10px rgba(190, 24, 93, 0.24));
+    transform-origin: 50% 100%;
+  }
+
+  .monopoly-teleport-effect span:nth-child(1) {
+    --whisp-angle: -88deg;
+  }
+
+  .monopoly-teleport-effect span:nth-child(2) {
+    --whisp-angle: -38deg;
+    animation-delay: 70ms;
+  }
+
+  .monopoly-teleport-effect span:nth-child(3) {
+    --whisp-angle: 8deg;
+    animation-delay: 130ms;
+  }
+
+  .monopoly-teleport-effect span:nth-child(4) {
+    --whisp-angle: 52deg;
+    animation-delay: 190ms;
+  }
+
+  .monopoly-teleport-effect span:nth-child(5) {
+    --whisp-angle: 96deg;
+    animation-delay: 250ms;
+  }
+
+  .monopoly-teleport-whisp.is-departing span {
+    animation: monopoly-whisp-depart 760ms ease-out both;
+  }
+
+  .monopoly-teleport-whisp.is-arriving span {
+    animation: monopoly-whisp-arrive 720ms ease-out 700ms both;
+  }
+
+  .monopoly-teleport-burst span {
+    width: calc(var(--monopoly-token-size) * 0.72);
+    height: calc(var(--monopoly-token-size) * 0.72);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle, #ffffff 0 18%, color-mix(in srgb, var(--player-color) 92%, #ffffff) 20% 48%, color-mix(in srgb, var(--player-color) 72%, transparent) 52% 66%, transparent 70%);
+    filter:
+      drop-shadow(0 0 4px #ffffff)
+      drop-shadow(0 0 13px color-mix(in srgb, var(--player-color) 88%, transparent))
+      drop-shadow(0 5px 9px rgba(190, 24, 93, 0.22));
+  }
+
+  .monopoly-teleport-burst.is-departing span,
+  .monopoly-teleport-burst.is-arriving span {
+    animation: monopoly-burst-pop 760ms ease-out both;
+  }
+
+  .monopoly-teleport-burst.is-arriving span {
+    animation-delay: calc(700ms + var(--burst-delay, 0ms));
+  }
+
+  .monopoly-teleport-burst span:nth-child(1) {
+    --burst-x: calc(var(--monopoly-token-size) * -1.78);
+    --burst-y: calc(var(--monopoly-token-size) * -1.32);
+    --burst-delay: 0ms;
+  }
+
+  .monopoly-teleport-burst span:nth-child(2) {
+    --burst-x: calc(var(--monopoly-token-size) * 1.72);
+    --burst-y: calc(var(--monopoly-token-size) * -1.48);
+    --burst-delay: 55ms;
+  }
+
+  .monopoly-teleport-burst span:nth-child(3) {
+    --burst-x: calc(var(--monopoly-token-size) * 1.88);
+    --burst-y: calc(var(--monopoly-token-size) * 0.98);
+    --burst-delay: 105ms;
+  }
+
+  .monopoly-teleport-burst span:nth-child(4) {
+    --burst-x: calc(var(--monopoly-token-size) * -1.46);
+    --burst-y: calc(var(--monopoly-token-size) * 1.62);
+    --burst-delay: 155ms;
+  }
+
+  .monopoly-teleport-burst span:nth-child(5) {
+    --burst-x: 0rem;
+    --burst-y: calc(var(--monopoly-token-size) * -1.95);
+    --burst-delay: 205ms;
+  }
+
+  .monopoly-teleport-ring span {
+    width: calc(var(--monopoly-token-size) * 2.55);
+    height: calc(var(--monopoly-token-size) * 2.55);
+    margin: calc(var(--monopoly-token-size) * -1.275) 0 0 calc(var(--monopoly-token-size) * -1.275);
+    border: max(2px, calc(var(--monopoly-token-size) * 0.17)) solid color-mix(in srgb, var(--player-color) 92%, #ffffff);
+    border-radius: 999px;
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.72),
+      0 0 18px color-mix(in srgb, var(--player-color) 82%, transparent),
+      0 5px 10px rgba(190, 24, 93, 0.18);
+  }
+
+  .monopoly-teleport-ring span:nth-child(1) {
+    animation-delay: 0ms;
+  }
+
+  .monopoly-teleport-ring span:nth-child(2) {
+    animation-delay: 130ms;
+  }
+
+  .monopoly-teleport-ring span:nth-child(3) {
+    animation-delay: 260ms;
+  }
+
+  .monopoly-teleport-ring span:nth-child(n + 4) {
+    display: none;
+  }
+
+  .monopoly-teleport-ring.is-departing span {
+    animation: monopoly-ring-pulse 700ms ease-out both;
+  }
+
+  .monopoly-teleport-ring.is-arriving span {
+    animation: monopoly-ring-pulse 720ms ease-out both;
+    animation-delay: calc(700ms + var(--ring-delay, 0ms));
+  }
+
+  .monopoly-teleport-ring span:nth-child(1) {
+    --ring-delay: 0ms;
+  }
+
+  .monopoly-teleport-ring span:nth-child(2) {
+    --ring-delay: 130ms;
+  }
+
+  .monopoly-teleport-ring span:nth-child(3) {
+    --ring-delay: 260ms;
+  }
+
+  @keyframes monopoly-whisp-depart {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--whisp-angle)) translateY(0) scaleY(0.45);
+    }
+
+    28% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--whisp-angle)) translateY(-1.08rem) scaleY(1.08);
+    }
+  }
+
+  @keyframes monopoly-whisp-arrive {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--whisp-angle)) translateY(-1.06rem) scaleY(0.72);
+    }
+
+    38% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--whisp-angle)) translateY(0.08rem) scaleY(0.42);
+    }
+  }
+
+  @keyframes monopoly-burst-pop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.42);
+    }
+
+    34% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--burst-x)), calc(-50% + var(--burst-y))) scale(0.78);
+    }
+  }
+
+  @keyframes monopoly-ring-pulse {
+    0% {
+      opacity: 0;
+      transform: scale(0.36);
+    }
+
+    34% {
+      opacity: 0.88;
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(1.26);
     }
   }
 
@@ -1413,7 +1726,7 @@
 
   .monopoly-dice-sparkles {
     position: absolute;
-    inset: 11% 12%;
+    inset: 0;
     pointer-events: none;
   }
 
@@ -1421,71 +1734,87 @@
     position: absolute;
     width: clamp(0.9rem, calc(var(--monopoly-board-size) * 0.025), 1.45rem);
     height: clamp(0.9rem, calc(var(--monopoly-board-size) * 0.025), 1.45rem);
-    color: #be185d;
+    color: #ff2f92;
     opacity: 0;
-    animation: monopoly-roll-sparkle 900ms ease-out infinite;
+    animation: monopoly-roll-sparkle 920ms cubic-bezier(0.14, 0.78, 0.28, 1) infinite;
+    --sparkle-x: 0rem;
+    --sparkle-y: -1rem;
   }
 
   .monopoly-dice-sparkles svg {
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 3px 5px rgba(190, 24, 93, 0.22));
+    filter:
+      drop-shadow(0 0 5px rgba(255, 255, 255, 0.95))
+      drop-shadow(0 5px 9px rgba(190, 24, 93, 0.3));
   }
 
   .monopoly-dice-sparkles span:nth-child(1) {
-    top: 18%;
-    left: 18%;
+    top: 35%;
+    left: 32%;
+    --sparkle-x: -4.8rem;
+    --sparkle-y: -3.2rem;
   }
 
   .monopoly-dice-sparkles span:nth-child(2) {
-    top: 12%;
-    right: 22%;
-    color: #c084fc;
+    top: 31%;
+    right: 34%;
+    color: #8b5cf6;
+    --sparkle-x: 4.2rem;
+    --sparkle-y: -3.5rem;
     animation-delay: 120ms;
   }
 
   .monopoly-dice-sparkles span:nth-child(3) {
-    right: 14%;
-    bottom: 24%;
-    color: #f9a8d4;
+    right: 31%;
+    bottom: 35%;
+    color: #ff4fc3;
+    --sparkle-x: 4.9rem;
+    --sparkle-y: 2.9rem;
     animation-delay: 220ms;
   }
 
   .monopoly-dice-sparkles span:nth-child(4) {
-    bottom: 16%;
-    left: 22%;
-    color: #ffe66d;
+    bottom: 32%;
+    left: 34%;
+    color: #ffd000;
+    --sparkle-x: -4.4rem;
+    --sparkle-y: 3.1rem;
     animation-delay: 320ms;
   }
 
   .monopoly-dice-sparkles span:nth-child(5) {
-    top: 45%;
-    left: 10%;
-    color: #aee9ff;
+    top: 47%;
+    left: 31%;
+    color: #00c2ff;
+    --sparkle-x: -5.2rem;
+    --sparkle-y: 0.3rem;
     animation-delay: 440ms;
   }
 
   .monopoly-dice-sparkles span:nth-child(6) {
-    top: 44%;
-    right: 10%;
-    color: #a7e8b2;
+    top: 45%;
+    right: 31%;
+    color: #19d66b;
+    --sparkle-x: 5.2rem;
+    --sparkle-y: -0.1rem;
     animation-delay: 560ms;
   }
 
   @keyframes monopoly-roll-sparkle {
     0% {
       opacity: 0;
-      transform: translateY(0.28rem) scale(0.45) rotate(-8deg);
+      transform: translate(0, 0) scale(0.42) rotate(-8deg);
     }
 
-    42% {
-      opacity: 0.9;
-      transform: translateY(-0.12rem) scale(1) rotate(7deg);
+    32% {
+      opacity: 1;
+      transform: translate(calc(var(--sparkle-x) * 0.54), calc(var(--sparkle-y) * 0.54)) scale(1.12) rotate(7deg);
     }
 
     100% {
       opacity: 0;
-      transform: translateY(-0.55rem) scale(0.7) rotate(16deg);
+      transform: translate(var(--sparkle-x), var(--sparkle-y)) scale(0.66) rotate(18deg);
     }
   }
 
