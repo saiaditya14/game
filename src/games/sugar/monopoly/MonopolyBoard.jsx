@@ -1,8 +1,9 @@
 import React from 'react';
 import { BoardSpace } from './BoardSpace';
+import { MonopolyDiceOverlay } from './MonopolyDiceOverlay';
 import monopolyBoardCenterImage from '../../../../images/monopoly_board.jpeg';
 
-const spaces = [
+export const spaces = [
   { id: 0, name: 'GO', kind: 'corner', corner: 'go', isCorner: true, gridArea: '15 / 15 / 16 / 16', edge: 'bottom' },
   { id: 1, name: 'Snarl Swamp', price: 60, colorGroup: 'darkOlive', gridArea: '15 / 14 / 16 / 15', edge: 'bottom' },
   { id: 2, name: 'Charm Chest', kind: 'chest', gridArea: '15 / 13 / 16 / 14', edge: 'bottom' },
@@ -64,21 +65,65 @@ const spaces = [
   { id: 55, name: 'Sky Palace', price: 400, colorGroup: 'white', gridArea: '14 / 15 / 15 / 16', edge: 'right' },
 ];
 
-export const MonopolyBoard = () => {
+export const BOARD_SPACE_COUNT = spaces.length;
+
+const getPlayersByPosition = (players) => {
+  return players.reduce((grouped, player) => {
+    const position = Number(player.position || 0);
+    const safePosition = ((position % BOARD_SPACE_COUNT) + BOARD_SPACE_COUNT) % BOARD_SPACE_COUNT;
+    if (!grouped[safePosition]) grouped[safePosition] = [];
+    grouped[safePosition].push(player);
+    return grouped;
+  }, {});
+};
+
+export const MonopolyBoard = ({
+  players = [],
+  latestRoll,
+  canRoll = false,
+  isRolling = false,
+  onRoll,
+}) => {
+  const playersByPosition = getPlayersByPosition(players);
+
   return (
     <section className="monopoly-board" aria-label="Sugaropoly board">
       <div className="monopoly-grid">
-        {spaces.map((space) => (
-          <div key={space.id} style={{ gridArea: space.gridArea }}>
-            <BoardSpace {...space} />
-          </div>
-        ))}
+        {spaces.map((space) => {
+          const spacePlayers = playersByPosition[space.id] || [];
+
+          return (
+            <div className="monopoly-space-holder" key={space.id} style={{ gridArea: space.gridArea }}>
+              <BoardSpace {...space} />
+              {spacePlayers.length ? (
+                <div className="monopoly-token-cluster" aria-label={`Players on ${space.name}`}>
+                  {spacePlayers.slice(0, 8).map((player) => (
+                    <span
+                      className="monopoly-token"
+                      key={player.id}
+                      title={`${player.name} on ${space.name}`}
+                      style={{ '--player-color': player.color || '#f9a8d4' }}
+                    >
+                      {String(player.name || '?').charAt(0)}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
 
         <div className="monopoly-center" style={{ gridArea: '2 / 2 / 15 / 15' }}>
           <img
             className="monopoly-center-image"
             src={monopolyBoardCenterImage}
             alt="Faerie Kingdom Quest board art"
+          />
+          <MonopolyDiceOverlay
+            latestRoll={latestRoll}
+            canRoll={canRoll}
+            isRolling={isRolling}
+            onRoll={onRoll}
           />
         </div>
       </div>

@@ -270,6 +270,23 @@
     min-width: 0;
   }
 
+  .sugaropoly-room-pill {
+    min-width: 0;
+    max-width: 5.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.45rem 0.58rem;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.72);
+    color: #8a1f4d;
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.12em;
+    box-shadow: 0 10px 22px rgba(190, 24, 93, 0.09);
+  }
+
   .sugaropoly-nav-icon-button:active {
     transform: scale(0.98);
   }
@@ -302,6 +319,260 @@
 
   .sugaropoly-page:fullscreen {
     overflow: auto;
+  }
+
+  .sugaropoly-lobby {
+    min-height: calc(100vh - 5rem);
+    display: grid;
+    place-items: center;
+    padding: clamp(1rem, 3vw, 2.4rem) 0.5rem;
+    color: #7a2046;
+    font-family: 'Nunito', 'Inter', sans-serif;
+  }
+
+  .sugaropoly-lobby-card {
+    width: min(100%, 42rem);
+    border: 3px solid #f0a9c8;
+    border-radius: 0.5rem;
+    padding: clamp(1.4rem, 3vw, 2rem);
+    background:
+      radial-gradient(circle at 12% 14%, rgba(174, 233, 255, 0.55), transparent 26%),
+      radial-gradient(circle at 86% 18%, rgba(255, 230, 109, 0.38), transparent 24%),
+      linear-gradient(145deg, rgba(255, 252, 246, 0.96), rgba(255, 242, 248, 0.96) 55%, rgba(239, 252, 255, 0.94));
+    box-shadow: 0 24px 70px rgba(190, 24, 93, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+    text-align: center;
+  }
+
+  .sugaropoly-lobby-mark {
+    width: 3.8rem;
+    height: 3.8rem;
+    margin: 0 auto;
+    display: grid;
+    place-items: center;
+    border: 3px solid #f0a9c8;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.9), transparent 30%),
+      linear-gradient(135deg, #fff7fb, #f9a8d4);
+    color: #be185d;
+    box-shadow: 0 14px 30px rgba(190, 24, 93, 0.16);
+  }
+
+  .sugaropoly-lobby-mark svg {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .sugaropoly-lobby-kicker {
+    margin: 1.15rem 0 0;
+    color: #be185d;
+    font-size: 0.68rem;
+    font-weight: 950;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-lobby-card h1 {
+    margin: 0.45rem 0 0;
+    color: #8a1f4d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 850;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-lobby-copy,
+  .sugaropoly-lobby-note {
+    max-width: 32rem;
+    margin: 1rem auto 0;
+    color: #8a4c69;
+    font-size: 0.95rem;
+    font-weight: 760;
+    line-height: 1.55;
+  }
+
+  .sugaropoly-lobby-actions,
+  .sugaropoly-join-form {
+    width: min(100%, 32rem);
+    margin: 1.65rem auto 0;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .sugaropoly-lobby-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sugaropoly-lobby-primary,
+  .sugaropoly-lobby-secondary {
+    border: 2px solid #f0a9c8;
+    border-radius: 0.5rem;
+    box-shadow: 0 14px 28px rgba(190, 24, 93, 0.15);
+  }
+
+  .sugaropoly-lobby-primary {
+    background: linear-gradient(135deg, #f9a8d4, #d8c4ff);
+    color: #68123a;
+  }
+
+  .sugaropoly-lobby-secondary {
+    background: rgba(255, 255, 255, 0.72);
+    color: #8a1f4d;
+  }
+
+  .sugaropoly-join-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.45rem;
+    border: 2px solid rgba(216, 106, 154, 0.26);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.54);
+  }
+
+  .sugaropoly-join-form input {
+    min-width: 0;
+    min-height: 3rem;
+    border: 2px solid rgba(216, 106, 154, 0.28);
+    border-radius: 0.45rem;
+    background: #fffafd;
+    color: #8a1f4d;
+    font-size: 1.1rem;
+    font-weight: 950;
+    letter-spacing: 0.22em;
+    outline: none;
+    padding: 0 0.8rem;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-waiting-room {
+    width: min(100%, 32rem);
+    margin: 1.5rem auto 0;
+  }
+
+  .sugaropoly-room-code {
+    display: grid;
+    gap: 0.2rem;
+    justify-items: center;
+    padding: 0.8rem;
+    border: 2px solid rgba(216, 106, 154, 0.28);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.62);
+  }
+
+  .sugaropoly-room-code span {
+    color: #8a4c69;
+    font-size: 0.66rem;
+    font-weight: 950;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-room-code strong {
+    color: #be185d;
+    font-size: 1.65rem;
+    font-weight: 950;
+    letter-spacing: 0.22em;
+  }
+
+  .sugaropoly-waiting-header,
+  .sugaropoly-waiting-player {
+    display: flex;
+    align-items: center;
+  }
+
+  .sugaropoly-waiting-header {
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 1rem;
+    color: #8a1f4d;
+    font-size: 0.8rem;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-waiting-header svg {
+    width: 1rem;
+    height: 1rem;
+    color: #be185d;
+  }
+
+  .sugaropoly-waiting-list {
+    display: grid;
+    gap: 0.38rem;
+    margin-top: 0.65rem;
+  }
+
+  .sugaropoly-waiting-player {
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 2.8rem;
+    padding: 0.42rem 0.55rem;
+    border: 2px solid rgba(216, 106, 154, 0.2);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.68);
+    color: #6f173f;
+    font-size: 0.86rem;
+    font-weight: 850;
+  }
+
+  .sugaropoly-waiting-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 2px solid color-mix(in srgb, var(--player-color) 72%, #be185d);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.84), transparent 30%),
+      var(--player-color);
+    color: #7a2046;
+  }
+
+  .sugaropoly-waiting-avatar svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .sugaropoly-waiting-player span:nth-child(2) {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sugaropoly-waiting-player strong {
+    color: #be185d;
+    font-size: 0.72rem;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  .sugaropoly-start-button {
+    width: 100%;
+    margin-top: 0.9rem;
+  }
+
+  .sugaropoly-lobby-error,
+  .sugaropoly-inline-error {
+    margin: 1rem auto 0;
+    max-width: 36rem;
+    border: 2px solid rgba(244, 63, 94, 0.28);
+    border-radius: 0.5rem;
+    background: rgba(255, 241, 242, 0.82);
+    color: #9f1239;
+    font-size: 0.82rem;
+    font-weight: 850;
+    line-height: 1.35;
+    padding: 0.72rem 0.9rem;
+    text-align: center;
+  }
+
+  .sugaropoly-inline-error {
+    margin-bottom: 0.75rem;
   }
 
   .sugaropoly-layout {
@@ -473,6 +744,22 @@
     font-size: 0.8rem;
     font-weight: 950;
     line-height: 1;
+  }
+
+  .monopoly-player-stats {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.12rem;
+    line-height: 1;
+  }
+
+  .monopoly-player-position {
+    color: #8a4c69;
+    font-size: 0.62rem;
+    font-weight: 900;
+    white-space: nowrap;
   }
 
   .monopoly-create-trade-button,
@@ -729,6 +1016,12 @@
     min-height: 0;
   }
 
+  .monopoly-space-holder {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+  }
+
   .monopoly-space {
     position: relative;
     width: 100%;
@@ -942,6 +1235,161 @@
     height: 100%;
     display: block;
     object-fit: cover;
+    transition: filter 180ms ease, transform 180ms ease;
+  }
+
+  .monopoly-center:has(.monopoly-dice-overlay) .monopoly-center-image {
+    filter: blur(2px) brightness(0.9) saturate(0.92);
+    transform: scale(1.012);
+  }
+
+  .monopoly-token-cluster {
+    position: absolute;
+    z-index: 5;
+    right: 0.12rem;
+    bottom: 0.12rem;
+    display: flex;
+    flex-wrap: wrap-reverse;
+    justify-content: flex-end;
+    gap: 0.06rem;
+    max-width: 78%;
+    pointer-events: none;
+  }
+
+  .monopoly-token {
+    width: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.018), 1.05rem);
+    height: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.018), 1.05rem);
+    display: grid;
+    place-items: center;
+    border: 2px solid color-mix(in srgb, var(--player-color) 72%, #be185d);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.9), transparent 31%),
+      var(--player-color);
+    color: #68123a;
+    font-size: clamp(0.34rem, calc(var(--monopoly-board-size) * 0.009), 0.62rem);
+    font-weight: 950;
+    line-height: 1;
+    box-shadow: 0 4px 10px rgba(122, 32, 70, 0.18);
+  }
+
+  .monopoly-dice-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.7rem, 3vw, 2rem);
+    pointer-events: none;
+  }
+
+  .monopoly-dice-card {
+    width: min(78%, 18rem);
+    display: grid;
+    justify-items: center;
+    gap: 0.65rem;
+    padding: clamp(0.78rem, 2vw, 1.08rem);
+    border: 3px solid #f0a9c8;
+    border-radius: 0.7rem;
+    background:
+      radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.94), transparent 28%),
+      linear-gradient(145deg, rgba(255, 252, 246, 0.96), rgba(255, 242, 248, 0.96) 60%, rgba(239, 252, 255, 0.94));
+    box-shadow: 0 22px 46px rgba(122, 32, 70, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.86);
+    pointer-events: auto;
+  }
+
+  .monopoly-dice-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    color: #be185d;
+    font-size: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.011), 0.72rem);
+    font-weight: 950;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .monopoly-dice-kicker svg,
+  .monopoly-roll-button svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .monopoly-dice-pair {
+    display: flex;
+    gap: clamp(0.45rem, 1.6vw, 0.8rem);
+  }
+
+  .monopoly-dice-pair.is-rolling .monopoly-die {
+    transform: rotate(-3deg) translateY(-1px);
+  }
+
+  .monopoly-dice-pair.is-rolling .monopoly-die:nth-child(2) {
+    transform: rotate(4deg) translateY(1px);
+  }
+
+  .monopoly-die {
+    width: clamp(2.25rem, calc(var(--monopoly-board-size) * 0.075), 4rem);
+    height: clamp(2.25rem, calc(var(--monopoly-board-size) * 0.075), 4rem);
+    display: grid;
+    place-items: center;
+    border: 3px solid #f0a9c8;
+    border-radius: 0.65rem;
+    background:
+      radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.94), transparent 30%),
+      linear-gradient(145deg, #fff7fb, #ffd6e8);
+    color: #8a1f4d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.25rem, calc(var(--monopoly-board-size) * 0.04), 2.2rem);
+    font-weight: 850;
+    line-height: 1;
+    box-shadow: 0 12px 24px rgba(190, 24, 93, 0.16);
+    transition: transform 80ms ease;
+  }
+
+  .monopoly-roll-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.55rem;
+    padding: 0.58rem 0.9rem;
+    border: 2px solid #c084fc;
+    border-radius: 0.55rem;
+    background: linear-gradient(135deg, #d8c4ff, #f9a8d4);
+    color: #68123a;
+    font-size: 0.82rem;
+    font-weight: 950;
+    box-shadow: 0 12px 24px rgba(190, 24, 93, 0.16);
+  }
+
+  .monopoly-roll-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+  }
+
+  .monopoly-dice-result {
+    min-height: 2.35rem;
+    display: grid;
+    justify-items: center;
+    gap: 0.12rem;
+    color: #7a2046;
+    text-align: center;
+  }
+
+  .monopoly-dice-result strong {
+    color: #be185d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.2rem, calc(var(--monopoly-board-size) * 0.035), 1.9rem);
+    line-height: 1;
+  }
+
+  .monopoly-dice-result span {
+    max-width: 13rem;
+    color: #8a4c69;
+    font-size: clamp(0.66rem, calc(var(--monopoly-board-size) * 0.012), 0.82rem);
+    font-weight: 850;
+    line-height: 1.25;
   }
 
   .center-script {
@@ -1021,6 +1469,10 @@
       display: none;
     }
 
+    .sugaropoly-room-pill {
+      display: none;
+    }
+
     .sugaropoly-theme-control {
       padding-inline: 0.42rem;
     }
@@ -1034,6 +1486,15 @@
   @media (max-width: 520px) {
     .sugaropoly-title-lockup span {
       max-width: 11rem;
+    }
+
+    .sugaropoly-lobby-actions,
+    .sugaropoly-join-form {
+      grid-template-columns: 1fr;
+    }
+
+    .sugaropoly-lobby-card {
+      padding-inline: 1rem;
     }
 
     .sugaropoly-theme-control select {

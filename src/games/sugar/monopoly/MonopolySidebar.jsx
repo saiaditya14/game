@@ -136,7 +136,12 @@ export const MonopolySidebar = ({
                   </div>
                   <span className="monopoly-player-name">{player.name}</span>
                 </div>
-                <span className="monopoly-player-money">{formatMoney(player.money)}</span>
+                <span className="monopoly-player-stats">
+                  <span className="monopoly-player-money">{formatMoney(player.money)}</span>
+                  {Number.isFinite(Number(player.position)) ? (
+                    <span className="monopoly-player-position">Space {Number(player.position) + 1}</span>
+                  ) : null}
+                </span>
               </div>
             );
           })}
