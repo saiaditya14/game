@@ -115,14 +115,71 @@ Then open:
 http://localhost:5173/draw-off
 ```
 
+## Sugaropoly / Faerie Kingdom Quest
+
+Sugaropoly lives at `/monopoly` in `src/games/sugar/monopoly/`. The current version is a playable Supabase prototype: players can create a room, join by code, start from the host lobby, roll 2d8, move tokens around the 56-space board, and see synced turn/player state.
+
+For local multiplayer development:
+
+```powershell
+supabase start
+supabase migration up
+npm run dev
+```
+
+The local Vite URL may use the project basename:
+
+```txt
+http://127.0.0.1:5173/game/monopoly
+```
+
+### Sugaropoly Done
+
+- 56-space board confirmed in `MonopolyBoard.jsx`.
+- Supabase `monopoly_rooms` migration exists for room code, players, current turn, status, latest roll, and event log.
+- Create room, join room, host start, 2-8 player waiting room, and Realtime sync are implemented.
+- Movement uses 2d8.
+- Tokens move around the board with wraparound movement.
+- Current player can roll; inactive players cannot roll.
+- Dice overlay is local-only for the rolling player and clears quickly after the roll.
+- Sidebar shows joined players, placeholder money, active turn, positions, and event log.
+- Topbar and sidebar show a clearer current-turn prompt.
+- Local players can leave a waiting or active room without deleting the room for everyone else.
+- Full and already-started rooms show friendlier join feedback.
+- Moved tokens do a small hop after a synced roll.
+- Local dice rolls show tiny pastel sparkle feedback.
+
+### Sugaropoly Manual Test Notes
+
+Use two browser tabs at `http://127.0.0.1:5173/game/monopoly` after `supabase start`, `supabase migration up`, and `npm run dev`.
+
+- Tab 1: create a room and confirm the waiting room shows the room code and host.
+- Tab 2: join with the room code and confirm both tabs show `2/8 players joined`.
+- Tab 1: start the game and confirm both tabs show whose turn it is in the topbar/sidebar.
+- Active player tab: roll 2d8 and confirm only that tab sees the dice overlay/sparkles, while both tabs see the token land with a small hop and the turn advance.
+- Non-active player tab: confirm the roll button is unavailable until that player's turn.
+- Leave flow: click Leave Room from a waiting or active tab and confirm that tab returns to the lobby while the other tab keeps the room state.
+- Join feedback: try joining an already-started room, and try joining a room with 8 players, to confirm the clear blocked-state message.
+
+### Sugaropoly Blocked Until Property/Card Data Exists
+
+- Property purchase prompts need a per-space property breakdown: purchasable vs tax vs card vs utility/gem/portal, purchase price, display copy, and initial owner state.
+- Rent logic needs rent tables or formulas for every property group, plus rules for utilities/gems/portals if they behave differently.
+- Property detail cards need finalized card content: title, type, price, rent values, art/icon treatment, and action buttons.
+- Ownership display needs a data model for deeds, owner ids, mortgages/upgrades if those will exist, and how ownership is rendered on the board.
+- Chance/Charm Chest behavior needs a card deck list and rules for each card before the spaces can do more than log a placeholder.
+- Jail/time-out, pass-GO rewards, taxes, bankruptcy, trading, and win/end conditions all depend on the economy rules being defined.
+
 
 Todolist:
 Need an overhaul of UI in general
 Need an overhaul of button UI in draw off
 Play test system prompt for draw off a little but seems fine and fun to babie
 Security issues in joining such as what if more than two join? what if one leaves how to come back? 
-Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement. Next: implement simple 2d8 dice rolling and circular board movement before adding special rules.
+Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement.
 NAVBAR needs an overhaul bro
+- Add a small "copy room code" control in the waiting room/topbar.
+- Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
 Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)

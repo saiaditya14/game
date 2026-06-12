@@ -287,6 +287,28 @@
     box-shadow: 0 10px 22px rgba(190, 24, 93, 0.09);
   }
 
+  .sugaropoly-turn-pill {
+    min-width: 0;
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.45rem 0.58rem;
+    border: 2px solid rgba(216, 106, 154, 0.28);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.72);
+    color: #8a1f4d;
+    font-size: 0.78rem;
+    font-weight: 950;
+    box-shadow: 0 10px 22px rgba(190, 24, 93, 0.09);
+  }
+
+  .sugaropoly-turn-pill.is-yours {
+    border-color: #f0a9c8;
+    background: linear-gradient(135deg, rgba(255, 230, 109, 0.52), rgba(255, 247, 251, 0.86));
+    color: #7a2046;
+  }
+
   .sugaropoly-nav-icon-button:active {
     transform: scale(0.98);
   }
@@ -556,6 +578,11 @@
     margin-top: 0.9rem;
   }
 
+  .sugaropoly-leave-button {
+    width: 100%;
+    margin-top: 0.6rem;
+  }
+
   .sugaropoly-lobby-error,
   .sugaropoly-inline-error {
     margin: 1rem auto 0;
@@ -606,10 +633,53 @@
   .monopoly-sidebar {
     height: 100%;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
     gap: 0.28rem;
     color: #7a2046;
     font-family: 'Nunito', 'Inter', sans-serif;
+  }
+
+  .monopoly-turn-callout {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.65rem;
+    padding: 0.55rem 0.68rem;
+    overflow: hidden;
+    border: 3px solid #d86a9a;
+    border-radius: 0.5rem;
+    background:
+      radial-gradient(circle at 16% 20%, rgba(255, 230, 109, 0.44), transparent 34%),
+      linear-gradient(145deg, rgba(255, 252, 246, 0.97), rgba(255, 242, 248, 0.96) 58%, rgba(239, 252, 255, 0.94));
+    color: #8a1f4d;
+    box-shadow: 0 16px 34px rgba(122, 32, 70, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  }
+
+  .monopoly-turn-callout.is-yours {
+    border-color: #f0a9c8;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(255, 230, 109, 0.56), transparent 34%),
+      linear-gradient(135deg, rgba(255, 247, 251, 0.98), rgba(255, 228, 240, 0.94) 62%, rgba(238, 251, 255, 0.94));
+  }
+
+  .monopoly-turn-callout-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    color: #be185d;
+  }
+
+  .monopoly-turn-callout span {
+    min-width: 0;
+    overflow: hidden;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    font-weight: 850;
+    line-height: 1;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .monopoly-sidebar-section {
@@ -989,6 +1059,8 @@
   }
 
   .monopoly-board {
+    --monopoly-token-size: clamp(0.72rem, calc(var(--monopoly-board-size) * 0.022), 1.28rem);
+    --monopoly-token-font-size: clamp(0.4rem, calc(var(--monopoly-board-size) * 0.01), 0.7rem);
     width: var(--monopoly-board-size);
     aspect-ratio: 1;
     margin-inline: auto;
@@ -998,6 +1070,24 @@
     border-radius: 0.5rem;
     background: #fff8fb;
     box-shadow: 0 24px 70px rgba(190, 24, 93, 0.18), inset 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .monopoly-board-players-3,
+  .monopoly-board-players-4 {
+    --monopoly-token-size: clamp(0.64rem, calc(var(--monopoly-board-size) * 0.019), 1.12rem);
+    --monopoly-token-font-size: clamp(0.36rem, calc(var(--monopoly-board-size) * 0.009), 0.62rem);
+  }
+
+  .monopoly-board-players-5,
+  .monopoly-board-players-6 {
+    --monopoly-token-size: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.017), 0.98rem);
+    --monopoly-token-font-size: clamp(0.32rem, calc(var(--monopoly-board-size) * 0.008), 0.56rem);
+  }
+
+  .monopoly-board-players-7,
+  .monopoly-board-players-8 {
+    --monopoly-token-size: clamp(0.52rem, calc(var(--monopoly-board-size) * 0.015), 0.86rem);
+    --monopoly-token-font-size: clamp(0.3rem, calc(var(--monopoly-board-size) * 0.0072), 0.5rem);
   }
 
   .monopoly-grid {
@@ -1257,8 +1347,8 @@
   }
 
   .monopoly-token {
-    width: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.018), 1.05rem);
-    height: clamp(0.58rem, calc(var(--monopoly-board-size) * 0.018), 1.05rem);
+    width: var(--monopoly-token-size);
+    height: var(--monopoly-token-size);
     display: grid;
     place-items: center;
     border: 2px solid color-mix(in srgb, var(--player-color) 72%, #be185d);
@@ -1267,10 +1357,33 @@
       radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.9), transparent 31%),
       var(--player-color);
     color: #68123a;
-    font-size: clamp(0.34rem, calc(var(--monopoly-board-size) * 0.009), 0.62rem);
+    font-size: var(--monopoly-token-font-size);
     font-weight: 950;
     line-height: 1;
     box-shadow: 0 4px 10px rgba(122, 32, 70, 0.18);
+  }
+
+  .monopoly-token.is-moving {
+    animation: monopoly-token-hop 520ms cubic-bezier(0.2, 0.82, 0.28, 1.12);
+    box-shadow: 0 7px 16px rgba(190, 24, 93, 0.24);
+  }
+
+  @keyframes monopoly-token-hop {
+    0% {
+      transform: translateY(0) scale(0.92);
+    }
+
+    38% {
+      transform: translateY(-0.42rem) scale(1.08);
+    }
+
+    68% {
+      transform: translateY(0.06rem) scale(0.98);
+    }
+
+    100% {
+      transform: translateY(0) scale(1);
+    }
   }
 
   .monopoly-dice-overlay {
@@ -1296,6 +1409,84 @@
       linear-gradient(145deg, rgba(255, 252, 246, 0.96), rgba(255, 242, 248, 0.96) 60%, rgba(239, 252, 255, 0.94));
     box-shadow: 0 22px 46px rgba(122, 32, 70, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.86);
     pointer-events: auto;
+  }
+
+  .monopoly-dice-sparkles {
+    position: absolute;
+    inset: 11% 12%;
+    pointer-events: none;
+  }
+
+  .monopoly-dice-sparkles span {
+    position: absolute;
+    width: clamp(0.9rem, calc(var(--monopoly-board-size) * 0.025), 1.45rem);
+    height: clamp(0.9rem, calc(var(--monopoly-board-size) * 0.025), 1.45rem);
+    color: #be185d;
+    opacity: 0;
+    animation: monopoly-roll-sparkle 900ms ease-out infinite;
+  }
+
+  .monopoly-dice-sparkles svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 3px 5px rgba(190, 24, 93, 0.22));
+  }
+
+  .monopoly-dice-sparkles span:nth-child(1) {
+    top: 18%;
+    left: 18%;
+  }
+
+  .monopoly-dice-sparkles span:nth-child(2) {
+    top: 12%;
+    right: 22%;
+    color: #c084fc;
+    animation-delay: 120ms;
+  }
+
+  .monopoly-dice-sparkles span:nth-child(3) {
+    right: 14%;
+    bottom: 24%;
+    color: #f9a8d4;
+    animation-delay: 220ms;
+  }
+
+  .monopoly-dice-sparkles span:nth-child(4) {
+    bottom: 16%;
+    left: 22%;
+    color: #ffe66d;
+    animation-delay: 320ms;
+  }
+
+  .monopoly-dice-sparkles span:nth-child(5) {
+    top: 45%;
+    left: 10%;
+    color: #aee9ff;
+    animation-delay: 440ms;
+  }
+
+  .monopoly-dice-sparkles span:nth-child(6) {
+    top: 44%;
+    right: 10%;
+    color: #a7e8b2;
+    animation-delay: 560ms;
+  }
+
+  @keyframes monopoly-roll-sparkle {
+    0% {
+      opacity: 0;
+      transform: translateY(0.28rem) scale(0.45) rotate(-8deg);
+    }
+
+    42% {
+      opacity: 0.9;
+      transform: translateY(-0.12rem) scale(1) rotate(7deg);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-0.55rem) scale(0.7) rotate(16deg);
+    }
   }
 
   .monopoly-dice-kicker {

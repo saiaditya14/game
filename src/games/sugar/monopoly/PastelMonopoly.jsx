@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gamepad2, Home, Maximize2, Minimize2, Palette, Sparkles } from 'lucide-react';
+import { Gamepad2, Home, LogOut, Maximize2, Minimize2, Palette, Sparkles } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { supabase } from '../../../lib/supabaseClient';
 import { MonopolyBoard, BOARD_SPACE_COUNT, spaces } from './MonopolyBoard';
@@ -53,9 +53,17 @@ const buildRollEvent = ({ id, playerName, total, to }) => ({
   kind: 'visit',
 });
 
+const buildLeaveEvent = (playerName) => ({
+  id: `leave-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  player: playerName,
+  action: 'left the quest',
+  kind: 'card',
+});
+
 export const PastelMonopoly = () => {
   const { theme, setTheme } = useTheme();
   const pageRef = useRef(null);
+  const leftRoomIdsRef = useRef(new Set());
   const playerId = useMemo(getPlayerId, []);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [room, setRoom] = useState(null);
@@ -74,9 +82,13 @@ export const PastelMonopoly = () => {
   const currentPlayer = room?.status === 'playing' && players.length
     ? players[room.current_player_index % players.length]
     : null;
+  const localPlayer = players.find((player) => player.id === playerId);
   const isHost = room?.host_id === playerId;
   const isCurrentPlayer = currentPlayer?.id === playerId;
   const canRoll = Boolean(room?.status === 'playing' && isCurrentPlayer && !isRolling);
+  const turnPrompt = room?.status === 'playing' && currentPlayer
+    ? `${isCurrentPlayer ? 'Your' : `${currentPlayer.name}'s`} turn`
+    : '';
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -99,7 +111,7 @@ export const PastelMonopoly = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'monopoly_rooms', filter: `id=eq.${room.id}` },
         (payload) => {
-          if (payload.new) setRoom(payload.new);
+          if (payload.new && !leftRoomIdsRef.current.has(payload.new.id)) setRoom(payload.new);
         },
       )
       .subscribe();
@@ -164,6 +176,7 @@ export const PastelMonopoly = () => {
       return;
     }
 
+    leftRoomIdsRef.current.delete(data.id);
     setRoom(data);
   };
 
@@ -198,19 +211,20 @@ export const PastelMonopoly = () => {
     const existingPlayers = getPlayers(existingRoom);
     if (existingPlayers.some((player) => player.id === playerId)) {
       setIsBusy(false);
+      leftRoomIdsRef.current.delete(existingRoom.id);
       setRoom(existingRoom);
       return;
     }
 
     if (existingRoom.status !== 'waiting') {
       setIsBusy(false);
-      setError('That room has already started.');
+      setError('That quest already started. Create a fresh room to begin a new round.');
       return;
     }
 
     if (existingPlayers.length >= 8) {
       setIsBusy(false);
-      setError('That room is full.');
+      setError('That room is cozy-full at 8 players. Try another code or make a new quest.');
       return;
     }
 
@@ -236,7 +250,48 @@ export const PastelMonopoly = () => {
       return;
     }
 
+    leftRoomIdsRef.current.delete(data.id);
     setRoom(data);
+  };
+
+  const leaveRoom = async () => {
+    setError('');
+    setLocalDiceRoll(null);
+
+    if (!room) return;
+
+    const leavingPlayer = players.find((player) => player.id === playerId);
+    const remainingPlayers = players.filter((player) => player.id !== playerId);
+    const nextEvents = leavingPlayer
+      ? [buildLeaveEvent(leavingPlayer.name), ...(Array.isArray(room.event_log) ? room.event_log : [])].slice(0, 24)
+      : room.event_log;
+
+    leftRoomIdsRef.current.add(room.id);
+    setRoom(null);
+
+    if (!supabase || !leavingPlayer) return;
+
+    const currentIndex = Number(room.current_player_index || 0);
+    const leavingIndex = players.findIndex((player) => player.id === playerId);
+    const shouldShiftTurnBack = room.status === 'playing' && leavingIndex >= 0 && leavingIndex < currentIndex;
+    const nextCurrentIndex = remainingPlayers.length
+      ? (currentIndex - (shouldShiftTurnBack ? 1 : 0) + remainingPlayers.length) % remainingPlayers.length
+      : 0;
+
+    const { error: leaveError } = await supabase
+      .from('monopoly_rooms')
+      .update({
+        players: remainingPlayers,
+        host_id: remainingPlayers[0]?.id || room.host_id,
+        current_player_index: nextCurrentIndex,
+        status: remainingPlayers.length ? room.status : 'aborted',
+        event_log: nextEvents,
+      })
+      .eq('id', room.id);
+
+    if (leaveError) {
+      setError(`You left locally, but the room could not update: ${leaveError.message}`);
+    }
   };
 
   const startGame = async () => {
@@ -364,6 +419,24 @@ export const PastelMonopoly = () => {
             </span>
           ) : null}
 
+          {turnPrompt ? (
+            <span className={`sugaropoly-turn-pill ${isCurrentPlayer ? 'is-yours' : ''}`} title={turnPrompt}>
+              {turnPrompt}
+            </span>
+          ) : null}
+
+          {room ? (
+            <button
+              className="sugaropoly-nav-icon-button"
+              type="button"
+              onClick={leaveRoom}
+              aria-label="Leave room"
+              title="Leave room"
+            >
+              <LogOut aria-hidden="true" />
+            </button>
+          ) : null}
+
           <Link className="sugaropoly-nav-icon-button" to="/" aria-label="Home" title="Home">
             <Home aria-hidden="true" />
           </Link>
@@ -403,6 +476,7 @@ export const PastelMonopoly = () => {
           onCreateRoom={createRoom}
           onJoinRoom={joinRoom}
           onStartGame={startGame}
+          onLeaveRoom={leaveRoom}
           isBusy={isBusy}
           error={error}
         />
@@ -414,6 +488,7 @@ export const PastelMonopoly = () => {
               <MonopolyBoard
                 players={players}
                 diceRoll={localDiceRoll}
+                movementRoll={room.latest_roll}
                 canRoll={canRoll}
                 isRolling={isRolling}
                 onRoll={rollDice}
@@ -427,6 +502,9 @@ export const PastelMonopoly = () => {
                 properties={[]}
                 events={events}
                 currentPlayerId={currentPlayer?.id}
+                currentPlayerName={currentPlayer?.name}
+                localPlayerId={playerId}
+                localPlayerName={localPlayer?.name}
                 onBankruptcy={() => setError('Bankruptcy is coming later. For now, keep rolling.')}
               />
             </div>

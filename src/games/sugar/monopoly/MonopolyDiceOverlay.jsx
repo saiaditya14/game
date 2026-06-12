@@ -51,6 +51,16 @@ export const MonopolyDiceOverlay = ({ roll, canRoll, onRoll, isRolling }) => {
 
   return (
     <div className="monopoly-dice-overlay" aria-live="polite">
+      {(roll || isRolling) ? (
+        <div className="monopoly-dice-sparkles" aria-hidden="true">
+          {[0, 1, 2, 3, 4, 5].map((sparkle) => (
+            <span key={sparkle}>
+              <Sparkles />
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <motion.div
         className="monopoly-dice-card"
         initial={{ opacity: 0, scale: 0.94, y: 8 }}

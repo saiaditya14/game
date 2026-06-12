@@ -98,14 +98,26 @@ export const MonopolySidebar = ({
   properties = DEFAULT_PROPERTIES,
   events = DEFAULT_EVENTS,
   currentPlayerId = 'you',
+  currentPlayerName,
+  localPlayerId,
+  localPlayerName,
   onBankruptcy,
 }) => {
   const [activeLowerPanel, setActiveLowerPanel] = useState('events');
   const visiblePlayers = players.slice(0, 8);
   const isPropertiesPanelActive = activeLowerPanel === 'properties';
+  const isLocalTurn = currentPlayerId && localPlayerId && currentPlayerId === localPlayerId;
+  const turnName = isLocalTurn ? (localPlayerName || 'You') : currentPlayerName;
 
   return (
     <aside className="monopoly-sidebar" aria-label="Monopoly game sidebar">
+      {turnName ? (
+        <section className={`monopoly-turn-callout ${isLocalTurn ? 'is-yours' : ''}`} aria-live="polite">
+          <Sparkles className="monopoly-turn-callout-icon" strokeWidth={2.5} aria-hidden="true" />
+          <span>{isLocalTurn ? 'Your turn' : `${turnName}'s turn`}</span>
+        </section>
+      ) : null}
+
       <SidebarSection
         title="Players"
         icon={Crown}

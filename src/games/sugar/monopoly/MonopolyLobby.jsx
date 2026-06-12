@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Crown, LogIn, Plus, Sparkles, Users } from 'lucide-react';
+import { Crown, LogIn, LogOut, Plus, Sparkles, Users } from 'lucide-react';
 
 const lobbyButtonClass =
   'inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-60';
@@ -11,6 +11,7 @@ export const MonopolyLobby = ({
   onCreateRoom,
   onJoinRoom,
   onStartGame,
+  onLeaveRoom,
   isBusy,
   error,
 }) => {
@@ -138,6 +139,15 @@ export const MonopolyLobby = ({
             ) : (
               <p className="sugaropoly-lobby-note">Waiting for the host to start the quest.</p>
             )}
+
+            <button
+              type="button"
+              onClick={onLeaveRoom}
+              className={`${lobbyButtonClass} sugaropoly-lobby-secondary sugaropoly-leave-button`}
+            >
+              <LogOut className="h-4 w-4" />
+              Leave Room
+            </button>
           </div>
         )}
 

@@ -80,14 +80,19 @@ const getPlayersByPosition = (players) => {
 export const MonopolyBoard = ({
   players = [],
   diceRoll,
+  movementRoll,
   canRoll = false,
   isRolling = false,
   onRoll,
 }) => {
   const playersByPosition = getPlayersByPosition(players);
+  const playerCount = Math.min(Math.max(players.length || 1, 1), 8);
 
   return (
-    <section className="monopoly-board" aria-label="Sugaropoly board">
+    <section
+      className={`monopoly-board monopoly-board-players-${playerCount}`}
+      aria-label="Sugaropoly board"
+    >
       <div className="monopoly-grid">
         {spaces.map((space) => {
           const spacePlayers = playersByPosition[space.id] || [];
@@ -97,16 +102,20 @@ export const MonopolyBoard = ({
               <BoardSpace {...space} />
               {spacePlayers.length ? (
                 <div className="monopoly-token-cluster" aria-label={`Players on ${space.name}`}>
-                  {spacePlayers.slice(0, 8).map((player) => (
+                  {spacePlayers.slice(0, 8).map((player) => {
+                    const isMovingToken = movementRoll?.playerId === player.id && movementRoll?.to === space.id;
+
+                    return (
                     <span
-                      className="monopoly-token"
-                      key={player.id}
+                      className={`monopoly-token ${isMovingToken ? 'is-moving' : ''}`}
+                      key={`${player.id}${isMovingToken ? `-${movementRoll.id}` : ''}`}
                       title={`${player.name} on ${space.name}`}
                       style={{ '--player-color': player.color || '#f9a8d4' }}
                     >
                       {String(player.name || '?').charAt(0)}
                     </span>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : null}
             </div>
