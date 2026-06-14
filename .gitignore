@@ -31,3 +31,4 @@ Thumbs.db
 # Supabase
 supabase/.temp/
 supabase/.branches/
+handoff.md

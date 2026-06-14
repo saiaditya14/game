@@ -3,512 +3,243 @@ import { Link } from 'react-router-dom';
 import { Gamepad2, Home, LogOut, Maximize2, Minimize2, Palette, Sparkles } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { supabase } from '../../../lib/supabaseClient';
-import { MonopolyBoard, BOARD_SPACE_COUNT, spaces } from './MonopolyBoard';
+import { MonopolyBoard } from './MonopolyBoard';
 import { MonopolyLobby } from './MonopolyLobby';
 import { MonopolySidebar } from './MonopolySidebar';
+import { MonopolySetup } from './MonopolySetup';
+import { PropertyCard } from './PropertyCard';
+import { TradeEditor } from './TradeEditor';
+import { TurnAction } from './TurnAction';
+import { VictoryOverlay } from './VictoryOverlay';
+import { ASSET_BY_ID, DEFAULT_RULES, spaces } from './monopolyData';
+import { createRollVisualTracker } from './rollVisuals';
 
-const PLAYER_ID_KEY = 'lovelyland-monopoly-player-id';
-const PLAYER_COLORS = ['#f9a8d4', '#a7e8b2', '#aee9ff', '#d8c4ff', '#ffe66d', '#ffc48f', '#b9b6ff', '#ffb48f'];
-const PLAYER_ICONS = ['heart', 'crown', 'sparkles', 'wand', 'gem', 'user', 'gift', 'heart'];
-
-const createPlayerId = () => {
-  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
-  return `player-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-};
-
-const getPlayerId = () => {
-  const existingId = window.localStorage.getItem(PLAYER_ID_KEY);
-  if (existingId) return existingId;
-
-  const playerId = createPlayerId();
-  window.localStorage.setItem(PLAYER_ID_KEY, playerId);
-  return playerId;
-};
-
+const ROOM_KEY = 'lovelyland-monopoly-room-id';
 const generateRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
-
-const createPlayer = (id, index) => ({
-  id,
-  name: `Player ${index + 1}`,
-  money: 1500,
-  position: 0,
-  color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-  icon: PLAYER_ICONS[index % PLAYER_ICONS.length],
-  joinedAt: new Date().toISOString(),
-});
-
-const getPlayers = (room) => (Array.isArray(room?.players) ? room.players : []);
-
-const getSpaceName = (position) => {
-  const safePosition = ((Number(position || 0) % BOARD_SPACE_COUNT) + BOARD_SPACE_COUNT) % BOARD_SPACE_COUNT;
-  return spaces[safePosition]?.name || `Space ${safePosition + 1}`;
-};
-
-const rollD8 = () => Math.floor(Math.random() * 8) + 1;
-
-const buildRollEvent = ({ id, playerName, total, to }) => ({
-  id,
-  player: playerName,
-  action: `rolled ${total} and landed on ${getSpaceName(to)}`,
-  kind: 'visit',
-});
-
-const buildLeaveEvent = (playerName) => ({
-  id: `leave-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-  player: playerName,
-  action: 'left the quest',
-  kind: 'card',
-});
+const playersOf = (room) => Array.isArray(room?.players) ? room.players : [];
+const LANDING_CARD_TYPES = new Set(['purchase', 'landed', 'rent', 'tax', 'free_park', 'time_out', 'time_out_failed']);
 
 export const PastelMonopoly = () => {
   const { theme, setTheme } = useTheme();
   const pageRef = useRef(null);
-  const leftRoomIdsRef = useRef(new Set());
-  const playerId = useMemo(getPlayerId, []);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const rollVisualTrackerRef = useRef(createRollVisualTracker());
+  const [userId, setUserId] = useState('');
   const [room, setRoom] = useState(null);
   const [error, setError] = useState('');
-  const [isBusy, setIsBusy] = useState(false);
-  const [isRolling, setIsRolling] = useState(false);
-  const [localDiceRoll, setLocalDiceRoll] = useState(null);
-  const themes = [
-    { id: 'theme-vanilla', label: 'Vanilla' },
-    { id: 'theme-pink', label: 'Pink' },
-    { id: 'theme-arcade', label: 'Arcade' },
-    { id: 'theme-cozy', label: 'Cozy' },
-  ];
+  const [busy, setBusy] = useState(false);
+  const [localRoll, setLocalRoll] = useState(null);
+  const [movementRoll, setMovementRoll] = useState(null);
+  const [inspectedSpaceId, setInspectedSpaceId] = useState(null);
+  const [showLandingCard, setShowLandingCard] = useState(false);
+  const [tradeOpen, setTradeOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const themes = [{ id: 'theme-vanilla', label: 'Vanilla' }, { id: 'theme-pink', label: 'Pink' }, { id: 'theme-arcade', label: 'Arcade' }, { id: 'theme-cozy', label: 'Cozy' }];
 
-  const players = getPlayers(room);
-  const currentPlayer = room?.status === 'playing' && players.length
-    ? players[room.current_player_index % players.length]
-    : null;
-  const localPlayer = players.find((player) => player.id === playerId);
-  const isHost = room?.host_id === playerId;
-  const isCurrentPlayer = currentPlayer?.id === playerId;
-  const canRoll = Boolean(room?.status === 'playing' && isCurrentPlayer && !isRolling);
-  const turnPrompt = room?.status === 'playing' && currentPlayer
-    ? `${isCurrentPlayer ? 'Your' : `${currentPlayer.name}'s`} turn`
-    : '';
+  const players = playersOf(room);
+  const currentPlayer = room?.status === 'playing' ? players[room.current_player_index] : null;
+  const localPlayer = players.find((player) => player.id === userId);
+  const isHost = room?.host_id === userId;
+  const isLocalTurn = currentPlayer?.id === userId;
+  const ownership = room?.ownership || {};
+  const pendingSpaceId = Number(room?.pending_action?.spaceId);
+  const hasVisibleLandingAction = LANDING_CARD_TYPES.has(room?.pending_action?.type);
+  const selectedSpaceId = inspectedSpaceId ?? (
+    showLandingCard && hasVisibleLandingAction && Number.isFinite(pendingSpaceId) ? pendingSpaceId : null
+  );
+  const selectedSpace = selectedSpaceId === null ? null : spaces[selectedSpaceId];
+  const selectedDeed = selectedSpace ? ownership[selectedSpace.id] : null;
+  const selectedOwner = players.find((player) => player.id === selectedDeed?.ownerId);
+  const authoritativeCard = isLocalTurn && selectedSpaceId === pendingSpaceId && inspectedSpaceId === null;
+  const canRoll = Boolean(isLocalTurn && room?.turn_phase === 'awaiting_roll' && !busy);
+  const canManage = Boolean(isLocalTurn && ['awaiting_roll', 'awaiting_end_turn'].includes(room?.turn_phase));
+  const myProperties = Object.entries(ownership).filter(([, deed]) => deed.ownerId === userId).map(([id]) => ASSET_BY_ID[id]).filter(Boolean);
+  const tradeAssets = Object.values(ASSET_BY_ID);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === pageRef.current);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
+  const applyRoom = useCallback((next, options) => {
+    if (!next) return;
+    const nextVisualRoll = rollVisualTrackerRef.current.observe(next, options);
+    if (nextVisualRoll) setMovementRoll(nextVisualRoll);
+    setRoom(next);
+    window.localStorage.setItem(ROOM_KEY, next.id);
   }, []);
 
-  useEffect(() => {
-    if (!supabase || !room?.id) return undefined;
-
-    const channel = supabase
-      .channel(`monopoly-room-${room.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'monopoly_rooms', filter: `id=eq.${room.id}` },
-        (payload) => {
-          if (payload.new && !leftRoomIdsRef.current.has(payload.new.id)) setRoom(payload.new);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room?.id]);
+  const rpc = useCallback(async (name, args = {}) => {
+    if (!supabase) throw new Error('Supabase is not configured.');
+    setBusy(true);
+    setError('');
+    const { data, error: rpcError } = await supabase.rpc(name, args);
+    setBusy(false);
+    if (rpcError) {
+      setError(rpcError.message);
+      throw rpcError;
+    }
+    applyRoom(data);
+    return data;
+  }, [applyRoom]);
 
   useEffect(() => {
-    if (!localDiceRoll?.id) return undefined;
+    if (!supabase) return;
+    let active = true;
+    (async () => {
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        const result = await supabase.auth.signInAnonymously();
+        if (result.error) { setError(`Anonymous sign-in failed: ${result.error.message}`); return; }
+        session = result.data.session;
+      }
+      if (!active) return;
+      setUserId(session.user.id);
+      const savedRoomId = window.localStorage.getItem(ROOM_KEY);
+      if (savedRoomId) {
+        const { data } = await supabase.from('monopoly_rooms').select('*').eq('id', savedRoomId).maybeSingle();
+        if (data && active) applyRoom(data);
+      }
+    })();
+    return () => { active = false; };
+  }, [applyRoom]);
 
-    const hideId = window.setTimeout(() => {
-      setLocalDiceRoll(null);
-    }, 1500);
+  useEffect(() => {
+    if (!supabase || !room?.id) return;
+    const channel = supabase.channel(`monopoly-room-${room.id}`).on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'monopoly_rooms', filter: `id=eq.${room.id}` },
+      ({ new: next }) => applyRoom(next)).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [applyRoom, room?.id]);
 
-    return () => {
-      window.clearTimeout(hideId);
-    };
-  }, [localDiceRoll?.id]);
+  useEffect(() => {
+    if (!movementRoll?.id || movementRoll.playerId !== userId) return;
+    setLocalRoll(movementRoll);
+    setShowLandingCard(false);
+    const diceTimer = window.setTimeout(() => setLocalRoll(null), 1500);
+    const cardTimer = window.setTimeout(() => setShowLandingCard(true), 1480);
+    return () => { window.clearTimeout(diceTimer); window.clearTimeout(cardTimer); };
+  }, [movementRoll?.id, userId]);
 
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await pageRef.current?.requestFullscreen();
-      return;
-    }
+  useEffect(() => {
+    if (room?.auction || LANDING_CARD_TYPES.has(room?.pending_action?.type)) return;
+    setShowLandingCard(false);
+    setInspectedSpaceId(null);
+  }, [room?.auction, room?.pending_action?.type]);
 
-    await document.exitFullscreen();
-  };
-
-  const createRoom = async () => {
-    setError('');
-
-    if (!supabase) {
-      setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.');
-      return;
-    }
-
-    setIsBusy(true);
-
-    const firstPlayer = createPlayer(playerId, 0);
-    const { data, error: createError } = await supabase
-      .from('monopoly_rooms')
-      .insert({
-        code: generateRoomCode(),
-        host_id: playerId,
-        players: [firstPlayer],
-        current_player_index: 0,
-        status: 'waiting',
-        latest_roll: null,
-        event_log: [
-          { id: `join-${firstPlayer.id}`, player: firstPlayer.name, action: 'created the room', kind: 'card' },
-        ],
-      })
-      .select()
-      .single();
-
-    setIsBusy(false);
-
-    if (createError) {
-      setError(createError.message);
-      return;
-    }
-
-    leftRoomIdsRef.current.delete(data.id);
-    setRoom(data);
-  };
-
-  const joinRoom = async (rawCode) => {
-    setError('');
-
-    if (!supabase) {
-      setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.');
-      return;
-    }
-
-    const code = rawCode.trim().toUpperCase();
-    if (code.length < 4) {
-      setError('Enter the 4-6 character room code.');
-      return;
-    }
-
-    setIsBusy(true);
-
-    const { data: existingRoom, error: lookupError } = await supabase
-      .from('monopoly_rooms')
-      .select('*')
-      .eq('code', code)
-      .maybeSingle();
-
-    if (lookupError || !existingRoom) {
-      setIsBusy(false);
-      setError('No Sugaropoly room found for that code.');
-      return;
-    }
-
-    const existingPlayers = getPlayers(existingRoom);
-    if (existingPlayers.some((player) => player.id === playerId)) {
-      setIsBusy(false);
-      leftRoomIdsRef.current.delete(existingRoom.id);
-      setRoom(existingRoom);
-      return;
-    }
-
-    if (existingRoom.status !== 'waiting') {
-      setIsBusy(false);
-      setError('That quest already started. Create a fresh room to begin a new round.');
-      return;
-    }
-
-    if (existingPlayers.length >= 8) {
-      setIsBusy(false);
-      setError('That room is cozy-full at 8 players. Try another code or make a new quest.');
-      return;
-    }
-
-    const nextPlayer = createPlayer(playerId, existingPlayers.length);
-    const nextPlayers = [...existingPlayers, nextPlayer];
-    const nextEvents = [
-      { id: `join-${nextPlayer.id}`, player: nextPlayer.name, action: 'joined the room', kind: 'card' },
-      ...(Array.isArray(existingRoom.event_log) ? existingRoom.event_log : []),
-    ].slice(0, 24);
-
-    const { data, error: joinError } = await supabase
-      .from('monopoly_rooms')
-      .update({ players: nextPlayers, event_log: nextEvents })
-      .eq('id', existingRoom.id)
-      .eq('status', 'waiting')
-      .select()
-      .single();
-
-    setIsBusy(false);
-
-    if (joinError) {
-      setError(joinError.message);
-      return;
-    }
-
-    leftRoomIdsRef.current.delete(data.id);
-    setRoom(data);
-  };
+  useEffect(() => {
+    const handler = () => setIsFullscreen(document.fullscreenElement === pageRef.current);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   const leaveRoom = async () => {
-    setError('');
-    setLocalDiceRoll(null);
-
-    if (!room) return;
-
-    const leavingPlayer = players.find((player) => player.id === playerId);
-    const remainingPlayers = players.filter((player) => player.id !== playerId);
-    const nextEvents = leavingPlayer
-      ? [buildLeaveEvent(leavingPlayer.name), ...(Array.isArray(room.event_log) ? room.event_log : [])].slice(0, 24)
-      : room.event_log;
-
-    leftRoomIdsRef.current.add(room.id);
+    const id = room?.id;
     setRoom(null);
-
-    if (!supabase || !leavingPlayer) return;
-
-    const currentIndex = Number(room.current_player_index || 0);
-    const leavingIndex = players.findIndex((player) => player.id === playerId);
-    const shouldShiftTurnBack = room.status === 'playing' && leavingIndex >= 0 && leavingIndex < currentIndex;
-    const nextCurrentIndex = remainingPlayers.length
-      ? (currentIndex - (shouldShiftTurnBack ? 1 : 0) + remainingPlayers.length) % remainingPlayers.length
-      : 0;
-
-    const { error: leaveError } = await supabase
-      .from('monopoly_rooms')
-      .update({
-        players: remainingPlayers,
-        host_id: remainingPlayers[0]?.id || room.host_id,
-        current_player_index: nextCurrentIndex,
-        status: remainingPlayers.length ? room.status : 'aborted',
-        event_log: nextEvents,
-      })
-      .eq('id', room.id);
-
-    if (leaveError) {
-      setError(`You left locally, but the room could not update: ${leaveError.message}`);
+    setMovementRoll(null);
+    setLocalRoll(null);
+    rollVisualTrackerRef.current.reset();
+    window.localStorage.removeItem(ROOM_KEY);
+    if (id && supabase) {
+      const { error: leaveError } = await supabase.rpc('monopoly_forfeit', { p_room_id: id });
+      if (leaveError) setError(`You left locally, but forfeiture failed: ${leaveError.message}`);
     }
   };
 
-  const startGame = async () => {
-    setError('');
-    if (!supabase || !room || !isHost || players.length < 1) return;
-
-    setIsBusy(true);
-
-    const startEvent = {
-      id: `start-${Date.now()}`,
-      player: 'Quest',
-      action: 'started around GO',
-      kind: 'money',
-    };
-
-    const { data, error: startError } = await supabase
-      .from('monopoly_rooms')
-      .update({
-        status: 'playing',
-        current_player_index: 0,
-        started_at: new Date().toISOString(),
-        event_log: [startEvent, ...(Array.isArray(room.event_log) ? room.event_log : [])].slice(0, 24),
-      })
-      .eq('id', room.id)
-      .eq('host_id', playerId)
-      .eq('status', 'waiting')
-      .select()
-      .single();
-
-    setIsBusy(false);
-
-    if (startError) {
-      setError(startError.message);
-      return;
-    }
-
-    setRoom(data);
+  const roll = async () => {
+    try {
+      await rpc('monopoly_roll', { p_room_id: room.id });
+    } catch { /* shown inline */ }
   };
 
-  const rollDice = useCallback(async () => {
-    setError('');
-    if (!supabase || !room || !canRoll || !currentPlayer) return;
-
-    setIsRolling(true);
-
-    const dieOne = rollD8();
-    const dieTwo = rollD8();
-    const total = dieOne + dieTwo;
-    const from = Number(currentPlayer.position || 0);
-    const to = (from + total) % BOARD_SPACE_COUNT;
-    const rollId = `roll-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const nextPlayers = players.map((player) => (
-      player.id === currentPlayer.id ? { ...player, position: to } : player
-    ));
-    const nextIndex = (room.current_player_index + 1) % players.length;
-    const latestRoll = {
-      id: rollId,
-      playerId: currentPlayer.id,
-      playerName: currentPlayer.name,
-      dice: [dieOne, dieTwo],
-      total,
-      from,
-      to,
-      at: new Date().toISOString(),
-    };
-    setLocalDiceRoll(latestRoll);
-
-    const nextEvents = [
-      buildRollEvent({ id: rollId, playerName: currentPlayer.name, total, to }),
-      ...(Array.isArray(room.event_log) ? room.event_log : []),
-    ].slice(0, 24);
-
-    const { data, error: moveError } = await supabase
-      .from('monopoly_rooms')
-      .update({
-        players: nextPlayers,
-        current_player_index: nextIndex,
-        latest_roll: latestRoll,
-        event_log: nextEvents,
-      })
-      .eq('id', room.id)
-      .eq('current_player_index', room.current_player_index)
-      .eq('status', 'playing')
-      .select()
-      .single();
-
-    setIsRolling(false);
-
-    if (moveError) {
-      setError(moveError.message);
+  const endTurn = async () => {
+    if (room.pending_action?.type === 'purchase') {
+      setInspectedSpaceId(null);
+      setShowLandingCard(true);
       return;
     }
+    try {
+      await rpc('monopoly_end_turn', { p_room_id: room.id });
+      setShowLandingCard(false);
+      setInspectedSpaceId(null);
+    } catch {
+      if (room.pending_action?.type === 'purchase') setShowLandingCard(true);
+    }
+  };
 
-    setRoom(data);
-  }, [canRoll, currentPlayer, players, room]);
+  const resolveLandingAction = async (name, args) => {
+    const next = await rpc(name, args);
+    setShowLandingCard(false);
+    setInspectedSpaceId(null);
+    return next;
+  };
 
-  const sidebarPlayers = players.map((player) => ({
-    ...player,
-    money: player.money ?? 1500,
+  const auction = room?.auction;
+  const auctionBidder = auction ? auction.bidders?.[auction.bidderIndex] : null;
+  const auctionSpace = auction ? spaces[auction.spaceId] : null;
+  const winner = players.find((player) => player.id === room?.winner_id);
+  const showCenterTurnAction = Boolean(
+    isLocalTurn
+    && room?.turn_phase === 'awaiting_end_turn'
+    && !auction
+    && !selectedSpace
+    && !localRoll
+    && !showLandingCard
+    && room?.status === 'playing'
+  );
+  const trades = (room?.trades || []).map((trade) => ({
+    ...trade,
+    title: `${players.find((p) => p.id === trade.proposerId)?.name || 'Player'} → ${players.find((p) => p.id === trade.recipientId)?.name || 'Player'}`,
   }));
-  const events = Array.isArray(room?.event_log) ? room.event_log : [];
 
   return (
     <div className="sugaropoly-page" ref={pageRef}>
-      <nav className="sugaropoly-topbar" aria-label="Sugaropoly navigation">
-        <Link className="sugaropoly-brand-link" to="/" aria-label="Lovelyland home">
-          <span className="sugaropoly-brand-mark">
-            <Gamepad2 aria-hidden="true" />
-          </span>
-          <span className="sugaropoly-brand-copy">
-            <span>Lovelyland</span>
-            <small>minigame hub</small>
-          </span>
-        </Link>
-
-        <div className="sugaropoly-title-lockup" aria-label="Current game">
-          <Sparkles aria-hidden="true" />
-          <span>Faerie Kingdom Quest</span>
-        </div>
-
+      <nav className="sugaropoly-topbar">
+        <Link className="sugaropoly-brand-link" to="/"><span className="sugaropoly-brand-mark"><Gamepad2 /></span><span className="sugaropoly-brand-copy"><span>Lovelyland</span><small>minigame hub</small></span></Link>
+        <div className="sugaropoly-title-lockup"><Sparkles /><span>Faerie Kingdom Quest</span></div>
         <div className="sugaropoly-topbar-actions">
-          {room ? (
-            <span className="sugaropoly-room-pill" title={`Room ${room.code}`}>
-              {room.code}
-            </span>
-          ) : null}
-
-          {turnPrompt ? (
-            <span className={`sugaropoly-turn-pill ${isCurrentPlayer ? 'is-yours' : ''}`} title={turnPrompt}>
-              {turnPrompt}
-            </span>
-          ) : null}
-
-          {room ? (
-            <button
-              className="sugaropoly-nav-icon-button"
-              type="button"
-              onClick={leaveRoom}
-              aria-label="Leave room"
-              title="Leave room"
-            >
-              <LogOut aria-hidden="true" />
-            </button>
-          ) : null}
-
-          <Link className="sugaropoly-nav-icon-button" to="/" aria-label="Home" title="Home">
-            <Home aria-hidden="true" />
-          </Link>
-
-          <label className="sugaropoly-theme-control">
-            <Palette aria-hidden="true" />
-            <span className="sr-only">Theme</span>
-            <select
-              value={theme}
-              onChange={(event) => setTheme(event.target.value)}
-              className="theme-select"
-            >
-              {themes.map(({ id, label }) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button
-            className="sugaropoly-nav-icon-button"
-            type="button"
-            onClick={toggleFullscreen}
-            aria-label={isFullscreen ? 'Exit fullscreen mode' : 'Enable fullscreen mode'}
-            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          >
-            {isFullscreen ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
-          </button>
+          {room ? <button className="sugaropoly-room-pill" type="button" onClick={() => navigator.clipboard?.writeText(room.code)}>{room.code}</button> : null}
+          {currentPlayer ? <span className={`sugaropoly-turn-pill ${isLocalTurn ? 'is-yours' : ''}`}>{isLocalTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}</span> : null}
+          {room ? <button className="sugaropoly-nav-icon-button" type="button" onClick={leaveRoom}><LogOut /></button> : null}
+          <Link className="sugaropoly-nav-icon-button" to="/"><Home /></Link>
+          <label className="sugaropoly-theme-control"><Palette /><select value={theme} onChange={(e) => setTheme(e.target.value)}>{themes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+          <button className="sugaropoly-nav-icon-button" type="button" onClick={() => document.fullscreenElement ? document.exitFullscreen() : pageRef.current?.requestFullscreen()}>{isFullscreen ? <Minimize2 /> : <Maximize2 />}</button>
         </div>
       </nav>
 
       {!room || room.status === 'waiting' ? (
-        <MonopolyLobby
-          room={room}
-          playerId={playerId}
-          onCreateRoom={createRoom}
-          onJoinRoom={joinRoom}
-          onStartGame={startGame}
-          onLeaveRoom={leaveRoom}
-          isBusy={isBusy}
-          error={error}
-        />
+        <MonopolyLobby room={room} playerId={userId} isBusy={busy || !userId} error={error}
+          onCreateRoom={() => rpc('monopoly_create_room', { p_code: generateRoomCode() })}
+          onJoinRoom={(code) => rpc('monopoly_join_room', { p_code: code })}
+          onStartGame={() => rpc('monopoly_start_setup', { p_room_id: room.id })}
+          onLeaveRoom={leaveRoom} />
+      ) : room.status === 'setup' ? (
+        <MonopolySetup room={room} isHost={isHost} busy={busy}
+          onConfigure={(rules) => rpc('monopoly_configure', { p_room_id: room.id, p_rules: rules }).catch(() => {})}
+          onBegin={(rules) => rpc('monopoly_configure', { p_room_id: room.id, p_rules: rules }).then(() => rpc('monopoly_begin', { p_room_id: room.id }))} />
       ) : (
         <>
           {error ? <p className="sugaropoly-inline-error">{error}</p> : null}
           <div className="sugaropoly-layout">
             <div className="sugaropoly-board-pane">
-              <MonopolyBoard
-                players={players}
-                diceRoll={localDiceRoll}
-                movementRoll={room.latest_roll}
-                canRoll={canRoll}
-                isRolling={isRolling}
-                onRoll={rollDice}
-              />
+              <MonopolyBoard players={players.filter((p) => p.active)} diceRoll={localRoll} movementRoll={movementRoll}
+                canRoll={canRoll} isRolling={busy && isLocalTurn && room.turn_phase === 'awaiting_roll'} onRoll={roll} onSpaceClick={setInspectedSpaceId}
+                overlay={selectedSpace ? <PropertyCard space={selectedSpace} deed={selectedDeed} owner={selectedOwner}
+                  pending={authoritativeCard ? room.pending_action : null} authoritative={authoritativeCard} localPlayer={localPlayer}
+                  canManage={canManage} busy={busy} onClose={() => { setInspectedSpaceId(null); setShowLandingCard(false); }}
+                  onBuy={() => resolveLandingAction('monopoly_buy', { p_room_id: room.id })}
+                  onDecline={() => resolveLandingAction('monopoly_decline', { p_room_id: room.id })}
+                  onPropertyAction={(action) => rpc('monopoly_property_action', { p_room_id: room.id, p_action: action, p_space: selectedSpace.id })} />
+                  : showCenterTurnAction ? <TurnAction isDouble={room.consecutive_doubles > 0} disabled={busy} onClick={endTurn} />
+                  : null} />
+              {auction ? <div className="monopoly-auction-panel"><h2>Auction: {auctionSpace?.name}</h2><p>Current bid: ${auction.bid || 0}</p><p>{auctionBidder?.id === userId ? 'Your bid' : `Waiting for ${players.find((p) => p.id === auctionBidder?.id)?.name || 'bidder'}`}</p>{auctionBidder?.id === userId ? <><button type="button" onClick={() => { const bid = Number(window.prompt('Your bid', Number(auction.bid || 0) + 1)); if (bid) resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: bid }); }}>Bid</button><button type="button" onClick={() => resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: null })}>Pass</button></> : null}</div> : null}
             </div>
-
             <div className="sugaropoly-sidebar-pane">
-              <MonopolySidebar
-                players={sidebarPlayers}
-                trades={[]}
-                properties={[]}
-                events={events}
-                currentPlayerId={currentPlayer?.id}
-                currentPlayerName={currentPlayer?.name}
-                localPlayerId={playerId}
-                localPlayerName={localPlayer?.name}
-                onBankruptcy={() => setError('Bankruptcy is coming later. For now, keep rolling.')}
+              <MonopolySidebar players={players} trades={trades} properties={myProperties} events={room.event_log || []}
+                currentPlayerId={currentPlayer?.id} currentPlayerName={currentPlayer?.name} localPlayerId={userId} localPlayerName={localPlayer?.name}
+                debt={localPlayer?.debt} onBankruptcy={() => rpc('monopoly_bankrupt', { p_room_id: room.id })}
+                onCreateTrade={() => setTradeOpen(true)} onTradeAction={(action, trade) => rpc('monopoly_trade', { p_room_id: room.id, p_action: action, p_trade: { id: trade.id } })}
               />
             </div>
           </div>
+          {localPlayer?.inTimeOut && isLocalTurn && room.turn_phase === 'awaiting_roll' ? <div className="monopoly-timeout-actions"><strong>Time Out</strong><button type="button" onClick={() => rpc('monopoly_time_out', { p_room_id: room.id, p_action: 'pay' })} disabled={localPlayer.money < 50}>Pay $50</button><span>or roll for doubles</span></div> : null}
+          {tradeOpen ? <TradeEditor players={players} localPlayer={localPlayer} owned={tradeAssets} ownership={ownership} onClose={() => setTradeOpen(false)}
+            onSubmit={(trade) => rpc('monopoly_trade', { p_room_id: room.id, p_action: 'create', p_trade: trade }).then(() => setTradeOpen(false))} /> : null}
+          {room.status === 'finished' ? <VictoryOverlay winner={winner} reason={room.end_reason} isHost={isHost} busy={busy} onPlayAgain={() => rpc('monopoly_play_again', { p_room_id: room.id })} /> : null}
         </>
       )}
     </div>

@@ -42,14 +42,14 @@ Current visual/gameplay decisions:
 - Other players should not see someone else's dice overlay.
 - Do not leave the board center blurred after dice roll.
 
-Do not build yet:
+Implemented in the June 14, 2026 economy handoff:
 
-- property cards
-- buying/rent/economy logic
-- trades
-- bankruptcy
-- Chance/Charm Chest effects
-- jail/time-out rules
+- structured property/card data and reusable inspection/landing cards
+- buying, rent, auctions, buildings, mortgages, taxes, debt, trades, bankruptcy, and victory
+- GO, Free Park, doubles, and Time Out rules
+- silent Supabase anonymous Auth, member-only reads, denied direct writes, and validated RPC actions
+
+Chance and Charm Chest decks remain intentionally deferred; their spaces are harmless placeholders.
 
 Sugaropoly near-term todos:
 

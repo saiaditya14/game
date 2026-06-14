@@ -102,6 +102,9 @@ export const MonopolySidebar = ({
   localPlayerId,
   localPlayerName,
   onBankruptcy,
+  onCreateTrade,
+  onTradeAction,
+  debt,
 }) => {
   const [activeLowerPanel, setActiveLowerPanel] = useState('events');
   const visiblePlayers = players.slice(0, 8);
@@ -117,6 +120,7 @@ export const MonopolySidebar = ({
           <span>{isLocalTurn ? 'Your turn' : `${turnName}'s turn`}</span>
         </section>
       ) : null}
+      {debt ? <div className="monopoly-debt-callout">Debt unresolved: {formatMoney(debt.amount)}. Sell, mortgage, trade, or declare bankruptcy.</div> : null}
 
       <SidebarSection
         title="Players"
@@ -164,7 +168,7 @@ export const MonopolySidebar = ({
         title="Trades"
         icon={WandSparkles}
         action={
-          <button className="monopoly-create-trade-button" type="button">
+          <button className="monopoly-create-trade-button" type="button" onClick={onCreateTrade}>
             <Plus className="h-4 w-4" strokeWidth={3} />
             <span>Create</span>
           </button>
@@ -176,13 +180,19 @@ export const MonopolySidebar = ({
               <div className="monopoly-trade-row" key={trade.id}>
                 <span>{trade.title}</span>
                 <strong>{trade.status}</strong>
+                {trade.status === 'pending' && trade.recipientId === localPlayerId ? (
+                  <span className="monopoly-trade-actions">
+                    <button type="button" onClick={() => onTradeAction('accept', trade)}>Accept</button>
+                    <button type="button" onClick={() => onTradeAction('reject', trade)}>Reject</button>
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>
         ) : (
           <div className="monopoly-empty-trades">
             <Gift className="monopoly-empty-trades-icon" strokeWidth={2.3} />
-            <p>Make trades with other players to exchange properties, money, and bonus cards.</p>
+            <p>Exchange cash and undeveloped properties with other players.</p>
           </div>
         )}
       </SidebarSection>

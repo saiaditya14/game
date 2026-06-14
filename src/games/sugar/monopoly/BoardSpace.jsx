@@ -57,6 +57,7 @@ export const BoardSpace = ({
   edge = 'bottom',
   isCorner = false,
   corner,
+  onClick,
 }) => {
   const Icon = isCorner ? ICONS[corner] || Sparkles : ICONS[kind] || Sparkles;
   const showIcon = name !== 'GO';
@@ -95,7 +96,7 @@ export const BoardSpace = ({
     : name;
 
   return (
-    <div className={spaceClassName}>
+    <button className={spaceClassName} type="button" onClick={onClick} aria-label={`Inspect ${name}`}>
       {hasBand && (
         <div
           className={`property-band property-band-${bandSide}`}
@@ -111,6 +112,6 @@ export const BoardSpace = ({
         <div className={nameClassName}>{displayName}</div>
         {price ? <div className="space-price">${price}</div> : null}
       </div>
-    </div>
+    </button>
   );
 };

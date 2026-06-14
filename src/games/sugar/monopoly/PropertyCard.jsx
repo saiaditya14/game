@@ -1,60 +1,79 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
-// Color map for distinct property sets using pastel aesthetics
-const PASTE_COLORS = {
-  brown: 'bg-[#eec1ad]', // pastel brown / peach
-  lightBlue: 'bg-[#a3e4f5]', // pastel baby blue
-  pink: 'bg-[#f4bbd3]', // pastel pink
-  orange: 'bg-[#fcd3a1]', // pastel orange
-  red: 'bg-[#fca5a5]', // pastel red
-  yellow: 'bg-[#fef08a]', // pastel yellow
-  green: 'bg-[#bbf7d0]', // pastel green
-  darkBlue: 'bg-[#93c5fd]', // pastel strong blue
-  gray: 'bg-[#e5e7eb]', // for stations/utilities
-};
+const money = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
 
-export const PropertyCard = ({ name, colorSection, price, rent, outlineOnly = false }) => {
-  const bgColor = PASTE_COLORS[colorSection] || 'bg-rose-200';
+export const PropertyCard = ({
+  space,
+  deed,
+  owner,
+  pending,
+  authoritative = false,
+  localPlayer,
+  canManage = false,
+  busy = false,
+  onClose,
+  onBuy,
+  onDecline,
+  onPropertyAction,
+}) => {
+  if (!space) return null;
+  const isProperty = space.type === 'property';
+  const isAsset = Boolean(space.price);
+  const actionType = pending?.type;
+  const amount = pending?.amount;
 
   return (
-    <div className={`w-64 flex flex-col rounded-xl border-4 ${outlineOnly ? 'border-pink-200 bg-white' : 'border-rose-300 bg-rose-50'} overflow-hidden shadow-lg font-sans text-rose-900`}>
-      {/* Header Color Block */}
-      <div className={`h-16 ${bgColor} border-b-4 border-rose-300 flex items-center justify-center p-2`}>
-        <div className="text-center font-bold uppercase tracking-widest text-sm text-gray-800 drop-shadow-sm">
-          Title Deed<br/>
-          <span className="text-lg">{name}</span>
+    <div className="monopoly-card-overlay" role="dialog" aria-modal="true" aria-label={`${space.name} card`}>
+      <div className={`monopoly-deed-card monopoly-card-${space.type || space.kind}`}>
+        <button className="monopoly-card-close" type="button" onClick={onClose} aria-label="Close card"><X /></button>
+        <header style={{ '--deed-color': `var(--property-${space.colorGroup || 'special'}, #f9a8d4)` }}>
+          <span>{isProperty ? 'Title Deed' : space.type || space.kind || 'Kingdom Space'}</span>
+          <h2>{space.name}</h2>
+        </header>
+        <div className="monopoly-card-art"><span>{deed?.mortgaged ? 'Mortgaged' : owner ? `Owned by ${owner.name}` : 'Unclaimed kingdom treasure'}</span></div>
+        <div className="monopoly-card-body">
+          {isProperty ? (
+            <>
+              {space.rents.map((rent, index) => (
+                <div className={amount === rent ? 'is-highlighted' : ''} key={rent}>
+                  <span>{index === 0 ? 'Rent' : index === 5 ? 'With hotel' : `With ${index} house${index > 1 ? 's' : ''}`}</span>
+                  <strong>{money(rent)}</strong>
+                </div>
+              ))}
+            </>
+          ) : null}
+          {space.type === 'portal' ? <p>Rent: $25 / $50 / $100 / $200 for 1-4 portals.</p> : null}
+          {space.type === 'utility' ? <p>Rent is 4x, 10x, or 15x the rolled total for 1-3 utilities.</p> : null}
+          {space.type === 'crystal' ? <p>Add $10, $25, or $65 to rent on normal properties for 1-3 crystals.</p> : null}
+          {space.id === 4 ? <p>Pay 10% of current cash, capped at $200.</p> : null}
+          {space.id === 52 ? <p>Pay $100 to the Treasury.</p> : null}
+          {['chance', 'chest'].includes(space.kind) ? <p>The magic is still a harmless black box. Nothing happens yet.</p> : null}
+          {space.isCorner ? <p>{space.id === 0 ? 'Collect $200 when passing or landing here.' : space.id === 28 ? 'Collect the recent tax jackpot when enabled.' : space.id === 14 ? 'Visiting is harmless unless you are in Time Out.' : 'Go directly to Time Out.'}</p> : null}
+          {amount ? <div className="monopoly-card-charge">Resolved amount: {money(amount)}</div> : null}
         </div>
+        {isAsset ? (
+          <footer>
+            <span>Price <strong>{money(space.price)}</strong></span>
+            <span>{space.buildingCost ? `Build ${money(space.buildingCost)}` : 'Special deed'}</span>
+            <span>Mortgage <strong>{money(space.mortgage)}</strong></span>
+          </footer>
+        ) : null}
       </div>
-
-      {/* Body Details */}
-      <div className="p-4 flex flex-col items-center text-sm gap-2">
-        <p className="font-semibold">Rent ${rent}</p>
-        <div className="w-full flex justify-between">
-          <span>With 1 Pastry</span>
-          <span>${rent * 5}</span>
-        </div>
-        <div className="w-full flex justify-between">
-          <span>With 2 Pastries</span>
-          <span>${rent * 15}</span>
-        </div>
-        <div className="w-full flex justify-between">
-          <span>With 3 Pastries</span>
-          <span>${rent * 40}</span>
-        </div>
-        <div className="w-full flex justify-between">
-          <span>With 4 Pastries</span>
-          <span>${rent * 70}</span>
-        </div>
-        <div className="w-full flex justify-between font-semibold mt-2 border-t-2 border-rose-100 pt-2">
-          <span>With 1 Bakery SignIn</span>
-          <span>${rent * 100}</span>
-        </div>
-      </div>
-
-      {/* Footer Details */}
-      <div className="p-2 bg-rose-100 border-t-2 border-rose-200 text-xs text-center">
-        <p>Mortgage Value ${price / 2}</p>
-        <p>Pastries cost ${price * 0.8} each</p>
+      <div className="monopoly-card-actions">
+        {authoritative && actionType === 'purchase' ? (
+          <>
+            <button type="button" onClick={onBuy} disabled={busy || Number(localPlayer?.money) < space.price}>Buy {money(space.price)}</button>
+            <button type="button" onClick={onDecline} disabled={busy}>Ignore / Auction</button>
+          </>
+        ) : null}
+        {canManage && deed?.ownerId === localPlayer?.id ? (
+          <>
+            {!deed.mortgaged && isProperty ? <button type="button" onClick={() => onPropertyAction('build')} disabled={busy}>Build</button> : null}
+            {Number(deed.buildings) > 0 ? <button type="button" onClick={() => onPropertyAction('sell')} disabled={busy}>Sell Building</button> : null}
+            {!deed.mortgaged ? <button type="button" onClick={() => onPropertyAction('mortgage')} disabled={busy}>Mortgage</button> : <button type="button" onClick={() => onPropertyAction('unmortgage')} disabled={busy}>Unmortgage</button>}
+          </>
+        ) : null}
       </div>
     </div>
   );

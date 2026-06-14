@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Crown, LogIn, LogOut, Plus, Sparkles, Users } from 'lucide-react';
+import { Copy, Crown, LogIn, LogOut, Plus, Sparkles, Users } from 'lucide-react';
 
 const lobbyButtonClass =
   'inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-60';
@@ -104,6 +104,7 @@ export const MonopolyLobby = ({
             <div className="sugaropoly-room-code">
               <span>Room Code</span>
               <strong>{room.code}</strong>
+              <button type="button" onClick={() => navigator.clipboard?.writeText(room.code)} aria-label="Copy room code"><Copy /></button>
             </div>
 
             <div className="sugaropoly-waiting-header">
@@ -134,7 +135,7 @@ export const MonopolyLobby = ({
                 className={`${lobbyButtonClass} sugaropoly-lobby-primary sugaropoly-start-button`}
               >
                 <Sparkles className="h-4 w-4" />
-                Start Game
+                Choose Rules
               </button>
             ) : (
               <p className="sugaropoly-lobby-note">Waiting for the host to start the quest.</p>

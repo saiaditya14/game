@@ -149,6 +149,13 @@ http://127.0.0.1:5173/game/monopoly
 - Tokens render as larger circular player-color coins on the board-space rail with controlled overlap for crowded tiles.
 - Rolled tokens use a short magic teleport beat with player-color ring/particle effects anchored to the exact token slot.
 - Local dice rolls show bright pastel sparkle feedback.
+- Canonical 56-space property data from `monopoly (1).pdf` lives in `monopolyData.js`.
+- Property purchases, rent, crystals, portals, utilities, taxes, GO, Free Park, buildings, mortgages, debt, auctions, trades, Time Out, bankruptcy, forfeiture, and victory are implemented.
+- Host setup controls starting cash, auctions, full-group base-rent doubling, Free Park jackpot, and optional target-cash victory.
+- Turn state is authoritative and deferred through landing resolution and End Turn.
+- Board spaces open reusable local inspection cards; only the active landed-space card exposes authoritative actions.
+- Multiplayer identity uses silent Supabase anonymous Auth. Direct room writes are denied and validated actions run through Postgres RPCs.
+- Focused pure-rule tests run with `npm test`.
 
 ### Sugaropoly Manual Test Notes
 
@@ -163,17 +170,38 @@ Use two browser tabs at `http://127.0.0.1:5173/game/monopoly` after `supabase st
 - Join feedback: try joining an already-started room, and try joining a room with 8 players, to confirm the clear blocked-state message.
 - Crowded coin tile: with 2-8 joined players, get multiple players onto the same board space and confirm circular coins remain readable, overlap intentionally, stay attached to the correct rail/slot, and teleport effects appear on the moving coin's slot.
 
-### Sugaropoly Blocked Until Property/Card Data Exists
+### Sugaropoly Economy Test Matrix
 
-- Property purchase prompts need a per-space property breakdown: purchasable vs tax vs card vs utility/gem/portal, purchase price, display copy, and initial owner state.
-- Rent logic needs rent tables or formulas for every property group, plus rules for utilities/gems/portals if they behave differently.
-- Property detail cards need finalized card content: title, type, price, rent values, art/icon treatment, and action buttons.
-- Ownership display needs a data model for deeds, owner ids, mortgages/upgrades if those will exist, and how ownership is rendered on the board.
-- Chance/Charm Chest behavior needs a card deck list and rules for each card before the spaces can do more than log a placeholder.
-- Jail/time-out, pass-GO rewards, taxes, bankruptcy, trading, and win/end conditions all depend on the economy rules being defined.
+- Solo development: create, choose rules, begin with one player, buy/decline, and continue cycling without triggering last-solvent victory. Solo bankruptcy ends the run with a defeat screen and rematch option.
+- Two tabs: verify independent anonymous users, Realtime state, active-player-only dice/cards, and rejected out-of-turn RPC calls.
+- Doubles: resolve the landing, choose End Turn/roll again, and confirm three consecutive doubles go directly to Time Out without the third move.
+- GO: pass and land on GO and confirm exactly $200 is awarded.
+- Property: test affordable/unaffordable Buy, decline with auctions off, and turn-by-turn bidding/pass removal with auctions on.
+- Rent: test undeveloped group doubling on/off, developed rent, crystal bonuses once, 1-3 utilities at 4x/10x/15x, 1-4 portals, and mortgaged zero rent.
+- Taxes and Free Park: test Tribute Tax cap, Treasury Tax, five-round jackpot window, disabled jackpot, and exclusion of Time Out fees.
+- Development: require a complete group, allow uneven building, buy/sell only on the owner turn, and sell at half cost.
+- Mortgage: confirm mortgage-and-liquidate, no rent/development while mortgaged, 110% unmortgage cost, and trading mortgaged deeds.
+- Debt: recover by selling, mortgaging, or trading; verify End Turn remains blocked while cash is negative.
+- Trades: exchange cash and undeveloped properties, reject/accept, and verify changed or unaffordable offers fail server validation.
+- Time Out: visit harmlessly; leave by $50, doubles, or the third failed attempt and move using the release roll.
+- Bankruptcy/forfeit: transfer to a player creditor, queue bank auctions when enabled, return deeds unowned when disabled, and advance the turn after an active-player leave.
+- Victory: test last-solvent-player and cash-only target victory at End Turn.
+- Cards: click any space for read-only inspection; click the landed space to restore unresolved controls; confirm other players never receive the automatic card.
 
-### Sugaropoly Blcoked Until actual Card exists
-- having each place's card popup on click, cute card appropriately sized that shows info about rent, buy price etc for houses and relevant info for other relevant place's like richup.io Or as a centre popup similar to dice
+### Supabase Configuration
+
+Enable **Anonymous Sign-Ins** in Supabase Dashboard under **Authentication > Providers > Anonymous**. No login UI or OAuth redirect is required, so GitHub Pages and GitHub Actions remain static-host compatible.
+
+Apply migrations before running Sugaropoly:
+
+```powershell
+supabase start
+supabase migration up
+npm test
+npm run build
+```
+
+The economy migration revokes direct client inserts/updates/deletes on `monopoly_rooms`, keeps member-only Realtime reads, and grants authenticated users only the validated Sugaropoly RPC actions.
 
 Todolist:
 Need an overhaul of UI in general
@@ -187,7 +215,7 @@ NAVBAR needs an overhaul bro
 - Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
 Make it back to more than 2 players only (monopoly)
 Babie feedback:
-
+Visiting rule for monopoly
 Thinner brushes (better UI for the same otherwise done)
 Number of rounds could be togglable
 
