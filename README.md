@@ -172,6 +172,8 @@ Use two browser tabs at `http://127.0.0.1:5173/game/monopoly` after `supabase st
 - Chance/Charm Chest behavior needs a card deck list and rules for each card before the spaces can do more than log a placeholder.
 - Jail/time-out, pass-GO rewards, taxes, bankruptcy, trading, and win/end conditions all depend on the economy rules being defined.
 
+### Sugaropoly Blcoked Until actual Card exists
+- having each place's card popup on click, cute card appropriately sized that shows info about rent, buy price etc for houses and relevant info for other relevant place's like richup.io Or as a centre popup similar to dice
 
 Todolist:
 Need an overhaul of UI in general
@@ -183,6 +185,7 @@ NAVBAR needs an overhaul bro
 - Add a small "copy room code" control in the waiting room/topbar.
 - Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
 - Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
+Make it back to more than 2 players only (monopoly)
 Babie feedback:
 
 Thinner brushes (better UI for the same otherwise done)

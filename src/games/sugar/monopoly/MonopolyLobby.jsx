@@ -19,7 +19,7 @@ export const MonopolyLobby = ({
   const [joinCode, setJoinCode] = useState('');
   const players = Array.isArray(room?.players) ? room.players : [];
   const isHost = room?.host_id === playerId;
-  const canStart = isHost && room?.status === 'waiting' && players.length >= 2;
+  const canStart = isHost && room?.status === 'waiting' && players.length >= 1;
 
   const submitJoin = (event) => {
     event.preventDefault();

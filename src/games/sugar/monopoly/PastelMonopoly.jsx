@@ -296,7 +296,7 @@ export const PastelMonopoly = () => {
 
   const startGame = async () => {
     setError('');
-    if (!supabase || !room || !isHost || players.length < 2) return;
+    if (!supabase || !room || !isHost || players.length < 1) return;
 
     setIsBusy(true);
 
