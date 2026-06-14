@@ -117,7 +117,7 @@ http://localhost:5173/draw-off
 
 ## Sugaropoly / Faerie Kingdom Quest
 
-Sugaropoly lives at `/monopoly` in `src/games/sugar/monopoly/`. The current version is a playable Supabase prototype: players can create a room, join by code, start from the host lobby, roll 2d8, move tokens around the 56-space board, and see synced turn/player state.
+Sugaropoly lives at `/monopoly` in `src/games/sugar/monopoly/`. It is a playable authenticated Supabase property/economy game with host rules, 2d8 movement, purchases, rent, development, auctions, trades, debt, Time Out, bankruptcy, victory, and Realtime state.
 
 For local multiplayer development:
 
@@ -204,20 +204,29 @@ npm run build
 The economy migration revokes direct client inserts/updates/deletes on `monopoly_rooms`, keeps member-only Realtime reads, and grants authenticated users only the validated Sugaropoly RPC actions.
 
 Todolist:
-Need an overhaul of UI in general
-Need an overhaul of button UI in draw off
-Play test system prompt for draw off a little but seems fine and fun to babie
-Security issues in joining such as what if more than two join? what if one leaves how to come back? 
+Need an overhaul of UI in general outside the completed Sugaropoly gameplay surface.
+Need an overhaul of button UI in draw off.
+Play test system prompt for draw off a little but seems fine and fun to babie.
 Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement.
 NAVBAR needs an overhaul bro
-- Add a small "copy room code" control in the waiting room/topbar.
 - Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
 - Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
-Make it back to more than 2 players only (monopoly)
 Babie feedback:
 Visiting rule for monopoly
 Thinner brushes (better UI for the same otherwise done)
 Number of rounds could be togglable
+
+### Sugaropoly Later Visual Polish
+
+- Color-code owned tiles or board-edge ownership rails with the owner's player color.
+- Show small house/hotel icons on developed spaces, inspired by Richup's at-a-glance readability without copying its design.
+- Add visible mortgage badges or muted tile treatment.
+- Show compact owner markers on portals, utilities, and crystals.
+- Add complete-group and build-eligible cues during the active owner's turn.
+- Improve auction, trade, debt, Time Out, and bankruptcy styling.
+- Create bespoke replaceable deed-card artwork.
+- Keep all ownership/development markers readable with 4-8 overlapping player coins.
+- Revamp board orders and outside of centre styling to be stronger
 
 FOR CONNECT FOUR
 i want sparkles when the game get over and the congrats box pops up.

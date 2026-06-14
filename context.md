@@ -8,7 +8,7 @@ Lovelyland is a cute minigame hub built with Vite, React, Tailwind CSS, Framer M
 - Keep changes scoped and understandable. Reuse existing patterns before adding abstractions.
 - For frontends, build the actual playable surface first, not a marketing page.
 - Run `npm.cmd run build` after implementation changes.
-- Do not add property/economy logic to Sugaropoly until property/card data exists.
+- Keep static property/economy definitions in `monopolyData.js`; do not scatter rule values through components.
 
 ## Sugaropoly / Faerie Kingdom Quest
 
@@ -19,7 +19,7 @@ Lovelyland is a cute minigame hub built with Vite, React, Tailwind CSS, Framer M
 - Supabase migration: `supabase/migrations/20260612120000_create_monopoly_rooms.sql`.
 - There is no `src/games/sugar/monopoly/monopoly-schema.sql` in the current checkout.
 
-Current Sugaropoly is a playable Supabase prototype:
+Current Sugaropoly is a playable authenticated property/economy game:
 
 - Create/join rooms by code.
 - Host starts from lobby.
@@ -41,6 +41,7 @@ Current visual/gameplay decisions:
 - Teleport effects are player-colored and anchored to the exact token slot. Only ring and particle-ball effects are currently in rotation.
 - Other players should not see someone else's dice overlay.
 - Do not leave the board center blurred after dice roll.
+- Roll visuals are edge-triggered by unique roll ID. Realtime or economy updates carrying the same `latest_roll` must never replay token movement.
 
 Implemented in the June 14, 2026 economy handoff:
 
@@ -54,9 +55,19 @@ Chance and Charm Chest decks remain intentionally deferred; their spaces are har
 Sugaropoly near-term todos:
 
 - Test 4-8 player crowded tile readability and tune coin overlap/effect scale.
-- Add copy-room-code in waiting room/topbar.
 - Improve reconnect/resume-from-localStorage messaging.
 - Eventually design a dedicated phone interaction pattern; tiny phones are not the base target right now.
+
+Sugaropoly deferred visual polish:
+
+- Color-code owned board tiles or ownership rails using the owner's player color.
+- Add small house and hotel markers directly on developed board spaces, with readable 1-4 house and hotel states.
+- Add clearer mortgaged-property treatment on the board, such as a muted band or compact mortgage badge.
+- Add compact owner indicators to portal, utility, and crystal spaces.
+- Improve ownership and development visibility in crowded 4-8 player games without shrinking coins excessively.
+- Polish auction, trade, debt, Time Out, and bankruptcy controls to match the deed-card and victory-screen visual quality.
+- Replace temporary card art slots with bespoke, replaceable Sugaropoly artwork later.
+- Consider subtle complete-color-group highlighting and build-eligible cues during the owner's turn.
 
 ## Draw Off
 
