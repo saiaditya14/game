@@ -131,6 +131,20 @@ If the user modifies the scope (e.g., "skip the background, do the rest"), ackno
 
 Execute exactly what was approved, nothing more.
 
+### Tailwind v4 caveat
+
+**Do not use dynamic CSS custom properties inside Tailwind className strings.** Tailwind v4 with Vite scans source at build time and cannot resolve values like `rounded-[calc(var(--radius)-2px)]` or `bg-[color:var(--surface)]` when they depend on runtime CSS vars. Use **inline `style` props** for any value that references a CSS variable:
+
+```jsx
+// ❌ Won't generate — Tailwind can't resolve the var at build time
+<div className="rounded-[calc(var(--radius)*3)]" />
+
+// ✅ Correct — inline style, resolved at runtime
+<div style={{ borderRadius: 'calc(var(--radius) * 3)' }} />
+```
+
+Static Tailwind vars (e.g. `bg-pink-300`, `rounded-xl`) are fine. Only dynamic/runtime CSS var references need this treatment.
+
 ### Sub-skill delegation
 
 When the pitch includes a sub-skill, invoke it inline using the sub-skill's documented boilerplate. Read the sub-skill file for the current project's known constraints before writing code:
@@ -198,6 +212,26 @@ import { AnimatePresence, motion } from 'framer-motion';
   />
 </AnimatePresence>
 ```
+
+**Gradient text (CSS only)**
+```css
+/* Add to a class, then apply per-theme via .theme-X .my-class */
+.hero-title {
+  letter-spacing: 0.06em;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* Use leading-tight + py-1 in Tailwind to prevent drop-shadow/descender clipping */
+}
+
+.theme-pink .hero-title {
+  background-image: linear-gradient(135deg, #9f1239 0%, #be185d 40%, #f472b6 100%);
+  filter: drop-shadow(0 1px 8px rgba(190, 24, 93, 0.28));
+}
+/* Repeat per theme. Arcade: use dual drop-shadow for neon glow effect. */
+```
+> ⚠️ Always pair `leading-none` → `leading-tight` and add `py-1` on the element. `leading-none` squeezes the line box so tight that drop-shadow filters and font descenders get clipped at the paint boundary.
 
 **Skeleton shimmer (CSS only)**
 ```css

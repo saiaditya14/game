@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './components/ThemeProvider';
 import { NavBar } from './components/NavBar';
@@ -11,11 +11,16 @@ import DrawOffCoop from './games/plum/DrawOffCoop';
 import ConnectFour from './games/sugar/ConnectFour';
 import PastelMonopoly from './games/sugar/monopoly/PastelMonopoly';
 
+const ThemeScene = lazy(() => import('./components/ThemeScene'));
+
 function App() {
   return (
     <ThemeProvider>
+      <Suspense fallback={null}>
+        <ThemeScene />
+      </Suspense>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <div className="min-h-screen transition-colors duration-300">
+        <div className="relative min-h-screen transition-colors duration-300" style={{ zIndex: 10 }}>
           <NavBar />
           <Routes>
             <Route path="/" element={<HomePage />} />

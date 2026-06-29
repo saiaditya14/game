@@ -97,7 +97,7 @@ const HomePage = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12">
       {/* Scroll-fade wrapper */}
-      <motion.div style={{ opacity: heroOpacity, y: heroY }} className="mt-10 mb-12">
+      <motion.div key={theme} style={{ opacity: heroOpacity, y: heroY }} className="mt-10 mb-12">
         {/* Hero — open text, no box */}
         <motion.div
           variants={headerVariants}
