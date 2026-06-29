@@ -45,6 +45,13 @@ const newGames = [
   },
 ];
 
+const heroSubtitleByTheme = {
+  'theme-pink':    'hii ♡ your person is waiting for you~',
+  'theme-vanilla': 'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-arcade':  'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-cozy':    'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+};
+
 const drawOffImagesByTheme = {
   'theme-vanilla': drawOffVanillaImage,
   'theme-pink': drawOffPinkImage,
@@ -89,6 +96,7 @@ const SectionHeader = ({ title, eyebrow }) => (
 const HomePage = () => {
   const { theme } = useTheme();
   const drawOffImage = drawOffImagesByTheme[theme] || drawOffVanillaImage;
+  const heroSubtitle = heroSubtitleByTheme[theme] || heroSubtitleByTheme['theme-vanilla'];
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 180], [1, 0]);
@@ -115,7 +123,7 @@ const HomePage = () => {
             variants={headerChildVariants}
             className="max-w-2xl text-base font-normal leading-7 text-[color:var(--muted)] sm:text-lg"
           >
-            Welcome back! Keep track of your ongoing matches, challenge your partner to new asynchronous games, and see who takes the crown this week.
+            {heroSubtitle}
           </motion.p>
         </motion.div>
         <div className="hero-divider" aria-hidden="true" />

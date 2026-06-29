@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from './ThemeProvider';
@@ -15,36 +15,22 @@ const PETAL_SHAPE = (() => {
   return s;
 })();
 
-// 4-pointed sparkle star (elongated tips, tight inner radius)
-const STAR_SHAPE = (() => {
-  const s = new THREE.Shape();
-  const outer = 0.5;
-  const inner = 0.09;
-  for (let i = 0; i < 8; i++) {
-    const angle = (i * Math.PI * 2) / 8 + Math.PI / 2;
-    const r = i % 2 === 0 ? outer : inner;
-    const x = Math.cos(angle) * r;
-    const y = Math.sin(angle) * r;
-    if (i === 0) s.moveTo(x, y);
-    else s.lineTo(x, y);
-  }
-  s.closePath();
-  return s;
-})();
 
 // ─── Pink — Cherry Blossom Flowers ────────────────────────────────────────────
 
-const FLOWER_COLORS = ['#f9a8d4', '#f472b6', '#fbcfe8', '#ec4899', '#fce7f3'];
+// 3 saturated pinks — no pale washes
+const FLOWER_COLORS = ['#f472b6', '#ec4899', '#db2777'];
 const PETAL_ANGLES_DEG = [0, 72, 144, 216, 288];
 
 function CherryBlossom({ color }) {
   const groupRef = useRef();
   const baseX = useRef(Math.random() * 22 - 11);
+  const { camera } = useThree();
 
   const data = useMemo(() => ({
     y: 9 + Math.random() * 10,
-    z: -2 - Math.random() * 5,          // pushed deep so never covers text
-    speed: 0.18 + Math.random() * 0.28,
+    z: -2 - Math.random() * 5,
+    speed: 0.38 + Math.random() * 0.28,
     swayAmp: 0.4 + Math.random() * 1.0,
     swaySpeed: 0.35 + Math.random() * 0.55,
     phase: Math.random() * Math.PI * 2,
@@ -54,6 +40,11 @@ function CherryBlossom({ color }) {
   }), []);
 
   const yRef = useRef(data.y);
+  // Stagger each flower's check so they don't all query the DOM on the same frame
+  const frameCount = useRef(Math.floor(Math.random() * 12));
+  const targetOpacity = useRef(data.opacity);
+  const liveOpacity = useRef(data.opacity);
+  const projVec = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state, delta) => {
     yRef.current -= delta * data.speed;
@@ -65,6 +56,30 @@ function CherryBlossom({ color }) {
       baseX.current + Math.sin(state.clock.elapsedTime * data.swaySpeed + data.phase) * data.swayAmp;
     groupRef.current.position.y = yRef.current;
     groupRef.current.rotation.z += delta * data.selfRot;
+
+    // Text-overlap check — throttled, staggered per flower
+    frameCount.current++;
+    if (frameCount.current % 12 === 0) {
+      projVec.copy(groupRef.current.position).project(camera);
+      const sx = (projVec.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-projVec.y * 0.5 + 0.5) * window.innerHeight;
+      let hit = false;
+      const els = document.querySelectorAll('h1, h2, p, .hero-title');
+      for (const el of els) {
+        const r = el.getBoundingClientRect();
+        if (sx > r.left - 28 && sx < r.right + 28 && sy > r.top - 28 && sy < r.bottom + 28) {
+          hit = true;
+          break;
+        }
+      }
+      targetOpacity.current = hit ? 0.06 : data.opacity;
+    }
+
+    // Smooth lerp toward target opacity and apply to all child materials
+    liveOpacity.current += (targetOpacity.current - liveOpacity.current) * Math.min(1, delta * 4);
+    groupRef.current.traverse(child => {
+      if (child.isMesh && child.material) child.material.opacity = liveOpacity.current;
+    });
   });
 
   return (
@@ -113,65 +128,50 @@ function PinkScene() {
   );
 }
 
-// ─── Vanilla — Golden Sparkle Stars ───────────────────────────────────────────
+// ─── Vanilla — Soft Bokeh Orbs ────────────────────────────────────────────────
 
-const STAR_COLORS = ['#d4aa60', '#e8c87a', '#c9a84c', '#f2d478', '#e0b84a'];
+const BOKEH_COLORS = ['#e8c87a', '#f5e6a3', '#f0d090', '#fffbe8', '#d4aa60'];
 
-function GoldStar({ color }) {
+function BokehOrb({ color }) {
   const meshRef = useRef();
 
   const data = useMemo(() => ({
-    x: Math.random() * 22 - 11,
-    y: Math.random() * 18 - 9,
-    z: -1.5 - Math.random() * 4,
-    riseSpeed: 0.06 + Math.random() * 0.12,
-    swayAmp: 0.25 + Math.random() * 0.65,
-    swaySpeed: 0.3 + Math.random() * 0.55,
+    x: Math.random() * 16 - 8,
+    y: Math.random() * 10 - 5,
+    z: -0.8 - Math.random() * 3.5,
+    driftSpeedX: 0.04 + Math.random() * 0.07,
+    driftSpeedY: 0.03 + Math.random() * 0.06,
+    driftAmpX:   0.3  + Math.random() * 0.6,
+    driftAmpY:   0.2  + Math.random() * 0.5,
     phase: Math.random() * Math.PI * 2,
-    selfRot: (Math.random() - 0.5) * 1.2,
-    scale: 0.045 + Math.random() * 0.04,
-    opacity: 0.55 + Math.random() * 0.38,
+    scale:   0.35 + Math.random() * 0.55,
+    opacity: 0.08 + Math.random() * 0.1,
   }), []);
 
-  const yRef = useRef(data.y);
-
-  useFrame((state, delta) => {
-    yRef.current += delta * data.riseSpeed;
-    if (yRef.current > 10) yRef.current = -10;
-    meshRef.current.position.y = yRef.current;
+  useFrame((state) => {
     meshRef.current.position.x =
-      data.x + Math.sin(state.clock.elapsedTime * data.swaySpeed + data.phase) * data.swayAmp;
-    meshRef.current.rotation.z += delta * data.selfRot;
+      data.x + Math.sin(state.clock.elapsedTime * data.driftSpeedX + data.phase) * data.driftAmpX;
+    meshRef.current.position.y =
+      data.y + Math.sin(state.clock.elapsedTime * data.driftSpeedY + data.phase * 1.3) * data.driftAmpY;
   });
 
   return (
     <mesh ref={meshRef} position={[data.x, data.y, data.z]} scale={data.scale}>
-      <shapeGeometry args={[STAR_SHAPE]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.55}
-        transparent
-        opacity={data.opacity}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-      />
+      <sphereGeometry args={[1, 16, 16]} />
+      <meshBasicMaterial color={color} transparent opacity={data.opacity} depthWrite={false} />
     </mesh>
   );
 }
 
 function VanillaScene() {
-  const stars = useMemo(
-    () => Array.from({ length: 24 }, (_, i) => ({ id: i, color: STAR_COLORS[i % STAR_COLORS.length] })),
+  const orbs = useMemo(
+    () => Array.from({ length: 22 }, (_, i) => ({ id: i, color: BOKEH_COLORS[i % BOKEH_COLORS.length] })),
     []
   );
 
   return (
     <>
-      <ambientLight intensity={0.9} />
-      <pointLight position={[0, 3, 4]} intensity={0.35} color="#e8c87a" />
-      {stars.map(s => <GoldStar key={s.id} color={s.color} />)}
-      <Sparkles count={25} size={0.85} scale={[22, 16, 6]} color="#d4aa60" opacity={0.18} speed={0.14} />
+      {orbs.map(o => <BokehOrb key={o.id} color={o.color} />)}
     </>
   );
 }
