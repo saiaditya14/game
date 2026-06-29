@@ -32,3 +32,6 @@ Thumbs.db
 supabase/.temp/
 supabase/.branches/
 handoff.md
+
+# Dev notes (local scratch, not for source control)
+.claude/dev-notes.md

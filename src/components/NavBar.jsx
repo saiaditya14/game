@@ -1,74 +1,189 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Gamepad2, Home, Palette } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Gamepad2, Home } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
+
+const THEME_SWATCHES = {
+  'theme-vanilla': '#c08b52',
+  'theme-pink':    '#be185d',
+  'theme-arcade':  '#ff00ff',
+  'theme-cozy':    '#8b5a2b',
+};
+
+const ALL_THEMES = [
+  { id: 'theme-vanilla', label: 'Vanilla' },
+  { id: 'theme-pink',    label: 'Pink'    },
+  { id: 'theme-arcade',  label: 'Arcade'  },
+  { id: 'theme-cozy',    label: 'Cozy'    },
+];
+
+function GradientPill({ children, style = {} }) {
+  return (
+    <div
+      style={{
+        padding: 1,
+        borderRadius: 20,
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+        boxShadow: '0 8px 32px color-mix(in srgb, var(--primary) 30%, transparent), 0 2px 8px rgba(0,0,0,0.1)',
+        ...style,
+      }}
+    >
+      <div
+        style={{
+          borderRadius: 19,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          backgroundColor: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          padding: '6px 10px',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export const NavBar = () => {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
-  const isGameRoute = pathname.startsWith('/draw-off');
+  const isGameRoute     = pathname.startsWith('/draw-off');
   const isMonopolyRoute = pathname.startsWith('/monopoly');
 
-  if (isMonopolyRoute) {
-    return null;
-  }
-
-  const themes = [
-    { id: 'theme-vanilla', label: 'Vanilla' },
-    { id: 'theme-pink', label: 'Pink' },
-    { id: 'theme-arcade', label: 'Arcade' },
-    { id: 'theme-cozy', label: 'Cozy' },
-  ];
+  if (isMonopolyRoute) return null;
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-border/70 bg-[color:var(--surface)]/85 shadow-sm backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-        <NavLink
-          to="/"
-          className="group mr-auto flex min-w-0 items-center gap-3 rounded-theme px-2 py-1.5 text-primary transition hover:text-accent focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
-          aria-label="Lovelyland home"
-        >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-theme border border-border/80 bg-background shadow-sm transition group-hover:-rotate-3 group-hover:scale-105">
-            <Gamepad2 className="h-5 w-5" />
-          </span>
-          <span className="hidden min-w-0 sm:block">
-            <span className="block text-base font-extrabold leading-tight">Lovelyland</span>
-            <span className="block text-[11px] font-medium uppercase text-[color:var(--muted)]">minigame hub</span>
-          </span>
-        </NavLink>
-
-        <div className="flex items-center gap-1 rounded-theme border border-border/70 bg-background/70 p-1 shadow-sm">
+    <motion.header
+      initial={{ y: -56, opacity: 0 }}
+      animate={{ y: 0,   opacity: 1 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        width: '100%',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1152,
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '10px 16px',
+          pointerEvents: 'auto',
+        }}
+      >
+        {/* ── Brand pill ── */}
+        <GradientPill>
           <NavLink
             to="/"
-            className={({ isActive }) =>
-              `grid h-9 w-9 place-items-center rounded-theme transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] ${
-                isActive ? 'bg-primary text-background shadow-sm' : 'text-[color:var(--muted)] hover:bg-secondary hover:text-primary'
-              }`
-            }
-            aria-label="Home"
+            aria-label="Lovelyland home"
+            style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', outline: 'none' }}
           >
-            <Home className="h-4 w-4" />
+            <motion.div
+              whileHover={{ rotate: -10, scale: 1.12 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 14 }}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                display: 'grid',
+                placeItems: 'center',
+                background: 'var(--primary)',
+                color: 'var(--background)',
+                flexShrink: 0,
+              }}
+            >
+              <Gamepad2 size={17} />
+            </motion.div>
+            <div style={{ lineHeight: 1, userSelect: 'none' }}>
+              <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--foreground)' }}>
+                Lovelyland
+              </span>
+              <span style={{ display: 'block', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: 1 }}>
+                minigame hub
+              </span>
+            </div>
+          </NavLink>
+        </GradientPill>
+
+        {/* ── Controls pill ── */}
+        <GradientPill>
+          {/* Home icon */}
+          <NavLink
+            to="/"
+            aria-label="Home"
+            style={{ outline: 'none' }}
+          >
+            {({ isActive }) => (
+              <motion.div
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: isActive ? 'var(--primary)' : 'transparent',
+                  color: isActive ? 'var(--background)' : 'var(--muted)',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+              >
+                <Home size={16} />
+              </motion.div>
+            )}
           </NavLink>
 
+          {/* Divider + theme swatches */}
           {!isGameRoute && (
-            <label className="flex h-9 items-center gap-2 rounded-theme px-2 text-[color:var(--muted)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]">
-              <Palette className="h-4 w-4" />
-              <span className="sr-only">Theme</span>
-              <select
-                value={theme}
-                onChange={(event) => setTheme(event.target.value)}
-                className="theme-select h-full cursor-pointer rounded-theme bg-transparent pr-1 text-sm font-semibold text-primary outline-none"
-              >
-                {themes.map(({ id, label }) => (
-                  <option key={id} value={id}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <>
+              <div style={{ width: 1, height: 22, background: 'var(--border)', opacity: 0.55, margin: '0 4px', flexShrink: 0 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px' }}>
+                {ALL_THEMES.map(({ id, label }) => {
+                  const isActive = theme === id;
+                  const color    = THEME_SWATCHES[id];
+                  return (
+                    <motion.button
+                      key={id}
+                      title={label}
+                      onClick={() => setTheme(id)}
+                      aria-label={`${label} theme`}
+                      aria-pressed={isActive}
+                      whileHover={{ scale: isActive ? 1.18 : 1.14 }}
+                      whileTap={{ scale: 0.82 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                      style={{
+                        width:  isActive ? 18 : 14,
+                        height: isActive ? 18 : 14,
+                        borderRadius: '50%',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        backgroundColor: color,
+                        boxShadow: isActive
+                          ? `0 0 0 2.5px var(--surface), 0 0 0 4px ${color}, 0 4px 16px ${color}99`
+                          : '0 1px 4px rgba(0,0,0,0.25)',
+                        opacity: isActive ? 1 : 0.52,
+                        transition: 'width 0.2s, height 0.2s, box-shadow 0.2s, opacity 0.2s',
+                        flexShrink: 0,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </>
           )}
-        </div>
+        </GradientPill>
       </div>
-    </nav>
+    </motion.header>
   );
 };

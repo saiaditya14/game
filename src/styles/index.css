@@ -26,7 +26,7 @@
     --divider: rgba(102, 81, 63, 0.2);
     --stroke-color: #0f172a;
     --canvas-bg: #ffffff;
-    --card-gradient: radial-gradient(circle at 22% 18%, rgba(255, 229, 181, 0.95), transparent 35%), linear-gradient(135deg, #fff7e7 0%, #f2dfbd 55%, #d9b987 100%);
+    --card-gradient: linear-gradient(135deg, #fffef8 0%, #fff7e6 55%, #f5e8cc 100%);
     --card-sheen: rgba(255, 255, 255, 0.58);
     --radius: 0.5rem;
     --font: 'Inter', sans-serif;
@@ -48,7 +48,7 @@
     --divider: rgba(190, 24, 93, 0.18);
     --stroke-color: #e11d48;
     --canvas-bg: #fff7fb;
-    --card-gradient: linear-gradient(135deg, #ffe4f0, #fbcfe8 54%, #fda4af);
+    --card-gradient: radial-gradient(ellipse at 30% 20%, rgba(255,248,251,0.92), transparent 40%), linear-gradient(135deg, #fff4f8 0%, #fce7f0 55%, #f8cedf 100%);
     --card-sheen: rgba(255, 255, 255, 0.45);
     --radius: var(--radius-lg);
     --font: 'Nunito', sans-serif;
@@ -92,7 +92,7 @@
     --divider: rgba(139, 90, 43, 0.24);
     --stroke-color: #0f172a;
     --canvas-bg: #fffdf8;
-    --card-gradient: linear-gradient(135deg, #fff7e1, #e6e3c0 58%, #d1b18c);
+    --card-gradient: linear-gradient(135deg, #fffbf2 0%, #f0e9d8 55%, #e2d4bb 100%);
     --card-sheen: rgba(255, 255, 255, 0.42);
     --radius: var(--radius-lg);
     --font: 'Comic Sans MS', 'Sniglet', cursive;
@@ -102,20 +102,107 @@
 @layer base {
   body {
     background-color: var(--background);
+    background-attachment: fixed;
     color: var(--foreground);
     font-family: var(--font);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.35s ease, color 0.35s ease;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 31rem),
-      radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--secondary) 42%, transparent), transparent 27rem);
+  /* ── Vanilla: honey-champagne ellipse mesh — warm diffused light on cream paper ── */
+  .theme-vanilla body {
+    background-image:
+      radial-gradient(70% 50% at 22% 14%, rgba(255, 228, 160, 0.34) 0%, transparent 100%),
+      radial-gradient(60% 45% at 80% 10%, rgba(255, 248, 220, 0.28) 0%, transparent 100%),
+      radial-gradient(75% 55% at 55% 88%, rgba(240, 210, 138, 0.24) 0%, transparent 100%);
+  }
+
+  /* ── Cozy: watercolor ellipse wash — muted sage/taupe/biscuit as flowing overlaps ── */
+  .theme-cozy body {
+    background-image:
+      radial-gradient(72% 48% at 12% 18%,  rgba(160, 185, 155, 0.36) 0%, transparent 100%),
+      radial-gradient(65% 42% at 88% 80%,  rgba(210, 175, 170, 0.30) 0%, transparent 100%),
+      radial-gradient(80% 52% at 52% 58%,  rgba(205, 170, 130, 0.22) 0%, transparent 100%),
+      radial-gradient(55% 38% at 80% 14%,  rgba(175, 195, 162, 0.20) 0%, transparent 100%);
+  }
+
+  /* ── Pink: kawaii clean — single soft vignette, blush center to rose edge, no splodges ── */
+  .theme-pink body {
+    background-image:
+      radial-gradient(ellipse at 50% 44%, #fff8fb 0%, #fce7f0 50%, #f8cedf 100%);
+  }
+
+  /* ── Arcade: cyberpunk neon — saturated magenta/cyan, violet core ── */
+  .theme-arcade body {
+    background-image:
+      radial-gradient(circle at 8%   12%,  rgba(255,   0, 255, 0.70) 0%, transparent 44%),
+      radial-gradient(circle at 92%  88%,  rgba(  0, 255, 255, 0.62) 0%, transparent 42%),
+      radial-gradient(circle at 50%  50%,  rgba(120,  40, 230, 0.38) 0%, transparent 52%),
+      radial-gradient(circle at 82%  12%,  rgba(255, 180,  30, 0.30) 0%, transparent 30%);
+  }
+
+  /* ── Hero title — gradient text, letter spacing, per-theme drop-shadow ── */
+  .hero-title {
+    letter-spacing: 0.06em;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .theme-pink .hero-title {
+    background-image: linear-gradient(135deg, #9f1239 0%, #be185d 40%, #f472b6 100%);
+    filter: drop-shadow(0 1px 8px rgba(190, 24, 93, 0.28));
+  }
+
+  .theme-vanilla .hero-title {
+    background-image: linear-gradient(135deg, #a07840 0%, #d4aa60 50%, #e8c87a 100%);
+    filter: drop-shadow(0 1px 6px rgba(180, 130, 40, 0.22));
+  }
+
+  .theme-arcade .hero-title {
+    background-image: linear-gradient(135deg, #ff00ff 0%, #a855f7 50%, #00ffff 100%);
+    filter: drop-shadow(0 0 14px rgba(255, 0, 255, 0.60)) drop-shadow(0 0 6px rgba(0, 255, 255, 0.40));
+  }
+
+  .theme-cozy .hero-title {
+    background-image: linear-gradient(135deg, #7a9b70 0%, #b89a7a 55%, #c4a882 100%);
+    filter: drop-shadow(0 1px 6px rgba(140, 120, 90, 0.18));
+  }
+
+  /* ── Hero divider — replaces the frosted-glass box ── */
+  .hero-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+    opacity: 0.55;
+  }
+
+  .theme-pink .hero-divider {
+    background: linear-gradient(90deg, transparent, rgba(249, 168, 212, 0.65) 25%, rgba(244, 63, 94, 0.45) 75%, transparent);
+    opacity: 1;
+  }
+
+  .theme-arcade .hero-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff00ff 30%, #00ffff 70%, transparent);
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
+    opacity: 1;
+  }
+
+  /* ── Vanilla gold linkings — borders, dividers, card accents ── */
+  .theme-vanilla .game-card-divider {
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(196, 148, 60, 0.45),
+      rgba(212, 168, 72, 0.70),
+      rgba(196, 148, 60, 0.45),
+      transparent
+    );
+  }
+
+  .theme-vanilla .game-card-badge {
+    border: 1px solid rgba(196, 148, 60, 0.50);
+    box-shadow: 0 2px 10px rgba(180, 130, 40, 0.28), inset 0 1px 0 rgba(255, 220, 120, 0.35);
   }
 }
 
@@ -2488,6 +2575,37 @@
   .theme-select option {
     background-color: var(--surface);
     color: var(--foreground);
+  }
+
+  /* ── Per-theme card accent treatments ── */
+  .game-card-badge {
+    transition: box-shadow 0.2s ease;
+  }
+
+  .theme-pink .game-card-badge {
+    box-shadow: 0 2px 10px rgba(244, 63, 94, 0.32), 0 0 0 1px rgba(244, 63, 94, 0.1);
+  }
+
+  .theme-arcade .game-card-badge {
+    text-shadow: 0 0 7px currentColor;
+    letter-spacing: 0.35em;
+  }
+
+  .theme-arcade article {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.18s ease;
+  }
+
+  .theme-arcade article:hover {
+    box-shadow: 0 0 0 1px rgba(255, 0, 255, 0.45), 0 20px 40px rgba(255, 0, 255, 0.14) !important;
+  }
+
+  .theme-vanilla .game-card-badge {
+    background: linear-gradient(135deg, var(--surface), var(--secondary));
+    border: 1px solid rgba(102, 81, 63, 0.18);
+  }
+
+  .theme-cozy .game-card-badge {
+    border-radius: 999px;
   }
 }
 

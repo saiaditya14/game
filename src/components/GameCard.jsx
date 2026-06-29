@@ -16,14 +16,25 @@ export const GameCard = ({
   return (
     <motion.article
       whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
+      whileTap={{ scale: 0.97, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
       className="group flex h-[27rem] overflow-hidden border border-border/70 bg-[color:var(--surface)] shadow-sm transition duration-300 hover:border-primary/30 hover:shadow-[var(--shadow)]"
       style={{ borderRadius: 'var(--radius)' }}
     >
       <div className="flex w-full flex-col">
         <div className="relative flex h-[52%] items-center justify-center overflow-hidden" style={{ background: 'var(--card-gradient)' }}>
-          <span className="absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm">
-            {label}
-          </span>
+          {isActionRequired ? (
+            <motion.span
+              animate={{ opacity: [1, 0.55, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="game-card-badge absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm"
+            >
+              {label}
+            </motion.span>
+          ) : (
+            <span className="game-card-badge absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm">
+              {label}
+            </span>
+          )}
 
           {imageSrc ? (
             <img
@@ -49,9 +60,9 @@ export const GameCard = ({
             <div className="game-card-divider game-card-footer-divider" />
             <div className="game-card-footer flex items-center justify-between gap-4">
               <span className="game-card-meta font-medium text-[color:var(--muted)]">{meta}</span>
-              <span className="game-card-action inline-flex items-center gap-1.5 font-bold text-primary">
+              <span className="game-card-action inline-flex items-center gap-1.5 font-bold text-primary transition-colors duration-200 group-hover:text-[color:var(--accent)]">
                 Play now
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1.5" />
               </span>
             </div>
           </div>
