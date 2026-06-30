@@ -15,7 +15,6 @@ const PETAL_SHAPE = (() => {
 })();
 
 // ─── Radial glow texture for star coronas ─────────────────────────────────────
-// Additive-blended sprite placed behind each sphere — light adds to background
 const GLOW_TEXTURE = (() => {
   const sz = 64;
   const canvas = document.createElement('canvas');
@@ -33,7 +32,6 @@ const GLOW_TEXTURE = (() => {
 })();
 
 // ─── 4-pointed silver star sprite texture ─────────────────────────────────────
-// Sharp diamond cross — Stardew-esque, renders as a sprite on Points.
 const STAR_SPRITE = (() => {
   const sz = 32;
   const canvas = document.createElement('canvas');
@@ -41,13 +39,11 @@ const STAR_SPRITE = (() => {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, sz, sz);
   const cx = sz / 2, cy = sz / 2;
-  // Faint central glow so the star has depth without being blurry
   const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.28);
   grd.addColorStop(0, 'rgba(255,255,255,0.35)');
   grd.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, sz, sz);
-  // Sharp 4-pointed star: outer spike at 15px, inner waist at 2px
   ctx.beginPath();
   for (let i = 0; i < 8; i++) {
     const angle = (i * Math.PI / 4) - Math.PI / 2;
@@ -173,12 +169,11 @@ function PinkScene() {
 // ─── Champagne — Physics Bubble Simulation ────────────────────────────────────
 
 const BOKEH_COLORS = ['#e8c87a', '#f5e6a3', '#f0d090', '#fffbe8', '#d4aa60'];
-const CAM_Z = 5;                                    // matches Canvas camera position
-const TAN_HALF_FOV = Math.tan(30 * Math.PI / 180); // fov=60 → half=30°
+const CAM_Z = 5;
+const TAN_HALF_FOV = Math.tan(30 * Math.PI / 180);
 
-// Returns world-space half-extents for a bubble at depth z
 function boundsAt(z, aspect) {
-  const depth = CAM_Z - z;          // distance from camera to bubble plane
+  const depth = CAM_Z - z;
   const halfH = TAN_HALF_FOV * depth;
   return { bX: halfH * aspect, bY: halfH };
 }
@@ -199,7 +194,7 @@ function VanillaScene() {
         vx: (Math.random() < 0.5 ? 1 : -1) * (0.12 + Math.random() * 0.22),
         vy: (Math.random() < 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.16),
         scale,
-        r:       scale * 0.5, // collision core — smaller than visual so they touch gently
+        r:       scale * 0.5,
         color:   BOKEH_COLORS[i % BOKEH_COLORS.length],
         opacity: 0.09 + Math.random() * 0.07,
         meshRef: { current: null },
@@ -212,7 +207,6 @@ function VanillaScene() {
     const asp = state.size.width / state.size.height || 1;
     const bs = bubbles.current;
 
-    // Move + wall bounce
     for (const b of bs) {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
@@ -224,7 +218,6 @@ function VanillaScene() {
       else if (b.y < -bY) { b.y = -bY; b.vy =  Math.abs(b.vy); }
     }
 
-    // Elastic bubble-bubble collision on small cores (~2% packing, occasional gentle nudge)
     for (let i = 0; i < bs.length; i++) {
       for (let j = i + 1; j < bs.length; j++) {
         const bi = bs[i], bj = bs[j];
@@ -264,7 +257,6 @@ function VanillaScene() {
 
 // ─── Arcade — Deep Space ──────────────────────────────────────────────────────
 
-// Dim nebula wisps — neon colour clouds far behind everything
 const NEBULA_DATA = [
   { x: -4.5, y:  2.5, z: -9,  color: '#ff00ff', scale: 5.0, rotSpeed: 0.04  },
   { x:  5.5, y: -2.0, z: -11, color: '#00ffff', scale: 6.0, rotSpeed: 0.03  },
@@ -285,7 +277,6 @@ function NebulaCloud({ x, y, z, color, scale, rotSpeed }) {
   );
 }
 
-// 220 tiny round/square points — all-screen, fast independent twinkle
 function TwinkleStarField({ count = 220 }) {
   const geoRef = useRef();
 
@@ -299,7 +290,7 @@ function TwinkleStarField({ count = 220 }) {
       positions[i * 3 + 1] = (Math.random() - 0.5) * 18;
       positions[i * 3 + 2] = -0.5 - Math.random() * 13;
       colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = 1;
-      speeds[i] = 0.5 + Math.random() * 2.0; // faster twinkle
+      speeds[i] = 0.5 + Math.random() * 2.0;
       phases[i] = Math.random() * Math.PI * 2;
     }
     return { positions, colors, speeds, phases };
@@ -327,8 +318,6 @@ function TwinkleStarField({ count = 220 }) {
   );
 }
 
-// ~38 4-pointed silver star sprites — all-screen, moderate twinkle
-// Cool blue-silver tint: R×0.82, G×0.90, B×1.0
 function PixelStarLayer({ count = 38 }) {
   const geoRef = useRef();
 
@@ -354,9 +343,9 @@ function PixelStarLayer({ count = 38 }) {
     const t = state.clock.elapsedTime;
     for (let i = 0; i < count; i++) {
       const b = 0.08 + 0.92 * (0.5 + 0.5 * Math.sin(t * speeds[i] + phases[i]));
-      attr.array[i * 3]     = b * 0.82; // R — cooler silver
-      attr.array[i * 3 + 1] = b * 0.90; // G
-      attr.array[i * 3 + 2] = b * 1.00; // B — blue-white
+      attr.array[i * 3]     = b * 0.82;
+      attr.array[i * 3 + 1] = b * 0.90;
+      attr.array[i * 3 + 2] = b * 1.00;
     }
     attr.needsUpdate = true;
   });
@@ -381,12 +370,10 @@ function PixelStarLayer({ count = 38 }) {
   );
 }
 
-// Bright steady stars with radial corona — no twinkling, static bright
 function GalaxyStar({ x, y, z, size, opacity }) {
-  const glowScale = size * 13; // corona is 13× the star radius
+  const glowScale = size * 13;
   return (
     <group position={[x, y, z]}>
-      {/* Soft radiating halo — additive so it adds light, never darkens */}
       <sprite scale={[glowScale, glowScale, 1]}>
         <spriteMaterial
           map={GLOW_TEXTURE}
@@ -396,7 +383,6 @@ function GalaxyStar({ x, y, z, size, opacity }) {
           blending={THREE.AdditiveBlending}
         />
       </sprite>
-      {/* Bright core */}
       <mesh>
         <sphereGeometry args={[size, 7, 7]} />
         <meshBasicMaterial color="#d8eeff" transparent opacity={opacity} depthWrite={false} />
@@ -407,7 +393,6 @@ function GalaxyStar({ x, y, z, size, opacity }) {
 
 function ArcadeScene() {
   const galaxyStars = useMemo(() => {
-    // Poisson-style placement: reject candidates within MIN_DIST of any placed star
     const W = 22, H = 14, MIN_DIST = 2.4, TARGET = 28;
     const placed = [];
     let tries = 0;

@@ -1,5 +1,5 @@
 ---
-description: Master UI/UX Design Engineer skill — orchestrates visual upgrades on React/Tailwind components through a strict vibe-check → audit → pitch → approval → execution workflow. Never touches game logic, state, or data fetching. Can delegate to skill-shader-gradient, skill-liquid-glass, skill-liquid-logo, and skill-react-three-fiber.
+description: Master UI/UX Design Engineer skill — orchestrates visual upgrades on React/Tailwind components through a strict vibe-check → audit → pitch → approval → execution workflow. Never touches game logic, state, or data fetching. Can delegate to skill-shader-gradient, skill-liquid-glass, skill-liquid-logo, skill-react-three-fiber, skill-reactbits, and skill-animejs.
 ---
 
 # Skill: UI Upgrade (`/ui-upgrade`)
@@ -16,6 +16,8 @@ This skill is the **orchestrator**. When the chosen vibe calls for a specific vi
 | Frosted glass / refraction panels | `skill-liquid-glass` |
 | Liquid metal shimmer on a logo or title | `skill-liquid-logo` |
 | 3D geometry, particles, or 3D game elements | `skill-react-three-fiber` |
+| Animated text effects (split, blur, scramble, shiny) or pre-built interactive components (SpotlightCard, Aurora, Particles) | `skill-reactbits` |
+| Complex sequenced timelines, scroll-synced animations, stagger grid patterns, SVG path drawing | `skill-animejs` |
 
 When none of those match, implement directly with **Tailwind + Framer Motion + CSS** — no extra libraries.
 
@@ -153,6 +155,8 @@ When the pitch includes a sub-skill, invoke it inline using the sub-skill's docu
 - `skill-liquid-glass` → no npm package; scripts in `public/lib/`; coexistence issue with ShaderGradient canvases
 - `skill-liquid-logo` → uses `@paper-design/shaders-react`; one canvas per view; blend mode depends on bg darkness
 - `skill-react-three-fiber` → one `<Canvas>` per route; cap `dpr={[1, 1.5]}`; always lazy-load; use `delta` in useFrame
+- `skill-reactbits` → components are local files after `npx reactbits add`; JS+Tailwind variant; some use GSAP as peer dep; WebGL backgrounds count toward context limit; do NOT apply to locked Pink/Champagne/Arcade backgrounds or title gradients
+- `skill-animejs` → v4 named imports only (`animate`, `createTimeline`, `stagger`, `onScroll`); always cancel on unmount; don't double-animate elements already managed by Framer Motion
 
 ### Framer Motion patterns (use these by default)
 

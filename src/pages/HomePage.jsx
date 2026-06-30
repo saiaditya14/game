@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { animate } from 'animejs';
 import { GameCard } from '../components/GameCard';
 import { useTheme } from '../components/ThemeProvider';
+import DecryptedText from '../components/reactbits/DecryptedText';
+import SplitText    from '../components/reactbits/SplitText';
+import BlurText     from '../components/reactbits/BlurText';
 import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp.png';
-import drawOffPinkImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
-import drawOffArcadeImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
+import drawOffPinkImage    from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
+import drawOffArcadeImage  from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
 import adorableWallpaper from '../../adorableeeee.jpg';
-import coupleCorner from '../../couplehehe.png';
-import arcadeVideo from '../../video_eb9d7e6a96d3.mp4';
-import blackHoleImg from '../../black-hole-spin.png';
+import coupleCorner      from '../../couplehehe.png';
+import arcadeVideo       from '../../video_eb9d7e6a96d3.mp4';
+import blackHoleImg      from '../../black-hole-spin.png';
 
 const turnGames = [
   {
@@ -78,19 +82,62 @@ const gridVariants = {
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
 };
 
-const cardItemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+// Per-theme card entrance variants
+const cardItemVariantsByTheme = {
+  'theme-pink': {
+    hidden: { opacity: 0, scale: 0.90 },
+    show:   { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 280, damping: 22 } },
+  },
+  'theme-champagne': {
+    hidden: { opacity: 0, x: -14 },
+    show:   { opacity: 1, x: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+  },
+  'theme-arcade': {
+    hidden: { opacity: 0 },
+    show:   { opacity: 1, transition: { duration: 0.10, ease: 'linear' } },
+  },
+  'theme-cozy': {
+    hidden: { opacity: 0, y: 16 },
+    show:   { opacity: 1, y: 0, transition: { duration: 0.65, ease: 'easeOut' } },
+  },
 };
 
 const ARCADE_STAR_STYLE = {
   color: 'var(--primary)',
   textShadow: '0 0 8px var(--primary), 0 0 18px var(--primary)',
+  display: 'inline-block',
 };
+
+// ─── Section Header with Anime.js arcade star pulse ───────────────────────────
 
 const SectionHeader = ({ title, eyebrow }) => {
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
+  const leftStarRef  = useRef(null);
+  const rightStarRef = useRef(null);
+
+  useEffect(() => {
+    if (!isArcade || !leftStarRef.current || !rightStarRef.current) return;
+
+    const a1 = animate(leftStarRef.current, {
+      opacity: [1, 0.18, 1],
+      scale:   [1, 1.14, 1],
+      duration: 1350,
+      ease: 'inOutSine',
+      loop: true,
+    });
+    const a2 = animate(rightStarRef.current, {
+      opacity: [1, 0.18, 1],
+      scale:   [1, 1.14, 1],
+      duration: 1350,
+      delay: 220,
+      ease: 'inOutSine',
+      loop: true,
+    });
+
+    return () => { a1.cancel(); a2.cancel(); };
+  }, [isArcade]);
+
   return (
     <motion.div
       className="mb-5 flex items-end justify-between gap-4"
@@ -101,21 +148,75 @@ const SectionHeader = ({ title, eyebrow }) => {
       <div>
         <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
         <h2 className="mt-1 font-serif text-2xl font-medium text-foreground">
-          {isArcade && <span aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginRight: '0.38em' }}>✦</span>}
+          {isArcade && (
+            <span ref={leftStarRef} aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginRight: '0.38em' }}>✦</span>
+          )}
           {title}
-          {isArcade && <span aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginLeft: '0.38em' }}>✦</span>}
+          {isArcade && (
+            <span ref={rightStarRef} aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginLeft: '0.38em' }}>✦</span>
+          )}
         </h2>
       </div>
     </motion.div>
   );
 };
 
+// ─── Hero Title — per-theme entry animation ───────────────────────────────────
+
+const HeroTitle = ({ theme }) => {
+  const titleClass = 'hero-title text-4xl font-bold leading-tight py-1 sm:text-6xl';
+
+  if (theme === 'theme-arcade') {
+    return (
+      <h1 className={titleClass}>
+        <DecryptedText
+          text="Lovelyland"
+          speed={30}
+          maxIterations={5}
+          sequential
+          revealDirection="start"
+        />
+      </h1>
+    );
+  }
+
+  if (theme === 'theme-pink') {
+    return (
+      <h1 className={titleClass}>
+        <SplitText
+          text="Lovelyland"
+          delay={55}
+          duration={0.48}
+          ease="backOut"
+          splitType="chars"
+          from={{ opacity: 0, scale: 0.7, y: 12 }}
+          to={{ opacity: 1, scale: 1, y: 0 }}
+        />
+      </h1>
+    );
+  }
+
+  // Champagne / Cozy: standard stagger fade-up — clean and well-matched to both vibes
+  return (
+    <motion.h1
+      variants={headerChildVariants}
+      className={titleClass}
+    >
+      Lovelyland
+    </motion.h1>
+  );
+};
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 const HomePage = () => {
   const { theme } = useTheme();
   const drawOffImage = drawOffImagesByTheme[theme] || drawOffVanillaImage;
-  const heroSubtitle = heroSubtitleByTheme[theme] || heroSubtitleByTheme['theme-vanilla'];
+  const heroSubtitle = heroSubtitleByTheme[theme] || heroSubtitleByTheme['theme-champagne'];
   const isCozy   = theme === 'theme-cozy';
   const isArcade = theme === 'theme-arcade';
+
+  const cardItemVariants = cardItemVariantsByTheme[theme] || cardItemVariantsByTheme['theme-cozy'];
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 180], [1, 0]);
@@ -123,7 +224,7 @@ const HomePage = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12" style={{ position: 'relative', zIndex: 2 }}>
-      {/* Cozy: wallpaper background — oversized so the gentle sway never shows an edge gap */}
+      {/* Cozy: wallpaper background */}
       {isCozy && (
         <motion.div
           aria-hidden="true"
@@ -143,7 +244,6 @@ const HomePage = () => {
           }}
         />
       )}
-      {/* Cozy: readability gradient over background */}
       {isCozy && (
         <div
           aria-hidden="true"
@@ -155,10 +255,6 @@ const HomePage = () => {
           }}
         />
       )}
-      {/* Cozy: girl + cat + shrine corner overlay.
-          Width = left margin of max-w-6xl content (72rem), clamped 0→320px.
-          Shows 0px when viewport ≤ 72rem (no room), grows as viewport widens.
-          CSS masks fade the top (so willow duplicate dissolves) and right edge. */}
       {isCozy && (
         <div
           aria-hidden="true"
@@ -182,7 +278,7 @@ const HomePage = () => {
         />
       )}
 
-      {/* Arcade: video — right half of screen, fades into black on the left edge */}
+      {/* Arcade: video */}
       {isArcade && (
         <div
           aria-hidden="true"
@@ -199,15 +295,10 @@ const HomePage = () => {
           }}
         >
           <video
-            autoPlay
-            muted
-            loop
-            playsInline
+            autoPlay muted loop playsInline
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center center',
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center center',
               display: 'block',
               filter: 'brightness(0.7) saturate(0.85)',
             }}
@@ -216,7 +307,6 @@ const HomePage = () => {
           </video>
         </div>
       )}
-      {/* Arcade: dark gradient keeps left text readable */}
       {isArcade && (
         <div
           aria-hidden="true"
@@ -229,7 +319,6 @@ const HomePage = () => {
           }}
         />
       )}
-      {/* Arcade: spinning black hole — z-index:-1, after overlay so it paints above it, below cards (z:2) */}
       {isArcade && (
         <motion.img
           src={blackHoleImg}
@@ -259,12 +348,8 @@ const HomePage = () => {
           animate="show"
           className="flex flex-col items-center gap-3 text-center px-6 py-10 sm:py-14"
         >
-          <motion.h1
-            variants={headerChildVariants}
-            className="hero-title text-4xl font-bold leading-tight py-1 sm:text-6xl"
-          >
-            Lovelyland
-          </motion.h1>
+          <HeroTitle theme={theme} />
+
           {isCozy ? (
             <motion.p
               className="max-w-2xl text-base font-normal leading-7 sm:text-lg"
