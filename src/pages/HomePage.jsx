@@ -10,10 +10,10 @@ import BlurText     from '../components/reactbits/BlurText';
 import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp.png';
 import drawOffPinkImage    from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
 import drawOffArcadeImage  from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
-import adorableWallpaper from '../../adorableeeee.jpg';
-import coupleCorner      from '../../couplehehe.png';
-import arcadeVideo       from '../../video_eb9d7e6a96d3.mp4';
-import blackHoleImg      from '../../black-hole-spin.png';
+import adorableWallpaper from '../../images/adorableeeee.jpg';
+import coupleCorner      from '../../images/couplehehe.png';
+import arcadeVideo       from '../../images/video_eb9d7e6a96d3.mp4';
+import blackHoleImg      from '../../images/black-hole-spin.png';
 
 const turnGames = [
   {
