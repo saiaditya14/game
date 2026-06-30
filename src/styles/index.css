@@ -162,8 +162,8 @@
   }
 
   .theme-cozy .hero-title {
-    background-image: linear-gradient(135deg, #6b3a12 0%, #cd7f32 50%, #e8b860 100%);
-    filter: drop-shadow(0 1px 10px rgba(180, 100, 20, 0.48));
+    background-image: linear-gradient(135deg, #f0c040 0%, #ffe070 45%, #fff5b0 100%);
+    filter: drop-shadow(0 0 18px rgba(255, 210, 60, 0.72)) drop-shadow(0 2px 6px rgba(120, 60, 0, 0.45));
   }
 
   /* â”€â”€ Hero divider â€” replaces the frosted-glass box â”€â”€ */

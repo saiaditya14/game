@@ -193,12 +193,24 @@ const HomePage = () => {
           >
             Lovelyland
           </motion.h1>
-          <motion.p
-            variants={headerChildVariants}
-            className="max-w-2xl text-base font-normal leading-7 text-[color:var(--muted)] sm:text-lg"
-          >
-            {heroSubtitle}
-          </motion.p>
+          {isCozy ? (
+            <motion.p
+              className="max-w-2xl text-base font-normal leading-7 sm:text-lg"
+              style={{ color: '#ffe070', textShadow: '0 0 12px rgba(255,210,60,0.55)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 5, times: [0, 0.18, 0.62, 1], delay: 0.4, ease: 'easeInOut' }}
+            >
+              {heroSubtitle}
+            </motion.p>
+          ) : (
+            <motion.p
+              variants={headerChildVariants}
+              className="max-w-2xl text-base font-normal leading-7 text-[color:var(--muted)] sm:text-lg"
+            >
+              {heroSubtitle}
+            </motion.p>
+          )}
         </motion.div>
         <div className="hero-divider" aria-hidden="true" />
       </motion.div>
