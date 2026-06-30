@@ -6,6 +6,7 @@ import { useTheme } from '../components/ThemeProvider';
 import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp.png';
 import drawOffPinkImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
 import drawOffArcadeImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
+import adorableWallpaper from '../../adorableeeee.jpg';
 
 const turnGames = [
   {
@@ -49,7 +50,7 @@ const heroSubtitleByTheme = {
   'theme-pink':      'hii ♡ your person is waiting for you~',
   'theme-champagne': 'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
   'theme-arcade':    'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
-  'theme-cozy':      'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-cozy':      'Settle in. The kettle\'s on. Your games are waiting.',
 };
 
 const drawOffImagesByTheme = {
@@ -110,6 +111,7 @@ const HomePage = () => {
   const { theme } = useTheme();
   const drawOffImage = drawOffImagesByTheme[theme] || drawOffVanillaImage;
   const heroSubtitle = heroSubtitleByTheme[theme] || heroSubtitleByTheme['theme-vanilla'];
+  const isCozy = theme === 'theme-cozy';
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 180], [1, 0]);
@@ -117,9 +119,37 @@ const HomePage = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12">
+      {/* Cozy wallpaper background */}
+      {isCozy && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            backgroundImage: `url(${adorableWallpaper})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+      )}
+      {/* Cozy: bottom gradient to darken under cards so text stays readable */}
+      {isCozy && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            background: 'linear-gradient(to bottom, rgba(8,18,6,0.10) 0%, rgba(8,18,6,0.38) 55%, rgba(8,18,6,0.62) 100%)',
+          }}
+        />
+      )}
+
       {/* Scroll-fade wrapper */}
       <motion.div key={theme} style={{ opacity: heroOpacity, y: heroY }} className="mt-10 mb-12">
-        {/* Hero — open text, no box */}
+        {/* Hero */}
         <motion.div
           variants={headerVariants}
           initial="hidden"
@@ -142,14 +172,21 @@ const HomePage = () => {
         <div className="hero-divider" aria-hidden="true" />
       </motion.div>
 
-      <section className="mb-14">
+      <motion.section
+        className="mb-14"
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, margin: '-80px' }}
+        transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="game-section-shell">
           <SectionHeader title="Your Turn" eyebrow="games waiting" />
           <motion.div
             className="game-grid hide-scrollbar"
             variants={gridVariants}
             initial="hidden"
-            animate="show"
+            whileInView="show"
+            viewport={{ once: false, margin: '-60px' }}
           >
             {turnGames.map((game) => (
               <motion.div key={game.title} variants={cardItemVariants}>
@@ -158,16 +195,22 @@ const HomePage = () => {
             ))}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, margin: '-80px' }}
+        transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="game-section-shell">
           <SectionHeader title="Start a New Game" eyebrow="fresh picks" />
           <motion.div
             className="game-grid hide-scrollbar"
             variants={gridVariants}
             initial="hidden"
-            animate="show"
+            whileInView="show"
+            viewport={{ once: false, margin: '-60px' }}
           >
             <motion.div variants={cardItemVariants}>
               <Link to="/draw-off" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
@@ -211,7 +254,7 @@ const HomePage = () => {
             ))}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 };

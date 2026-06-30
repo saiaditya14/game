@@ -439,6 +439,153 @@ function ArcadeScene() {
   );
 }
 
+// ─── Cozy — Outdoor rainy garden scene ────────────────────────────────────────
+
+const GARDEN_TREE_DATA = [
+  { x: -9, y: -1, z: -14, scale: 5, color: '#1a3020' },
+  { x: -5, y:  2, z: -17, scale: 6, color: '#243828' },
+  { x: -2, y: -3, z: -16, scale: 4, color: '#1e2c1c' },
+  { x:  1, y:  1, z: -20, scale: 7, color: '#1a3020' },
+  { x:  4, y: -2, z: -15, scale: 5, color: '#243828' },
+  { x:  7, y:  2, z: -18, scale: 6, color: '#1e2c1c' },
+  { x:  9, y: -1, z: -14, scale: 4, color: '#1a3020' },
+];
+
+function TreeMass() {
+  return (
+    <>
+      {GARDEN_TREE_DATA.map((t, i) => (
+        <mesh key={i} position={[t.x, t.y, t.z]} scale={t.scale}>
+          <sphereGeometry args={[1, 8, 8]} />
+          <meshBasicMaterial color={t.color} transparent opacity={0.30 + (i % 3) * 0.05} depthWrite={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+const GARDEN_FOG_DATA = [
+  { x: -6, z: -7,  scale: 9,  color: '#7090a8', opacity: 0.05, phase: 0.0,  period: 24 },
+  { x:  3, z: -9,  scale: 12, color: '#8aacbe', opacity: 0.04, phase: 1.2,  period: 32 },
+  { x: -2, z: -11, scale: 8,  color: '#7898b0', opacity: 0.06, phase: 2.4,  period: 28 },
+  { x:  7, z: -8,  scale: 10, color: '#8aacbe', opacity: 0.07, phase: 0.8,  period: 38 },
+  { x: -5, z: -10, scale: 7,  color: '#7090a8', opacity: 0.05, phase: 3.1,  period: 22 },
+];
+
+function GardenFog() {
+  const meshRefs = useRef([]);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    GARDEN_FOG_DATA.forEach((f, i) => {
+      if (meshRefs.current[i]) {
+        meshRefs.current[i].position.x = f.x + Math.sin((t / f.period) * Math.PI * 2 + f.phase) * 0.4;
+      }
+    });
+  });
+
+  return (
+    <>
+      {GARDEN_FOG_DATA.map((f, i) => (
+        <mesh key={i} ref={el => { meshRefs.current[i] = el; }} position={[f.x, 0, f.z]} scale={f.scale}>
+          <sphereGeometry args={[1, 8, 8]} />
+          <meshBasicMaterial color={f.color} transparent opacity={f.opacity} depthWrite={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+const GARDEN_LIGHT_COLORS = ['#d8c448', '#e0cd50', '#e8c448', '#f0d860', '#dcc040'];
+
+function GardenLights() {
+  const lightData = useMemo(() => Array.from({ length: 20 }, (_, i) => ({
+    x:         (Math.random() - 0.5) * 22,
+    y:         (Math.random() - 0.5) * 8,
+    z:         -1.5 - Math.random() * 3.5,
+    scale:     0.08 + Math.random() * 0.10,
+    baseOp:    0.18 + Math.random() * 0.22,
+    bobPeriod: 3 + Math.random() * 4,
+    phase:     Math.random() * Math.PI * 2,
+    opPhase:   Math.random() * Math.PI * 2,
+    color:     GARDEN_LIGHT_COLORS[i % GARDEN_LIGHT_COLORS.length],
+  })), []);
+
+  const meshRefs = useRef([]);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    lightData.forEach((l, i) => {
+      const mesh = meshRefs.current[i];
+      if (!mesh) return;
+      mesh.position.y = l.y + Math.sin((t / l.bobPeriod) * Math.PI * 2 + l.phase) * 0.15;
+      mesh.material.opacity = l.baseOp + Math.sin((t / l.bobPeriod) * Math.PI * 2 + l.opPhase) * 0.08;
+    });
+  });
+
+  return (
+    <>
+      {lightData.map((l, i) => (
+        <mesh key={i} ref={el => { meshRefs.current[i] = el; }} position={[l.x, l.y, l.z]} scale={l.scale}>
+          <sphereGeometry args={[1, 7, 7]} />
+          <meshBasicMaterial color={l.color} transparent opacity={l.baseOp} depthWrite={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+function DepthRain() {
+  const COUNT = 1400;
+  const geoRef = useRef();
+
+  const { positions, speeds } = useMemo(() => {
+    const positions = new Float32Array(COUNT * 3);
+    const speeds    = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 32;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 22;
+      positions[i * 3 + 2] = -3 - Math.random() * 10;
+      speeds[i] = 0.5 + Math.random() * 0.7;
+    }
+    return { positions, speeds };
+  }, []);
+
+  useFrame((_, delta) => {
+    if (!geoRef.current) return;
+    const dt  = Math.min(delta, 0.05);
+    const pos = geoRef.current.attributes.position.array;
+    for (let i = 0; i < COUNT; i++) {
+      pos[i * 3 + 1] -= speeds[i] * dt;
+      if (pos[i * 3 + 1] < -11) {
+        pos[i * 3 + 1] = 11;
+        pos[i * 3]     = (Math.random() - 0.5) * 32;
+      }
+    }
+    geoRef.current.attributes.position.needsUpdate = true;
+  });
+
+  return (
+    <points>
+      <bufferGeometry ref={geoRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.022} color="#ffffff" transparent opacity={0.07} depthWrite={false} sizeAttenuation />
+    </points>
+  );
+}
+
+function CozyScene() {
+  return (
+    <>
+      <TreeMass />
+      <GardenFog />
+      <DepthRain />
+      <GardenLights />
+    </>
+  );
+}
+
 // ─── Canvas wrapper ───────────────────────────────────────────────────────────
 
 const SCENE_MAP = {
