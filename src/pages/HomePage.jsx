@@ -118,15 +118,20 @@ const HomePage = () => {
   const heroY       = useTransform(scrollY, [0, 180], [0, -28]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-12">
-      {/* Cozy wallpaper background */}
+    <div className="mx-auto max-w-6xl px-4 pb-12" style={{ position: 'relative', zIndex: 2 }}>
+      {/* Cozy: wallpaper background — oversized so the gentle sway never shows an edge gap */}
       {isCozy && (
-        <div
+        <motion.div
           aria-hidden="true"
+          animate={{ x: [0, -7, 2, -4, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: [0.45, 0, 0.55, 1], times: [0, 0.3, 0.55, 0.78, 1] }}
           style={{
             position: 'fixed',
-            inset: 0,
-            zIndex: -1,
+            top: '-2%',
+            left: '-2%',
+            right: '-2%',
+            bottom: '-2%',
+            zIndex: -2,
             backgroundImage: `url(${adorableWallpaper})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
@@ -134,7 +139,7 @@ const HomePage = () => {
           }}
         />
       )}
-      {/* Cozy: bottom gradient to darken under cards so text stays readable */}
+      {/* Cozy: readability gradient over background */}
       {isCozy && (
         <div
           aria-hidden="true"
@@ -142,7 +147,33 @@ const HomePage = () => {
             position: 'fixed',
             inset: 0,
             zIndex: -1,
-            background: 'linear-gradient(to bottom, rgba(8,18,6,0.10) 0%, rgba(8,18,6,0.38) 55%, rgba(8,18,6,0.62) 100%)',
+            background: 'linear-gradient(to bottom, rgba(8,18,6,0.08) 0%, rgba(8,18,6,0.36) 55%, rgba(8,18,6,0.60) 100%)',
+          }}
+        />
+      )}
+      {/* Cozy: girl + cat + shrine corner overlay.
+          Width = left margin of max-w-6xl content (72rem), clamped 0→320px.
+          Shows 0px when viewport ≤ 72rem (no room), grows as viewport widens.
+          CSS masks fade the top (so willow duplicate dissolves) and right edge. */}
+      {isCozy && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            width: 'clamp(0px, calc((100vw - 72rem) / 2), 320px)',
+            height: 'clamp(0px, 56vh, 520px)',
+            backgroundImage: `url(${adorableWallpaper})`,
+            backgroundSize: 'auto 100%',
+            backgroundPosition: 'left bottom',
+            backgroundRepeat: 'no-repeat',
+            maskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 60%, transparent 94%)',
+            WebkitMaskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 60%, transparent 94%)',
+            maskComposite: 'intersect',
+            WebkitMaskComposite: 'source-in',
+            pointerEvents: 'none',
+            zIndex: 1,
           }}
         />
       )}
