@@ -6,7 +6,6 @@ import { useTheme } from './ThemeProvider';
 
 // ─── Shared geometry shapes (created once at module load) ──────────────────────
 
-// Teardrop petal: base at origin, tip at y=0.7, symmetric around x=0
 const PETAL_SHAPE = (() => {
   const s = new THREE.Shape();
   s.moveTo(0, 0);
@@ -15,10 +14,57 @@ const PETAL_SHAPE = (() => {
   return s;
 })();
 
+// ─── Radial glow texture for star coronas ─────────────────────────────────────
+// Additive-blended sprite placed behind each sphere — light adds to background
+const GLOW_TEXTURE = (() => {
+  const sz = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = sz;
+  const ctx = canvas.getContext('2d');
+  const cx = sz / 2, cy = sz / 2;
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz / 2);
+  grd.addColorStop(0.00, 'rgba(220,235,255,0.90)');
+  grd.addColorStop(0.25, 'rgba(200,220,255,0.38)');
+  grd.addColorStop(0.60, 'rgba(180,210,255,0.08)');
+  grd.addColorStop(1.00, 'rgba(160,200,255,0.00)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, sz, sz);
+  return new THREE.CanvasTexture(canvas);
+})();
+
+// ─── 4-pointed silver star sprite texture ─────────────────────────────────────
+// Sharp diamond cross — Stardew-esque, renders as a sprite on Points.
+const STAR_SPRITE = (() => {
+  const sz = 32;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = sz;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, sz, sz);
+  const cx = sz / 2, cy = sz / 2;
+  // Faint central glow so the star has depth without being blurry
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.28);
+  grd.addColorStop(0, 'rgba(255,255,255,0.35)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, sz, sz);
+  // Sharp 4-pointed star: outer spike at 15px, inner waist at 2px
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI / 4) - Math.PI / 2;
+    const r = (i % 2 === 0) ? (sz / 2 - 1) : (sz / 16);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  return new THREE.CanvasTexture(canvas);
+})();
+
 
 // ─── Pink — Cherry Blossom Flowers ────────────────────────────────────────────
 
-// 3 saturated pinks — no pale washes
 const FLOWER_COLORS = ['#f472b6', '#ec4899', '#db2777'];
 const PETAL_ANGLES_DEG = [0, 72, 144, 216, 288];
 
@@ -40,7 +86,6 @@ function CherryBlossom({ color }) {
   }), []);
 
   const yRef = useRef(data.y);
-  // Stagger each flower's check so they don't all query the DOM on the same frame
   const frameCount = useRef(Math.floor(Math.random() * 12));
   const targetOpacity = useRef(data.opacity);
   const liveOpacity = useRef(data.opacity);
@@ -57,7 +102,6 @@ function CherryBlossom({ color }) {
     groupRef.current.position.y = yRef.current;
     groupRef.current.rotation.z += delta * data.selfRot;
 
-    // Text-overlap check — throttled, staggered per flower
     frameCount.current++;
     if (frameCount.current % 12 === 0) {
       projVec.copy(groupRef.current.position).project(camera);
@@ -75,7 +119,6 @@ function CherryBlossom({ color }) {
       targetOpacity.current = hit ? 0.06 : data.opacity;
     }
 
-    // Smooth lerp toward target opacity and apply to all child materials
     liveOpacity.current += (targetOpacity.current - liveOpacity.current) * Math.min(1, delta * 4);
     groupRef.current.traverse(child => {
       if (child.isMesh && child.material) child.material.opacity = liveOpacity.current;
@@ -103,7 +146,6 @@ function CherryBlossom({ color }) {
           </mesh>
         );
       })}
-      {/* Yellow center */}
       <mesh position={[0, 0, 0.01]}>
         <circleGeometry args={[0.22, 16]} />
         <meshStandardMaterial color="#fde68a" transparent opacity={0.92} depthWrite={false} />
@@ -128,112 +170,271 @@ function PinkScene() {
   );
 }
 
-// ─── Vanilla — Soft Bokeh Orbs ────────────────────────────────────────────────
+// ─── Champagne — Physics Bubble Simulation ────────────────────────────────────
 
 const BOKEH_COLORS = ['#e8c87a', '#f5e6a3', '#f0d090', '#fffbe8', '#d4aa60'];
+const CAM_Z = 5;                                    // matches Canvas camera position
+const TAN_HALF_FOV = Math.tan(30 * Math.PI / 180); // fov=60 → half=30°
 
-function BokehOrb({ color }) {
-  const meshRef = useRef();
-
-  const data = useMemo(() => ({
-    x: Math.random() * 16 - 8,
-    y: Math.random() * 10 - 5,
-    z: -0.8 - Math.random() * 3.5,
-    driftSpeedX: 0.04 + Math.random() * 0.07,
-    driftSpeedY: 0.03 + Math.random() * 0.06,
-    driftAmpX:   0.3  + Math.random() * 0.6,
-    driftAmpY:   0.2  + Math.random() * 0.5,
-    phase: Math.random() * Math.PI * 2,
-    scale:   0.35 + Math.random() * 0.55,
-    opacity: 0.08 + Math.random() * 0.1,
-  }), []);
-
-  useFrame((state) => {
-    meshRef.current.position.x =
-      data.x + Math.sin(state.clock.elapsedTime * data.driftSpeedX + data.phase) * data.driftAmpX;
-    meshRef.current.position.y =
-      data.y + Math.sin(state.clock.elapsedTime * data.driftSpeedY + data.phase * 1.3) * data.driftAmpY;
-  });
-
-  return (
-    <mesh ref={meshRef} position={[data.x, data.y, data.z]} scale={data.scale}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshBasicMaterial color={color} transparent opacity={data.opacity} depthWrite={false} />
-    </mesh>
-  );
+// Returns world-space half-extents for a bubble at depth z
+function boundsAt(z, aspect) {
+  const depth = CAM_Z - z;          // distance from camera to bubble plane
+  const halfH = TAN_HALF_FOV * depth;
+  return { bX: halfH * aspect, bY: halfH };
 }
 
 function VanillaScene() {
-  const orbs = useMemo(
-    () => Array.from({ length: 22 }, (_, i) => ({ id: i, color: BOKEH_COLORS[i % BOKEH_COLORS.length] })),
-    []
+  const { size } = useThree();
+  const aspect = size.width / size.height || 1;
+
+  const bubbles = useRef(
+    Array.from({ length: 18 }, (_, i) => {
+      const z = -1.0 - Math.random() * 4.5;
+      const { bX, bY } = boundsAt(z, aspect);
+      const scale = 0.28 + Math.random() * 0.44;
+      return {
+        x:  (Math.random() * 2 - 1) * bX * 0.85,
+        y:  (Math.random() * 2 - 1) * bY * 0.85,
+        z,
+        vx: (Math.random() < 0.5 ? 1 : -1) * (0.12 + Math.random() * 0.22),
+        vy: (Math.random() < 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.16),
+        scale,
+        r:       scale * 0.5, // collision core — smaller than visual so they touch gently
+        color:   BOKEH_COLORS[i % BOKEH_COLORS.length],
+        opacity: 0.09 + Math.random() * 0.07,
+        meshRef: { current: null },
+      };
+    })
   );
+
+  useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const asp = state.size.width / state.size.height || 1;
+    const bs = bubbles.current;
+
+    // Move + wall bounce
+    for (const b of bs) {
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      const { bX, bY } = boundsAt(b.z, asp);
+      if      (b.x >  bX) { b.x =  bX; b.vx = -Math.abs(b.vx); }
+      else if (b.x < -bX) { b.x = -bX; b.vx =  Math.abs(b.vx); }
+      if      (b.y >  bY) { b.y =  bY; b.vy = -Math.abs(b.vy); }
+      else if (b.y < -bY) { b.y = -bY; b.vy =  Math.abs(b.vy); }
+    }
+
+    // Elastic bubble-bubble collision on small cores (~2% packing, occasional gentle nudge)
+    for (let i = 0; i < bs.length; i++) {
+      for (let j = i + 1; j < bs.length; j++) {
+        const bi = bs[i], bj = bs[j];
+        const dx = bj.x - bi.x, dy = bj.y - bi.y;
+        const dist2 = dx * dx + dy * dy;
+        const minD = bi.r + bj.r;
+        if (dist2 < minD * minD && dist2 > 0.0001) {
+          const dist = Math.sqrt(dist2);
+          const nx = dx / dist, ny = dy / dist;
+          const overlap = (minD - dist) * 0.5;
+          bi.x -= nx * overlap; bi.y -= ny * overlap;
+          bj.x += nx * overlap; bj.y += ny * overlap;
+          const dvx = bi.vx - bj.vx, dvy = bi.vy - bj.vy;
+          const dot = dvx * nx + dvy * ny;
+          if (dot > 0) {
+            bi.vx -= dot * nx; bi.vy -= dot * ny;
+            bj.vx += dot * nx; bj.vy += dot * ny;
+          }
+        }
+      }
+    }
+
+    for (const b of bs) b.meshRef.current?.position.set(b.x, b.y, b.z);
+  });
 
   return (
     <>
-      {orbs.map(o => <BokehOrb key={o.id} color={o.color} />)}
+      {bubbles.current.map((b, i) => (
+        <mesh key={i} ref={b.meshRef} position={[b.x, b.y, b.z]}>
+          <sphereGeometry args={[b.scale, 14, 14]} />
+          <meshBasicMaterial color={b.color} transparent opacity={b.opacity} depthWrite={false} />
+        </mesh>
+      ))}
     </>
   );
 }
 
-// ─── Arcade — Neon Crystals ───────────────────────────────────────────────────
+// ─── Arcade — Deep Space ──────────────────────────────────────────────────────
 
-const CRYSTAL_COLORS = ['#ff00ff', '#00ffff', '#a855f7', '#ff00ff', '#00ffff', '#7c3aed'];
+// Dim nebula wisps — neon colour clouds far behind everything
+const NEBULA_DATA = [
+  { x: -4.5, y:  2.5, z: -9,  color: '#ff00ff', scale: 5.0, rotSpeed: 0.04  },
+  { x:  5.5, y: -2.0, z: -11, color: '#00ffff', scale: 6.0, rotSpeed: 0.03  },
+  { x:  0.5, y:  4.0, z: -13, color: '#7c3aed', scale: 7.5, rotSpeed: 0.025 },
+];
 
-function Crystal({ color }) {
+function NebulaCloud({ x, y, z, color, scale, rotSpeed }) {
   const meshRef = useRef();
-
-  const data = useMemo(() => ({
-    x: Math.random() * 22 - 11,
-    y: Math.random() * 16 - 8,
-    z: -1 - Math.random() * 4,
-    rotX: (Math.random() - 0.5) * 2.5,
-    rotY: (Math.random() - 0.5) * 2.5,
-    rotZ: (Math.random() - 0.5) * 1.5,
-    scale: 0.07 + Math.random() * 0.13,
-    floatAmp: 0.15 + Math.random() * 0.35,
-    floatSpeed: 0.4 + Math.random() * 0.8,
-    phase: Math.random() * Math.PI * 2,
-  }), []);
-
-  useFrame((state, delta) => {
-    meshRef.current.rotation.x += delta * data.rotX;
-    meshRef.current.rotation.y += delta * data.rotY;
-    meshRef.current.rotation.z += delta * data.rotZ;
-    meshRef.current.position.y =
-      data.y + Math.sin(state.clock.elapsedTime * data.floatSpeed + data.phase) * data.floatAmp;
+  useFrame((_, delta) => {
+    meshRef.current.rotation.y += delta * rotSpeed;
+    meshRef.current.rotation.z += delta * rotSpeed * 0.6;
   });
-
   return (
-    <mesh ref={meshRef} position={[data.x, data.y, data.z]} scale={data.scale}>
-      <octahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.65}
-        metalness={0.7}
-        roughness={0.15}
-        transparent
-        opacity={0.88}
-      />
+    <mesh ref={meshRef} position={[x, y, z]} scale={scale}>
+      <sphereGeometry args={[1, 10, 10]} />
+      <meshBasicMaterial color={color} transparent opacity={0.045} depthWrite={false} />
     </mesh>
   );
 }
 
-function ArcadeScene() {
-  const crystals = useMemo(
-    () => Array.from({ length: 22 }, (_, i) => ({ id: i, color: CRYSTAL_COLORS[i % CRYSTAL_COLORS.length] })),
-    []
+// 220 tiny round/square points — all-screen, fast independent twinkle
+function TwinkleStarField({ count = 220 }) {
+  const geoRef = useRef();
+
+  const { positions, colors, speeds, phases } = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    const colors    = new Float32Array(count * 3);
+    const speeds    = new Float32Array(count);
+    const phases    = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 26;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 18;
+      positions[i * 3 + 2] = -0.5 - Math.random() * 13;
+      colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = 1;
+      speeds[i] = 0.5 + Math.random() * 2.0; // faster twinkle
+      phases[i] = Math.random() * Math.PI * 2;
+    }
+    return { positions, colors, speeds, phases };
+  }, [count]);
+
+  useFrame((state) => {
+    if (!geoRef.current) return;
+    const attr = geoRef.current.attributes.color;
+    const t = state.clock.elapsedTime;
+    for (let i = 0; i < count; i++) {
+      const b = 0.04 + 0.96 * (0.5 + 0.5 * Math.sin(t * speeds[i] + phases[i]));
+      attr.array[i * 3] = attr.array[i * 3 + 1] = attr.array[i * 3 + 2] = b;
+    }
+    attr.needsUpdate = true;
+  });
+
+  return (
+    <points>
+      <bufferGeometry ref={geoRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color"    args={[colors,    3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.045} vertexColors transparent opacity={0.95} depthWrite={false} sizeAttenuation />
+    </points>
   );
+}
+
+// ~38 4-pointed silver star sprites — all-screen, moderate twinkle
+// Cool blue-silver tint: R×0.82, G×0.90, B×1.0
+function PixelStarLayer({ count = 38 }) {
+  const geoRef = useRef();
+
+  const { positions, colors, speeds, phases } = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    const colors    = new Float32Array(count * 3);
+    const speeds    = new Float32Array(count);
+    const phases    = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 24;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      positions[i * 3 + 2] = -0.4 - Math.random() * 7;
+      colors[i * 3] = 0.82; colors[i * 3 + 1] = 0.90; colors[i * 3 + 2] = 1.0;
+      speeds[i] = 0.3 + Math.random() * 1.1;
+      phases[i] = Math.random() * Math.PI * 2;
+    }
+    return { positions, colors, speeds, phases };
+  }, [count]);
+
+  useFrame((state) => {
+    if (!geoRef.current) return;
+    const attr = geoRef.current.attributes.color;
+    const t = state.clock.elapsedTime;
+    for (let i = 0; i < count; i++) {
+      const b = 0.08 + 0.92 * (0.5 + 0.5 * Math.sin(t * speeds[i] + phases[i]));
+      attr.array[i * 3]     = b * 0.82; // R — cooler silver
+      attr.array[i * 3 + 1] = b * 0.90; // G
+      attr.array[i * 3 + 2] = b * 1.00; // B — blue-white
+    }
+    attr.needsUpdate = true;
+  });
+
+  return (
+    <points>
+      <bufferGeometry ref={geoRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color"    args={[colors,    3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        map={STAR_SPRITE}
+        size={0.22}
+        vertexColors
+        transparent
+        opacity={0.9}
+        depthWrite={false}
+        sizeAttenuation
+        alphaTest={0.04}
+      />
+    </points>
+  );
+}
+
+// Bright steady stars with radial corona — no twinkling, static bright
+function GalaxyStar({ x, y, z, size, opacity }) {
+  const glowScale = size * 13; // corona is 13× the star radius
+  return (
+    <group position={[x, y, z]}>
+      {/* Soft radiating halo — additive so it adds light, never darkens */}
+      <sprite scale={[glowScale, glowScale, 1]}>
+        <spriteMaterial
+          map={GLOW_TEXTURE}
+          transparent
+          opacity={opacity * 0.42}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
+      {/* Bright core */}
+      <mesh>
+        <sphereGeometry args={[size, 7, 7]} />
+        <meshBasicMaterial color="#d8eeff" transparent opacity={opacity} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function ArcadeScene() {
+  const galaxyStars = useMemo(() => {
+    // Poisson-style placement: reject candidates within MIN_DIST of any placed star
+    const W = 22, H = 14, MIN_DIST = 2.4, TARGET = 28;
+    const placed = [];
+    let tries = 0;
+    while (placed.length < TARGET && tries < TARGET * 40) {
+      tries++;
+      const x = (Math.random() - 0.5) * W;
+      const y = (Math.random() - 0.5) * H;
+      const tooClose = placed.some(s => {
+        const dx = s.x - x, dy = s.y - y;
+        return dx * dx + dy * dy < MIN_DIST * MIN_DIST;
+      });
+      if (!tooClose) placed.push({
+        x, y,
+        z:       -0.8 - Math.random() * 2.5,
+        size:    0.025 + Math.random() * 0.038,
+        opacity: 0.72 + Math.random() * 0.28,
+      });
+    }
+    return placed;
+  }, []);
 
   return (
     <>
-      <ambientLight intensity={0.2} color="#220022" />
-      <pointLight position={[-4, 5, 3]} intensity={1.6} color="#ff00ff" />
-      <pointLight position={[4, -3, 2]} intensity={1.2} color="#00ffff" />
-      {crystals.map(c => <Crystal key={c.id} color={c.color} />)}
-      <Sparkles count={32} size={1.6} scale={[22, 16, 6]} color="#ff00ff" opacity={0.42} speed={0.5} />
-      <Sparkles count={32} size={1.3} scale={[22, 16, 6]} color="#00ffff" opacity={0.36} speed={0.4} />
+      {NEBULA_DATA.map((c, i) => <NebulaCloud key={i} {...c} />)}
+      <TwinkleStarField count={220} />
+      <PixelStarLayer   count={38}  />
+      {galaxyStars.map((s, i) => <GalaxyStar key={i} {...s} />)}
     </>
   );
 }

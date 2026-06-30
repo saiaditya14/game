@@ -79,19 +79,32 @@ const cardItemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 };
 
-const SectionHeader = ({ title, eyebrow }) => (
-  <motion.div
-    className="mb-5 flex items-end justify-between gap-4"
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.35, ease: 'easeOut' }}
-  >
-    <div>
-      <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
-      <h2 className="mt-1 font-serif text-2xl font-medium text-foreground">{title}</h2>
-    </div>
-  </motion.div>
-);
+const ARCADE_STAR_STYLE = {
+  color: 'var(--primary)',
+  textShadow: '0 0 8px var(--primary), 0 0 18px var(--primary)',
+};
+
+const SectionHeader = ({ title, eyebrow }) => {
+  const { theme } = useTheme();
+  const isArcade = theme === 'theme-arcade';
+  return (
+    <motion.div
+      className="mb-5 flex items-end justify-between gap-4"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+    >
+      <div>
+        <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
+        <h2 className="mt-1 font-serif text-2xl font-medium text-foreground">
+          {isArcade && <span aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginRight: '0.38em' }}>✦</span>}
+          {title}
+          {isArcade && <span aria-hidden="true" style={{ ...ARCADE_STAR_STYLE, marginLeft: '0.38em' }}>✦</span>}
+        </h2>
+      </div>
+    </motion.div>
+  );
+};
 
 const HomePage = () => {
   const { theme } = useTheme();

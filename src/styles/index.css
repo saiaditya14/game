@@ -131,13 +131,10 @@
       radial-gradient(ellipse at 50% 44%, #fff8fb 0%, #fce7f0 50%, #f8cedf 100%);
   }
 
-  /* â”€â”€ Arcade: cyberpunk neon â€” saturated magenta/cyan, violet core â”€â”€ */
+  /* ── Arcade: deep space — near-black with faint indigo core ── */
   .theme-arcade body {
     background-image:
-      radial-gradient(circle at 8%   12%,  rgba(255,   0, 255, 0.70) 0%, transparent 44%),
-      radial-gradient(circle at 92%  88%,  rgba(  0, 255, 255, 0.62) 0%, transparent 42%),
-      radial-gradient(circle at 50%  50%,  rgba(120,  40, 230, 0.38) 0%, transparent 52%),
-      radial-gradient(circle at 82%  12%,  rgba(255, 180,  30, 0.30) 0%, transparent 30%);
+      radial-gradient(ellipse at 50% 22%, #0a0520 0%, #03010f 55%, #000000 100%);
   }
 
   /* â”€â”€ Hero title â€” gradient text, letter spacing, per-theme drop-shadow â”€â”€ */
