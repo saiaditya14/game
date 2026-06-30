@@ -46,17 +46,17 @@ const newGames = [
 ];
 
 const heroSubtitleByTheme = {
-  'theme-pink':    'hii ♡ your person is waiting for you~',
-  'theme-vanilla': 'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
-  'theme-arcade':  'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
-  'theme-cozy':    'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-pink':      'hii ♡ your person is waiting for you~',
+  'theme-champagne': 'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-arcade':    'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
+  'theme-cozy':      'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
 };
 
 const drawOffImagesByTheme = {
-  'theme-vanilla': drawOffVanillaImage,
-  'theme-pink': drawOffPinkImage,
-  'theme-arcade': drawOffArcadeImage,
-  'theme-cozy': drawOffVanillaImage,
+  'theme-champagne': drawOffVanillaImage,
+  'theme-pink':      drawOffPinkImage,
+  'theme-arcade':    drawOffArcadeImage,
+  'theme-cozy':      drawOffVanillaImage,
 };
 
 const headerVariants = {

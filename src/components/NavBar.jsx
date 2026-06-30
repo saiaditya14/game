@@ -5,17 +5,17 @@ import { Gamepad2, Home } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 
 const THEME_SWATCHES = {
-  'theme-vanilla': '#c08b52',
-  'theme-pink':    '#be185d',
-  'theme-arcade':  '#ff00ff',
-  'theme-cozy':    '#8b5a2b',
+  'theme-arcade':    '#00e5ff',   // electric cyan — clearly arcade, off magenta
+  'theme-pink':      '#ff79c6',   // bright bubblegum pink
+  'theme-champagne': '#c08b52',   // warm gold
+  'theme-cozy':      '#8b5a2b',
 };
 
 const ALL_THEMES = [
-  { id: 'theme-vanilla', label: 'Vanilla' },
-  { id: 'theme-pink',    label: 'Pink'    },
-  { id: 'theme-arcade',  label: 'Arcade'  },
-  { id: 'theme-cozy',    label: 'Cozy'    },
+  { id: 'theme-arcade',    label: 'Arcade'    },
+  { id: 'theme-pink',      label: 'Pink'      },
+  { id: 'theme-champagne', label: 'Champagne' },
+  { id: 'theme-cozy',      label: 'Cozy'      },
 ];
 
 function GradientPill({ children, style = {} }) {
@@ -171,8 +171,8 @@ export const NavBar = () => {
                         backgroundColor: color,
                         boxShadow: isActive
                           ? `0 0 0 2.5px var(--surface), 0 0 0 4px ${color}, 0 4px 16px ${color}99`
-                          : '0 1px 4px rgba(0,0,0,0.25)',
-                        opacity: isActive ? 1 : 0.52,
+                          : `0 0 0 1.5px rgba(255,255,255,0.22), 0 1px 6px rgba(0,0,0,0.35)`,
+                        opacity: isActive ? 1 : 0.82,
                         transition: 'width 0.2s, height 0.2s, box-shadow 0.2s, opacity 0.2s',
                         flexShrink: 0,
                       }}

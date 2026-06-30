@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -11,7 +11,7 @@
   }
 
   /* Default / Vanilla */
-  .theme-vanilla {
+  .theme-champagne {
     --background: #fffaf0;
     --foreground: #2f3138;
     --primary: #66513f;
@@ -108,15 +108,15 @@
     transition: background-color 0.35s ease, color 0.35s ease;
   }
 
-  /* ── Vanilla: honey-champagne ellipse mesh — warm diffused light on cream paper ── */
-  .theme-vanilla body {
+  /* â”€â”€ Vanilla: honey-champagne ellipse mesh â€” warm diffused light on cream paper â”€â”€ */
+  .theme-champagne body {
     background-image:
       radial-gradient(70% 50% at 22% 14%, rgba(255, 228, 160, 0.34) 0%, transparent 100%),
       radial-gradient(60% 45% at 80% 10%, rgba(255, 248, 220, 0.28) 0%, transparent 100%),
       radial-gradient(75% 55% at 55% 88%, rgba(240, 210, 138, 0.24) 0%, transparent 100%);
   }
 
-  /* ── Cozy: watercolor ellipse wash — muted sage/taupe/biscuit as flowing overlaps ── */
+  /* â”€â”€ Cozy: watercolor ellipse wash â€” muted sage/taupe/biscuit as flowing overlaps â”€â”€ */
   .theme-cozy body {
     background-image:
       radial-gradient(72% 48% at 12% 18%,  rgba(160, 185, 155, 0.36) 0%, transparent 100%),
@@ -125,13 +125,13 @@
       radial-gradient(55% 38% at 80% 14%,  rgba(175, 195, 162, 0.20) 0%, transparent 100%);
   }
 
-  /* ── Pink: kawaii clean — single soft vignette, blush center to rose edge, no splodges ── */
+  /* â”€â”€ Pink: kawaii clean â€” single soft vignette, blush center to rose edge, no splodges â”€â”€ */
   .theme-pink body {
     background-image:
       radial-gradient(ellipse at 50% 44%, #fff8fb 0%, #fce7f0 50%, #f8cedf 100%);
   }
 
-  /* ── Arcade: cyberpunk neon — saturated magenta/cyan, violet core ── */
+  /* â”€â”€ Arcade: cyberpunk neon â€” saturated magenta/cyan, violet core â”€â”€ */
   .theme-arcade body {
     background-image:
       radial-gradient(circle at 8%   12%,  rgba(255,   0, 255, 0.70) 0%, transparent 44%),
@@ -140,7 +140,7 @@
       radial-gradient(circle at 82%  12%,  rgba(255, 180,  30, 0.30) 0%, transparent 30%);
   }
 
-  /* ── Hero title — gradient text, letter spacing, per-theme drop-shadow ── */
+  /* â”€â”€ Hero title â€” gradient text, letter spacing, per-theme drop-shadow â”€â”€ */
   .hero-title {
     letter-spacing: 0.06em;
     background-clip: text;
@@ -154,7 +154,7 @@
     filter: drop-shadow(0 1px 8px rgba(190, 24, 93, 0.28));
   }
 
-  .theme-vanilla .hero-title {
+  .theme-champagne .hero-title {
     background-image: linear-gradient(135deg, #a07840 0%, #d4aa60 50%, #e8c87a 100%);
     filter: drop-shadow(0 1px 6px rgba(180, 130, 40, 0.22));
   }
@@ -169,7 +169,7 @@
     filter: drop-shadow(0 1px 6px rgba(140, 120, 90, 0.18));
   }
 
-  /* ── Hero divider — replaces the frosted-glass box ── */
+  /* â”€â”€ Hero divider â€” replaces the frosted-glass box â”€â”€ */
   .hero-divider {
     height: 1px;
     width: 100%;
@@ -189,8 +189,8 @@
     opacity: 1;
   }
 
-  /* ── Vanilla gold linkings — borders, dividers, card accents ── */
-  .theme-vanilla .game-card-divider {
+  /* â”€â”€ Vanilla gold linkings â€” borders, dividers, card accents â”€â”€ */
+  .theme-champagne .game-card-divider {
     background: linear-gradient(90deg,
       transparent,
       rgba(196, 148, 60, 0.45),
@@ -200,7 +200,7 @@
     );
   }
 
-  .theme-vanilla .game-card-badge {
+  .theme-champagne .game-card-badge {
     border: 1px solid rgba(196, 148, 60, 0.50);
     box-shadow: 0 2px 10px rgba(180, 130, 40, 0.28), inset 0 1px 0 rgba(255, 220, 120, 0.35);
   }
@@ -2577,7 +2577,7 @@
     color: var(--foreground);
   }
 
-  /* ── Per-theme card accent treatments ── */
+  /* â”€â”€ Per-theme card accent treatments â”€â”€ */
   .game-card-badge {
     transition: box-shadow 0.2s ease;
   }
@@ -2599,7 +2599,7 @@
     box-shadow: 0 0 0 1px rgba(255, 0, 255, 0.45), 0 20px 40px rgba(255, 0, 255, 0.14) !important;
   }
 
-  .theme-vanilla .game-card-badge {
+  .theme-champagne .game-card-badge {
     background: linear-gradient(135deg, var(--surface), var(--secondary));
     border: 1px solid rgba(102, 81, 63, 0.18);
   }

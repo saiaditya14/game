@@ -241,9 +241,9 @@ function ArcadeScene() {
 // ─── Canvas wrapper ───────────────────────────────────────────────────────────
 
 const SCENE_MAP = {
-  'theme-pink': PinkScene,
-  'theme-vanilla': VanillaScene,
-  'theme-arcade': ArcadeScene,
+  'theme-arcade':    ArcadeScene,
+  'theme-pink':      PinkScene,
+  'theme-champagne': VanillaScene,
 };
 
 const canvasStyle = {
