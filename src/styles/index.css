@@ -131,10 +131,9 @@
       radial-gradient(ellipse at 50% 44%, #fff8fb 0%, #fce7f0 50%, #f8cedf 100%);
   }
 
-  /* ── Arcade: deep space — near-black with faint indigo core ── */
+  /* ── Arcade: deep space backdrop for the left side star field ── */
   .theme-arcade body {
-    background-image:
-      radial-gradient(ellipse at 50% 22%, #0a0520 0%, #03010f 55%, #000000 100%);
+    background-image: radial-gradient(ellipse at 30% 50%, #0a0520 0%, #03010f 55%, #000000 100%);
   }
 
   /* â”€â”€ Hero title â€” gradient text, letter spacing, per-theme drop-shadow â”€â”€ */

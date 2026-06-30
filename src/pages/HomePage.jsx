@@ -7,6 +7,8 @@ import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpn
 import drawOffPinkImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
 import drawOffArcadeImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
 import adorableWallpaper from '../../adorableeeee.jpg';
+import arcadeVideo from '../../video_eb9d7e6a96d3.mp4';
+import blackHoleImg from '../../black-hole-spin.png';
 
 const turnGames = [
   {
@@ -111,7 +113,8 @@ const HomePage = () => {
   const { theme } = useTheme();
   const drawOffImage = drawOffImagesByTheme[theme] || drawOffVanillaImage;
   const heroSubtitle = heroSubtitleByTheme[theme] || heroSubtitleByTheme['theme-vanilla'];
-  const isCozy = theme === 'theme-cozy';
+  const isCozy   = theme === 'theme-cozy';
+  const isArcade = theme === 'theme-arcade';
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 180], [1, 0]);
@@ -174,6 +177,74 @@ const HomePage = () => {
             WebkitMaskComposite: 'source-in',
             pointerEvents: 'none',
             zIndex: 1,
+          }}
+        />
+      )}
+
+      {/* Arcade: video — right half of screen, fades into black on the left edge */}
+      {isArcade && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: 'min(58vw, 680px)',
+            zIndex: -2,
+            overflow: 'hidden',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%)',
+          }}
+        >
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              display: 'block',
+              filter: 'brightness(0.7) saturate(0.85)',
+            }}
+          >
+            <source src={arcadeVideo} type="video/mp4" />
+          </video>
+        </div>
+      )}
+      {/* Arcade: dark gradient keeps left text readable */}
+      {isArcade && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            background: 'linear-gradient(to right, #000 0%, rgba(0,0,0,0.9) 38%, rgba(0,0,0,0.35) 52%, transparent 68%)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {/* Arcade: spinning black hole — z-index:-1, after overlay so it paints above it, below cards (z:2) */}
+      {isArcade && (
+        <motion.img
+          src={blackHoleImg}
+          aria-hidden="true"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 55, repeat: Infinity, ease: 'linear' }}
+          style={{
+            position: 'fixed',
+            bottom: '-260px',
+            left: '-200px',
+            width: 'min(28vw, 440px)',
+            height: 'auto',
+            zIndex: -1,
+            opacity: 0.82,
+            filter: 'brightness(0.75) saturate(1.1)',
+            pointerEvents: 'none',
           }}
         />
       )}

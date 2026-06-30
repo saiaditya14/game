@@ -431,7 +431,6 @@ function ArcadeScene() {
 
   return (
     <>
-      {NEBULA_DATA.map((c, i) => <NebulaCloud key={i} {...c} />)}
       <TwinkleStarField count={220} />
       <PixelStarLayer   count={38}  />
       {galaxyStars.map((s, i) => <GalaxyStar key={i} {...s} />)}
@@ -589,7 +588,6 @@ function CozyScene() {
 // ─── Canvas wrapper ───────────────────────────────────────────────────────────
 
 const SCENE_MAP = {
-  'theme-arcade':    ArcadeScene,
   'theme-pink':      PinkScene,
   'theme-champagne': VanillaScene,
 };
