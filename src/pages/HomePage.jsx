@@ -7,6 +7,7 @@ import drawOffVanillaImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpn
 import drawOffPinkImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (1).png';
 import drawOffArcadeImage from '../../images/Gemini_Generated_Image_mvrpnvmvrpnvmvrp (2).png';
 import adorableWallpaper from '../../adorableeeee.jpg';
+import coupleCorner from '../../couplehehe.png';
 import arcadeVideo from '../../video_eb9d7e6a96d3.mp4';
 import blackHoleImg from '../../black-hole-spin.png';
 
@@ -167,12 +168,12 @@ const HomePage = () => {
             left: 0,
             width: 'clamp(0px, calc((100vw - 72rem) / 2), 320px)',
             height: 'clamp(0px, 56vh, 520px)',
-            backgroundImage: `url(${adorableWallpaper})`,
+            backgroundImage: `url(${coupleCorner})`,
             backgroundSize: 'auto 100%',
             backgroundPosition: 'left bottom',
             backgroundRepeat: 'no-repeat',
-            maskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 60%, transparent 94%)',
-            WebkitMaskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 60%, transparent 94%)',
+            maskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 78%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to top, black 0%, black 52%, transparent 80%), linear-gradient(to right, black 0%, black 78%, transparent 100%)',
             maskComposite: 'intersect',
             WebkitMaskComposite: 'source-in',
             pointerEvents: 'none',
