@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from './ThemeProvider';
+import pinkWallpaper from '../../images/Trial 1.jpg';
 
 // ─── Shared geometry shapes (created once at module load) ──────────────────────
 
@@ -152,7 +153,7 @@ function CherryBlossom({ color }) {
 
 function PinkScene() {
   const flowers = useMemo(
-    () => Array.from({ length: 16 }, (_, i) => ({ id: i, color: FLOWER_COLORS[i % FLOWER_COLORS.length] })),
+    () => Array.from({ length: 24 }, (_, i) => ({ id: i, color: FLOWER_COLORS[i % FLOWER_COLORS.length] })),
     []
   );
 
@@ -587,19 +588,50 @@ const canvasStyle = {
 export default function ThemeScene() {
   const { theme } = useTheme();
   const Scene = SCENE_MAP[theme];
-  if (!Scene) return null;
+  const isPink = theme === 'theme-pink';
+
+  if (!Scene && !isPink) return null;
 
   return (
     <div style={canvasStyle}>
-      <Canvas
-        key={theme}
-        dpr={[1, 1.5]}
-        camera={{ fov: 60, near: 0.1, far: 100, position: [0, 0, 5] }}
-        gl={{ alpha: true, antialias: false }}
-        frameloop="always"
-      >
-        <Scene />
-      </Canvas>
+      {/* Pink wallpaper — sits behind the R3F canvas in DOM order.
+          Canvas has alpha:true so blossoms composite over it correctly. */}
+      {isPink && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${pinkWallpaper})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'pixelated',
+          }}
+        />
+      )}
+      {/* Soft readability veil between wallpaper and blossoms */}
+      {isPink && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, rgba(255,240,248,0.15) 0%, rgba(255,240,248,0.28) 100%)',
+          }}
+        />
+      )}
+      {Scene && (
+        <Canvas
+          key={theme}
+          dpr={[1, 1.5]}
+          camera={{ fov: 60, near: 0.1, far: 100, position: [0, 0, 5] }}
+          gl={{ alpha: true, antialias: false }}
+          frameloop="always"
+        >
+          <Scene />
+        </Canvas>
+      )}
     </div>
   );
 }
