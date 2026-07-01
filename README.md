@@ -204,13 +204,14 @@ npm run build
 The economy migration revokes direct client inserts/updates/deletes on `monopoly_rooms`, keeps member-only Realtime reads, and grants authenticated users only the validated Sugaropoly RPC actions.
 
 Todolist:
-Need an overhaul of UI in general outside the completed Sugaropoly gameplay surface.
 Need an overhaul of button UI in draw off.
+Overhaul in connect 4?
 Play test system prompt for draw off a little but seems fine and fun to babie.
 Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement.
 NAVBAR needs an overhaul bro
 - Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
 - Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
+Take babie feedback on the scenes, most likely faster falling of flowers and more bubbles in champagne but yea otherwise UI overhaul done!
 Babie feedback:
 Visiting rule for monopoly
 Thinner brushes (better UI for the same otherwise done)
