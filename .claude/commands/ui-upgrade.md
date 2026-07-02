@@ -147,6 +147,43 @@ Execute exactly what was approved, nothing more.
 
 Static Tailwind vars (e.g. `bg-pink-300`, `rounded-xl`) are fine. Only dynamic/runtime CSS var references need this treatment.
 
+### ⚠️ Named spacing-scale utilities DO NOT generate in this project (verified)
+
+This repo runs **Tailwind v4** (`@tailwindcss/postcss` 4.3.0) but `src/styles/index.css`
+still uses the **v3 entrypoint** (`@tailwind base/components/utilities`) plus a v3-style
+`tailwind.config.js`. The result, confirmed by in-browser computed-style measurement:
+
+> **Named spacing-scale utilities emit no CSS at all.** `h-16`, `w-7`, `p-8`, `mt-8`, `gap-3`,
+> `px-4`, `py-3`, `min-h-11`, `max-w-xl`, `max-w-xs`, `max-w-sm`, etc. silently produce nothing
+> (measured: `p-8` → 0px, `h-16` → 1422px, `gap-3` → `normal`, `max-w-xl` → `none`).
+> `var(--spacing)` appears 0× in the compiled CSS.
+
+What DOES work: **arbitrary values** (`p-[2rem]`, `h-[4rem]`, `w-[4rem]`, `max-w-[36rem]`,
+`min-h-[calc(100vh-5rem)]`, `gap-[0.75rem]`), **inline `style`**, and **non-spacing utilities**
+(flex, grid, colors, place-items, `tracking-[…]`, `text-[…]`).
+
+```jsx
+// ❌ Renders nothing — spacing scale is dead
+<div className="h-16 w-16 p-8 mt-8 gap-3 max-w-xl" />
+
+// ✅ Use arbitrary values or inline style
+<div className="h-[4rem] w-[4rem] p-[2rem] mt-[2rem] gap-[0.75rem] max-w-[36rem]" />
+<div style={{ height: '4rem', width: '4rem' }} />
+```
+
+Rule for this repo: **never use named spacing classes** (h-/w-/p-/m-/gap-/space-/max-w-{xs..xl}).
+Always arbitrary values or inline styles. Lucide icons self-size via width/height attrs, so
+`h-4 w-4` on them looks fine even though the class is dead — but real layout sizing must be
+arbitrary/inline.
+
+Do NOT "fix" this by switching `index.css` to `@import "tailwindcss"` unless the user explicitly
+asks — that activates hundreds of currently-dead spacing classes across every page and locked
+theme at once, and will shift/break tuned layouts. Stay scoped to arbitrary values.
+
+**Always verify visual claims in a real browser** (Playwright is installed) — measure
+`getBoundingClientRect`/`getComputedStyle` and read a screenshot before declaring something fixed.
+Named-spacing failures are invisible in source review; only the rendered DOM reveals them.
+
 ### Sub-skill delegation
 
 When the pitch includes a sub-skill, invoke it inline using the sub-skill's documented boilerplate. Read the sub-skill file for the current project's known constraints before writing code:

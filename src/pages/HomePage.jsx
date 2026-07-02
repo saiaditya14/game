@@ -34,12 +34,6 @@ const turnGames = [
 
 const newGames = [
   {
-    title: 'Battleship',
-    description: 'Deploy your fleet, hide your ships, and hunt theirs down before they find yours.',
-    category: 'Strategy',
-    meta: 'async turns',
-  },
-  {
     title: 'Guess Who?',
     description: 'Ask the right questions, narrow the board, and uncover their secret character.',
     category: 'Deduction',
@@ -376,7 +370,7 @@ const HomePage = () => {
         className="mb-14"
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, margin: '-80px' }}
+        viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="game-section-shell">
@@ -386,7 +380,7 @@ const HomePage = () => {
             variants={gridVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: false, margin: '-60px' }}
+            viewport={{ once: true, margin: '-60px' }}
           >
             {turnGames.map((game) => (
               <motion.div key={game.title} variants={cardItemVariants}>
@@ -400,7 +394,7 @@ const HomePage = () => {
       <motion.section
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, margin: '-80px' }}
+        viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="game-section-shell">
@@ -410,7 +404,7 @@ const HomePage = () => {
             variants={gridVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: false, margin: '-60px' }}
+            viewport={{ once: true, margin: '-60px' }}
           >
             <motion.div variants={cardItemVariants}>
               <Link to="/draw-off" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
@@ -444,6 +438,17 @@ const HomePage = () => {
                   category="Board Game"
                   meta="multiplayer"
                   imageSrc={drawOffPinkImage}
+                />
+              </Link>
+            </motion.div>
+            <motion.div variants={cardItemVariants}>
+              <Link to="/tic-tac-toe" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Tic-Tac-Toe"
+                  description="Classic 3×3 showdown. Take turns, mark your spot, and be the first to line up three in a row."
+                  badge="New"
+                  category="Classic"
+                  meta="2 player live"
                 />
               </Link>
             </motion.div>

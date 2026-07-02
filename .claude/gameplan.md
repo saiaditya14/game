@@ -10,15 +10,16 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 - **Draw Off** (`/draw-off`)
 - **Connect Four** (`/connect-four`)
 - **Sugaropoly** (`/monopoly`)
+- **Tic-Tac-Toe** (`/tic-tac-toe`) ✅ shipped 2026-07-02
 
-Their homepage cards stay. Keep Tic-Tac-Toe and Word Race cards too (below).
+Their homepage cards stay. Keep Word Race card too (below).
 
 ---
 
 ## Build order (easiest → hardest)
 
-1. **Tic-Tac-Toe** — Classic 3×3; both play live, first to three in a row.
-2. **Quick-Maths Duel** — Rapid-fire arithmetic; first correct answer each round scores.
+1. ~~**Tic-Tac-Toe**~~ ✅ **SHIPPED** — `src/games/sugar/TicTacToe.jsx` + lobby + board. Supabase realtime room-code pattern proven end to end. Route: `/tic-tac-toe`.
+2. **Quick-Maths Duel** ← **NEXT** — Rapid-fire arithmetic; first correct answer each round scores.
 3. **Tug-of-War** — Both mash to drag the rope marker to their side; best-of.
 4. **Word Race** — Same hidden word; both race Wordle-style with a live opponent progress bar.
 5. **Category Blitz** — One random letter, race to fill categories before the timer.
