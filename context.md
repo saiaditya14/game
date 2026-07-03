@@ -76,6 +76,17 @@ Sugaropoly deferred visual polish:
 - Future AI improvements should prefer worker-based inference, cheap canvas completeness checks, and less distracting normal-play debug output.
 - Draw Off UI still needs lighter brush options and button polish.
 
+## Quick-Maths Duel
+
+- Source: `src/games/sugar/QuickMaths*.jsx`.
+- Route: `/quick-maths`.
+- Supabase migration: `supabase/migrations/20260702130000_create_quick_maths_rooms.sql`.
+- Config set by creator at room creation: number size (small/medium/large), operations (+ − / + − × / all), operands per question (2/3/4), rounds (5/10/15/20).
+- Both clients generate identical question sequences from a shared `seed` via seeded PRNG — no server-side question logic.
+- Abort (mid-game) sets `status='aborted'`; Exit (after game over) sets `status='closed'`. Both send both players home after 1.8 s.
+
+**TODO:** Extract `GameExitScreen` (the abort/game-over centered modal in `QuickMathsDuel.jsx`) into a shared component and retrofit Tic-Tac-Toe (and future games) to reuse it instead of rolling their own abort screens.
+
 ## Connect Four
 
 - Source: `src/games/sugar/ConnectFour.jsx`, `ConnectFourLobby.jsx`, `ConnectFourBoard.jsx`.

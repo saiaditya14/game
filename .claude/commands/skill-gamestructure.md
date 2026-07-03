@@ -65,8 +65,9 @@ No lazy loading is used for game components (only `ThemeScene` is lazy). Import 
 
 ## Theme system
 
-Theme is a CSS class on `<html>`: `theme-vanilla`, `theme-pink`, `theme-arcade`, `theme-cozy`.  
-All design tokens are CSS custom properties scoped to those classes in `src/styles/index.css`.
+Theme is a CSS class on `<html>`: `theme-champagne`, `theme-pink`, `theme-arcade`, `theme-cozy`.  
+All design tokens are CSS custom properties scoped to those classes in `src/styles/index.css`.  
+**Note:** `theme-vanilla` is a dead name — the correct default theme is `theme-champagne`.
 
 **Reading the theme in a component:**
 ```js
@@ -74,7 +75,7 @@ import { useTheme } from '../../components/ThemeProvider';
 const { theme, setTheme } = useTheme();
 ```
 
-`theme` is one of `'theme-vanilla' | 'theme-pink' | 'theme-arcade' | 'theme-cozy'`.
+`theme` is one of `'theme-champagne' | 'theme-pink' | 'theme-arcade' | 'theme-cozy'`.
 
 **Token usage pattern:**
 ```jsx
@@ -86,6 +87,26 @@ className="bg-primary text-foreground border-border"
 ```
 
 Key tokens: `--surface`, `--surface-strong`, `--primary`, `--muted`, `--ring`, `--radius`, `--shadow`, `--divider`. Color tokens are set per-theme in `src/styles/index.css`.
+
+**CRITICAL — overlay centering:** Tailwind's `fixed`, `inset-0`, and `flex items-center justify-center` do NOT generate CSS in this repo (spacing scale is dead). Always use inline styles for any full-screen overlay or modal:
+```jsx
+<div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+```
+Never use `className="fixed inset-0 flex items-center justify-center"` — it will render in the top-left corner.
+
+---
+
+## Shared abort / game-over modal
+
+**`GameExitScreen`** lives in `src/games/sugar/QuickMathsDuel.jsx` and should eventually be extracted to a shared component. It handles two statuses:
+- `status="aborted"` — mid-game abort, shows "Game Aborted / heading home"
+- `status="closed"` — exit after game over, shows "Game Over / heading home"
+
+Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root component watching `room.status`). Copy this pattern for every new game that needs abort/exit. **TODO: retrofit Tic-Tac-Toe** to use the same modal instead of its own abort screen.
+
+DB status values to include in every new game schema: `'waiting' | 'playing' | 'finished' | 'aborted' | 'closed'`
+
+---
 
 **Theme-conditional rendering pattern:**
 ```js
@@ -176,7 +197,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.mygame_rooms (
   id uuid primary key default gen_random_uuid(),
   code text not null unique check (char_length(code) between 4 and 6),
-  status text not null default 'waiting' check (status in ('waiting', 'playing', 'finished', 'aborted')),
+  status text not null default 'waiting' check (status in ('waiting', 'playing', 'finished', 'aborted', 'closed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

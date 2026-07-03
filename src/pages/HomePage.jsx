@@ -34,12 +34,6 @@ const turnGames = [
 
 const newGames = [
   {
-    title: 'Guess Who?',
-    description: 'Ask the right questions, narrow the board, and uncover their secret character.',
-    category: 'Deduction',
-    meta: 'quick match',
-  },
-  {
     title: 'Checkers',
     description: 'Jump, capture, and set up the board for a clean little tactical win.',
     category: 'Classic',
@@ -448,6 +442,17 @@ const HomePage = () => {
                   description="Classic 3×3 showdown. Take turns, mark your spot, and be the first to line up three in a row."
                   badge="New"
                   category="Classic"
+                  meta="2 player live"
+                />
+              </Link>
+            </motion.div>
+            <motion.div variants={cardItemVariants}>
+              <Link to="/quick-maths" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Quick-Maths Duel"
+                  description="Ten rapid-fire arithmetic rounds. Race your partner — first correct answer steals the point."
+                  badge="New"
+                  category="Puzzle"
                   meta="2 player live"
                 />
               </Link>

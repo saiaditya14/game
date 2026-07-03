@@ -204,6 +204,7 @@ npm run build
 The economy migration revokes direct client inserts/updates/deletes on `monopoly_rooms`, keeps member-only Realtime reads, and grants authenticated users only the validated Sugaropoly RPC actions.
 
 Todolist:
+Extract GameExitScreen from QuickMathsDuel into a shared component; retrofit Tic-Tac-Toe + future games.
 Need an overhaul of button UI in draw off.
 Overhaul in connect 4?
 Play test system prompt for draw off a little but seems fine and fun to babie.

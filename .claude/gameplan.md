@@ -19,8 +19,10 @@ Their homepage cards stay. Keep Word Race card too (below).
 ## Build order (easiest → hardest)
 
 1. ~~**Tic-Tac-Toe**~~ ✅ **SHIPPED** — `src/games/sugar/TicTacToe.jsx` + lobby + board. Supabase realtime room-code pattern proven end to end. Route: `/tic-tac-toe`.
-2. **Quick-Maths Duel** ← **NEXT** — Rapid-fire arithmetic; first correct answer each round scores.
+2. ~~**Quick-Maths Duel**~~ ✅ **SHIPPED** — `src/games/sugar/QuickMaths*.jsx`. Seeded PRNG, realtime room, configurable number size / operations / operand count / rounds. Route: `/quick-maths`.
+3. **Tug-of-War** ← **NEXT** — Both mash to drag the rope marker to their side; best-of.
 3. **Tug-of-War** — Both mash to drag the rope marker to their side; best-of.
+   *(also needs: TODO — extract the `GameExitScreen` abort/game-over modal from `QuickMathsDuel.jsx` into a shared component and retrofit Tic-Tac-Toe + any other games that currently have their own abort screens)*
 4. **Word Race** — Same hidden word; both race Wordle-style with a live opponent progress bar.
 5. **Category Blitz** — One random letter, race to fill categories before the timer.
 6. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.

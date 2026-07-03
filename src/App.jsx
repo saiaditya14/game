@@ -11,6 +11,7 @@ import DrawOffCoop from './games/plum/DrawOffCoop';
 import ConnectFour from './games/sugar/ConnectFour';
 import PastelMonopoly from './games/sugar/monopoly/PastelMonopoly';
 import TicTacToe from './games/sugar/TicTacToe';
+import QuickMathsDuel from './games/sugar/QuickMathsDuel';
 
 const ThemeScene = lazy(() => import('./components/ThemeScene'));
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="/draw-off-byok" element={<DrawOffBYOK />} />
             <Route path="/connect-four" element={<ConnectFour />} />
             <Route path="/tic-tac-toe" element={<TicTacToe />} />
+            <Route path="/quick-maths" element={<QuickMathsDuel />} />
             <Route path="/monopoly" element={<PastelMonopoly />} />
           </Routes>
         </div>
