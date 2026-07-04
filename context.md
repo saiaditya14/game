@@ -85,7 +85,22 @@ Sugaropoly deferred visual polish:
 - Both clients generate identical question sequences from a shared `seed` via seeded PRNG — no server-side question logic.
 - Abort (mid-game) sets `status='aborted'`; Exit (after game over) sets `status='closed'`. Both send both players home after 1.8 s.
 
-**TODO:** Extract `GameExitScreen` (the abort/game-over centered modal in `QuickMathsDuel.jsx`) into a shared component and retrofit Tic-Tac-Toe (and future games) to reuse it instead of rolling their own abort screens.
+`GameExitScreen` (the abort/game-over centered modal) was extracted into `src/games/sugar/GameExitScreen.jsx` during the Word Race build; `QuickMathsDuel.jsx` now imports it instead of defining it inline. Tic-Tac-Toe and other games were NOT retrofitted — that's a later pass.
+
+## Word Race
+
+- Source: `src/games/sugar/WordRace*.jsx`, `WordRaceRules.js` (+ tests), `wordRaceWords.js`.
+- Route: `/word-race`.
+- Supabase migration: `supabase/migrations/20260704120000_create_word_race_rooms.sql`.
+- Secret word is picked server-side (client-generated on room creation) from a vendored `wordle-words` (MIT) answers list; the whole room row — including `secret_word` — is readable by both clients like every other game here, but the UI only ever renders the opponent's guesses as color tiles, never letters.
+- Each player writes only their own `progress_one`/`progress_two` (jsonb color arrays), `solved_x`, `gave_up_x`, `finished_x_at` columns; a `useEffect` on every realtime update checks if both players are "done" (solved / gave up / exhausted 6 guesses) and finalizes `status='finished'` + `winner` once, guarded by `.eq('status','playing')`.
+- One "Leave" button, not two: pre-opponent it aborts the empty room, mid-race it forfeits (opponent keeps playing to their own finish).
+- Absent-letter tile color is a per-theme tint (not a generic surface token) — see `ABSENT_BY_THEME` in `WordRaceBoard.jsx`.
+- `GameExitScreen` (see below) is shared with Quick-Maths Duel.
+
+## Shared abort / game-over modal
+
+- `src/games/sugar/GameExitScreen.jsx` — extracted from `QuickMathsDuel.jsx` during the Word Race build. Handles `status="aborted"` and `status="closed"`, both auto-navigating home after 1.8s. Currently consumed by Quick-Maths Duel and Word Race only; other games (Tic-Tac-Toe, Connect Four) keep their own abort screens until a later retrofit pass.
 
 ## Connect Four
 

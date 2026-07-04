@@ -1,12 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { generateSeed, generateQuestions } from './QuickMathsRules';
-import QuickMathsLobby from './QuickMathsLobby';
-import QuickMathsBoard from './QuickMathsBoard';
+import {
+  MAX_GUESSES,
+  evaluateGuess,
+  isPlayerDone,
+  isSolvedRow,
+  isValidWord,
+  pickSecretWord,
+  resolveWinner,
+} from './WordRaceRules';
+import WordRaceLobby from './WordRaceLobby';
+import WordRaceBoard from './WordRaceBoard';
 import GameExitScreen from './GameExitScreen';
 
-const PLAYER_ID_KEY = 'lovelyland-quick-maths-player-id';
+const PLAYER_ID_KEY = 'lovelyland-word-race-player-id';
 
 const getOrCreatePlayerId = () => {
   const existing = window.localStorage.getItem(PLAYER_ID_KEY);
@@ -27,41 +35,24 @@ const getPlayerNumber = (room, playerId) => {
   return null;
 };
 
-// ─── Root component ────────────────────────────────────────────────────────────
-
-const QuickMathsDuel = () => {
-  const navigate   = useNavigate();
-  const playerId   = useMemo(getOrCreatePlayerId, []);
+const WordRace = () => {
+  const navigate = useNavigate();
+  const playerId = useMemo(getOrCreatePlayerId, []);
   const [room, setRoom]     = useState(null);
   const [error, setError]   = useState('');
   const [isBusy, setIsBusy] = useState(false);
 
-  const claimingRef = useRef(false);
-
   const playerNumber = getPlayerNumber(room, playerId);
-
-  const questions = useMemo(
-    () =>
-      room?.seed
-        ? generateQuestions(room.seed, {
-            totalRounds:  room.total_rounds  ?? 10,
-            numberSize:   room.number_size   ?? 'small',
-            operations:   room.operations    ?? 'add_sub',
-            operandCount: room.operand_count ?? 2,
-          })
-        : [],
-    [room?.seed, room?.total_rounds, room?.number_size, room?.operations, room?.operand_count],
-  );
 
   // ── Realtime subscription ──────────────────────────────────────────────────
 
   useEffect(() => {
     if (!supabase || !room?.id) return undefined;
     const channel = supabase
-      .channel(`quick-maths-room-${room.id}`)
+      .channel(`word-race-room-${room.id}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'quick_maths_rooms', filter: `id=eq.${room.id}` },
+        { event: '*', schema: 'public', table: 'word_race_rooms', filter: `id=eq.${room.id}` },
         (payload) => { if (payload.new) setRoom(payload.new); },
       )
       .subscribe();
@@ -76,20 +67,36 @@ const QuickMathsDuel = () => {
     return () => clearTimeout(t);
   }, [room?.status, navigate]);
 
-  // ── Reset claiming flag on round advance ───────────────────────────────────
+  // ── Finalize the race once both players are done (solved/gave up/out of guesses) ──
 
-  useEffect(() => { claimingRef.current = false; }, [room?.current_round]);
+  useEffect(() => {
+    if (!supabase || !room || room.status !== 'playing' || !room.player_two) return;
+    const oneDone = isPlayerDone({ progress: room.progress_one, solved: room.solved_one, gaveUp: room.gave_up_one });
+    const twoDone = isPlayerDone({ progress: room.progress_two, solved: room.solved_two, gaveUp: room.gave_up_two });
+    if (!oneDone || !twoDone) return;
+
+    const winner = resolveWinner({
+      solvedOne: room.solved_one,
+      solvedTwo: room.solved_two,
+      progressOne: room.progress_one ?? [],
+      progressTwo: room.progress_two ?? [],
+      gaveUpOne: room.gave_up_one,
+      gaveUpTwo: room.gave_up_two,
+      finishedOneAt: room.finished_one_at,
+      finishedTwoAt: room.finished_two_at,
+    });
+
+    supabase
+      .from('word_race_rooms')
+      .update({ status: 'finished', winner })
+      .eq('id', room.id)
+      .eq('status', 'playing')
+      .then(() => {});
+  }, [room]);
 
   // ── Create room ────────────────────────────────────────────────────────────
 
-  const createRoom = async (config = {}) => {
-    const {
-      numberSize   = 'small',
-      operations   = 'add_sub',
-      operandCount = 2,
-      totalRounds  = 10,
-    } = config;
-
+  const createRoom = async () => {
     setError('');
     if (!supabase) {
       setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.');
@@ -97,21 +104,14 @@ const QuickMathsDuel = () => {
     }
     setIsBusy(true);
     const { data, error: e } = await supabase
-      .from('quick_maths_rooms')
+      .from('word_race_rooms')
       .insert({
-        code:          generateRoomCode(),
-        seed:          generateSeed(),
-        number_size:   numberSize,
-        operations,
-        operand_count: operandCount,
-        total_rounds:  totalRounds,
-        status:        'waiting',
-        player_one:    playerId,
-        score_one:     0,
-        score_two:     0,
-        current_round: 1,
-        round_winner:  null,
-        winner:        null,
+        code:         generateRoomCode(),
+        secret_word:  pickSecretWord(),
+        status:       'waiting',
+        player_one:   playerId,
+        progress_one: [],
+        progress_two: [],
       })
       .select()
       .single();
@@ -133,13 +133,13 @@ const QuickMathsDuel = () => {
     setIsBusy(true);
 
     const { data: existing, error: lookupError } = await supabase
-      .from('quick_maths_rooms')
+      .from('word_race_rooms')
       .select('*')
       .eq('code', code)
       .maybeSingle();
     if (lookupError || !existing) {
       setIsBusy(false);
-      setError('No Quick-Maths room found for that code.');
+      setError('No Word Race room found for that code.');
       return;
     }
     if (existing.player_one === playerId || existing.player_two === playerId) {
@@ -154,7 +154,7 @@ const QuickMathsDuel = () => {
     }
 
     const { data, error: joinError } = await supabase
-      .from('quick_maths_rooms')
+      .from('word_race_rooms')
       .update({ player_two: playerId, status: 'playing', started_at: new Date().toISOString() })
       .eq('id', existing.id)
       .is('player_two', null)
@@ -165,50 +165,55 @@ const QuickMathsDuel = () => {
     setRoom(data);
   };
 
-  // ── Handle answer change ───────────────────────────────────────────────────
+  // ── Submit a guess (own columns only — opponent only ever sees colors) ─────
 
-  const handleAnswerChange = useCallback((rawValue) => {
-    if (!room || room.status !== 'playing' || claimingRef.current) return;
+  const submitGuess = async (word) => {
+    if (!supabase || !room || room.status !== 'playing' || !playerNumber) return { ok: false };
+    if (!isValidWord(word)) return { ok: false, reason: 'invalid' };
 
-    const parsed = parseInt(rawValue, 10);
-    if (isNaN(parsed)) return;
+    const isOne = playerNumber === 1;
+    const currentProgress = (isOne ? room.progress_one : room.progress_two) ?? [];
+    if (currentProgress.length >= MAX_GUESSES) return { ok: false, reason: 'exhausted' };
 
-    const q = questions[room.current_round - 1];
-    if (!q || parsed !== q.answer) return;
+    const colors = evaluateGuess(word, room.secret_word);
+    const solved = isSolvedRow(colors);
+    const newProgress = [...currentProgress, colors];
+    const done = solved || newProgress.length >= MAX_GUESSES;
 
-    claimingRef.current = true;
+    const update = { [isOne ? 'progress_one' : 'progress_two']: newProgress };
+    if (solved) update[isOne ? 'solved_one' : 'solved_two'] = true;
+    if (done) update[isOne ? 'finished_one_at' : 'finished_two_at'] = new Date().toISOString();
 
-    const isLastRound = room.current_round >= room.total_rounds;
-    const newScoreOne = playerNumber === 1 ? room.score_one + 1 : room.score_one;
-    const newScoreTwo = playerNumber === 2 ? room.score_two + 1 : room.score_two;
-    const finalWinner = isLastRound
-      ? (newScoreOne > newScoreTwo ? 1 : newScoreTwo > newScoreOne ? 2 : null)
-      : null;
-
-    supabase
-      .from('quick_maths_rooms')
-      .update({
-        round_winner:  playerNumber,
-        score_one:     newScoreOne,
-        score_two:     newScoreTwo,
-        current_round: isLastRound ? room.current_round : room.current_round + 1,
-        status:        isLastRound ? 'finished' : 'playing',
-        winner:        finalWinner,
-      })
+    const { data, error: e } = await supabase
+      .from('word_race_rooms')
+      .update(update)
       .eq('id', room.id)
-      .eq('current_round', room.current_round)
-      .then(({ error: e }) => {
-        if (e) claimingRef.current = false;
-      });
-  }, [playerNumber, questions, room]);
+      .select()
+      .single();
+    if (e) return { ok: false, reason: 'error', message: e.message };
+    setRoom(data);
+    return { ok: true, colors, solved };
+  };
 
-  // ── Abort — locks room mid-game, both clients navigate home ───────────────
+  // ── Leave — one contextual control ─────────────────────────────────────────
+  // No opponent yet: nothing to forfeit, so it aborts the unstarted room outright.
+  // Mid-race: it forfeits this player's race only — the opponent keeps playing
+  // to their own finish, and resolveWinner() awards them the win once done.
 
-  const abortGame = async () => {
+  const leaveGame = async () => {
     if (!supabase || !room) { navigate('/'); return; }
+    if (!room.player_two) {
+      await supabase.from('word_race_rooms').update({ status: 'aborted' }).eq('id', room.id);
+      return;
+    }
+    if (room.status !== 'playing' || !playerNumber) return;
+    const isOne = playerNumber === 1;
     await supabase
-      .from('quick_maths_rooms')
-      .update({ status: 'aborted' })
+      .from('word_race_rooms')
+      .update({
+        [isOne ? 'gave_up_one' : 'gave_up_two']: true,
+        [isOne ? 'finished_one_at' : 'finished_two_at']: new Date().toISOString(),
+      })
       .eq('id', room.id);
   };
 
@@ -217,7 +222,7 @@ const QuickMathsDuel = () => {
   const exitGame = async () => {
     if (!supabase || !room) { navigate('/'); return; }
     await supabase
-      .from('quick_maths_rooms')
+      .from('word_race_rooms')
       .update({ status: 'closed' })
       .eq('id', room.id)
       .eq('status', 'finished');
@@ -227,18 +232,21 @@ const QuickMathsDuel = () => {
 
   const playAgain = async () => {
     if (!supabase || !room) return;
-    claimingRef.current = false;
     await supabase
-      .from('quick_maths_rooms')
+      .from('word_race_rooms')
       .update({
-        seed:          generateSeed(),
-        status:        'playing',
-        score_one:     0,
-        score_two:     0,
-        current_round: 1,
-        round_winner:  null,
-        winner:        null,
-        started_at:    new Date().toISOString(),
+        secret_word:     pickSecretWord(),
+        status:          'playing',
+        progress_one:    [],
+        progress_two:    [],
+        solved_one:      false,
+        solved_two:      false,
+        gave_up_one:     false,
+        gave_up_two:     false,
+        finished_one_at: null,
+        finished_two_at: null,
+        winner:          null,
+        started_at:      new Date().toISOString(),
       })
       .eq('id', room.id)
       .eq('status', 'finished');
@@ -248,7 +256,7 @@ const QuickMathsDuel = () => {
 
   if (!room || !playerNumber) {
     return (
-      <QuickMathsLobby
+      <WordRaceLobby
         onCreateRoom={createRoom}
         onJoinRoom={joinRoom}
         isBusy={isBusy}
@@ -262,16 +270,15 @@ const QuickMathsDuel = () => {
   if (room.status === 'closed')  return <GameExitScreen status="closed" />;
 
   return (
-    <QuickMathsBoard
+    <WordRaceBoard
       room={room}
       playerNumber={playerNumber}
-      questions={questions}
-      onAnswerChange={handleAnswerChange}
+      onSubmitGuess={submitGuess}
+      onLeave={leaveGame}
       onPlayAgain={playAgain}
-      onAbort={abortGame}
       onExit={exitGame}
     />
   );
 };
 
-export default QuickMathsDuel;
+export default WordRace;

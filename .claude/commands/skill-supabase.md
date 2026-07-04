@@ -64,9 +64,24 @@ Additional runtime columns inferred from usage: `ownership` (jsonb, map of space
 
 Schema file: `src/games/sugar/monopoly-schema.sql`
 
-RLS policy on both tables: open read/insert/update for `anon` and `authenticated` (no row-level restrictions — all access control is enforced in app logic or RPC functions).
+### `word_race_rooms`
+| column | type | notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `code` | text UNIQUE | 4-6 chars |
+| `status` | text | `waiting \| playing \| finished \| aborted \| closed` |
+| `secret_word` | text | picked client-side at room creation from a vendored `wordle-words` answers list; readable by both clients like any other column, but the UI only ever renders the *opponent's* guesses as color tiles, never letters |
+| `player_one` / `player_two` | text | localStorage UUID |
+| `progress_one` / `progress_two` | jsonb | array of per-guess color arrays (`'correct' \| 'present' \| 'absent'`) — **colors only, the guessed word itself is never written to the DB** |
+| `solved_one` / `solved_two`, `gave_up_one` / `gave_up_two` | boolean | per-player race outcome flags |
+| `finished_one_at` / `finished_two_at` | timestamptz | set when that player solves/exhausts/gives up |
+| `winner` | int | `1`, `2`, or `null` (draw) — computed by `resolveWinner()` in `WordRaceRules.js` once both players are done |
 
-Both tables are added to the `supabase_realtime` publication.
+Schema file: `src/games/sugar/word-race-schema.sql`. Pattern for "each player only ever writes their own columns, a `useEffect` reconciles once both sides are done" — reuse this for any future race-style game where hidden state must stay asymmetric.
+
+RLS policy on all tables above: open read/insert/update for `anon` and `authenticated` (no row-level restrictions — all access control is enforced in app logic or RPC functions).
+
+All tables above are added to the `supabase_realtime` publication.
 
 ---
 

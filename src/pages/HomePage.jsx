@@ -32,14 +32,7 @@ const turnGames = [
   },
 ];
 
-const newGames = [
-  {
-    title: 'Checkers',
-    description: 'Jump, capture, and set up the board for a clean little tactical win.',
-    category: 'Classic',
-    meta: 'board game',
-  },
-];
+const newGames = [];
 
 const heroSubtitleByTheme = {
   'theme-pink':      'hii ♡ your person is waiting for you~',
@@ -453,6 +446,17 @@ const HomePage = () => {
                   description="Ten rapid-fire arithmetic rounds. Race your partner — first correct answer steals the point."
                   badge="New"
                   category="Puzzle"
+                  meta="2 player live"
+                />
+              </Link>
+            </motion.div>
+            <motion.div variants={cardItemVariants}>
+              <Link to="/word-race" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Word Race"
+                  description="Same secret word, six guesses each. Watch their tiles light up as you race to solve it first."
+                  badge="New"
+                  category="Word"
                   meta="2 player live"
                 />
               </Link>

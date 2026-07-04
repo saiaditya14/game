@@ -98,11 +98,13 @@ Never use `className="fixed inset-0 flex items-center justify-center"` — it wi
 
 ## Shared abort / game-over modal
 
-**`GameExitScreen`** lives in `src/games/sugar/QuickMathsDuel.jsx` and should eventually be extracted to a shared component. It handles two statuses:
+**`GameExitScreen`** lives in `src/games/sugar/GameExitScreen.jsx` (extracted from `QuickMathsDuel.jsx` during the Word Race build). It handles two statuses:
 - `status="aborted"` — mid-game abort, shows "Game Aborted / heading home"
 - `status="closed"` — exit after game over, shows "Game Over / heading home"
 
-Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root component watching `room.status`). Copy this pattern for every new game that needs abort/exit. **TODO: retrofit Tic-Tac-Toe** to use the same modal instead of its own abort screen.
+Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root component watching `room.status`). Import it directly (`import GameExitScreen from './GameExitScreen'`) for every new game that needs abort/exit — do not redefine it inline. Currently consumed by Quick-Maths Duel and Word Race. **TODO: retrofit Tic-Tac-Toe / Connect Four** to use the same modal instead of their own abort screens (a later pass, not automatic).
+
+If a new game needs more than one quit-like action (e.g. "abort an empty room" vs "forfeit mid-race"), collapse them into a **single contextual button** whose label/behavior branches on game state — don't surface two separate buttons for overlapping quit/forfeit intents (see `WordRace.jsx`'s `onLeave`/`leaveGame`).
 
 DB status values to include in every new game schema: `'waiting' | 'playing' | 'finished' | 'aborted' | 'closed'`
 
