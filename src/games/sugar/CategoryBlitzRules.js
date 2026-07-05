@@ -23,43 +23,59 @@ export function normalizeAnswer(value) {
 }
 
 /**
- * Score one Category Blitz round.
- * - An answer only counts if it's non-empty AND the partner approved it.
- * - Identical answers (case/whitespace-insensitive) between both players
- *   auto-cancel to zero points each, regardless of approval — dupes never score.
+ * Tally votes for one Category Blitz round across N players.
+ *
+ * For each category, every player may cast ONE vote for another player's
+ * (non-empty) answer in that category, or abstain (null). A player's score
+ * is the total number of votes their answers RECEIVED across all categories.
+ * There is no duplicate-cancellation — voting alone decides everything.
+ *
+ * Defensive rules (never trust the payload blindly — it's realtime-synced
+ * client input): a self-vote is ignored, a vote for a nonexistent player is
+ * ignored, and a vote that targets an empty answer is ignored.
+ *
+ * @param {{ players: {id:string,name:string}[], categories: string[],
+ *   answers: Record<string,string[]>, votes: Record<string,(string|null)[]> }} args
+ * @returns {{ scores: Record<string,number>,
+ *   perCategory: { category: string, votesReceived: Record<string,number> }[] }}
  */
-export function computeScores({
-  categories,
-  answersOne = [],
-  answersTwo = [],
-  approvalsOne = [],
-  approvalsTwo = [],
-}) {
+export function computeScores({ players = [], categories = [], answers = {}, votes = {} }) {
+  const playerIds = players.map((p) => p.id);
+  const scores = Object.fromEntries(playerIds.map((id) => [id, 0]));
+
   const perCategory = categories.map((category, i) => {
-    const answerOne = answersOne[i] ?? '';
-    const answerTwo = answersTwo[i] ?? '';
-    const normOne = normalizeAnswer(answerOne);
-    const normTwo = normalizeAnswer(answerTwo);
-    const isDupe = Boolean(normOne) && Boolean(normTwo) && normOne === normTwo;
+    const votesReceived = Object.fromEntries(playerIds.map((id) => [id, 0]));
 
-    let scoreOne = 0;
-    let scoreTwo = 0;
-    if (!isDupe) {
-      if (normOne && approvalsOne[i]) scoreOne = 1;
-      if (normTwo && approvalsTwo[i]) scoreTwo = 1;
-    }
+    playerIds.forEach((voterId) => {
+      const targetId = votes?.[voterId]?.[i];
+      if (!targetId) return; // abstain
+      if (targetId === voterId) return; // self-vote — ignored
+      if (!playerIds.includes(targetId)) return; // unknown player — ignored
 
-    return { category, answerOne, answerTwo, isDupe, scoreOne, scoreTwo };
+      const targetAnswer = answers?.[targetId]?.[i];
+      if (!normalizeAnswer(targetAnswer)) return; // vote for an empty answer — ignored
+
+      votesReceived[targetId] += 1;
+      scores[targetId] += 1;
+    });
+
+    return { category, votesReceived };
   });
 
-  const scoreOne = perCategory.reduce((sum, c) => sum + c.scoreOne, 0);
-  const scoreTwo = perCategory.reduce((sum, c) => sum + c.scoreTwo, 0);
-
-  return { perCategory, scoreOne, scoreTwo };
+  return { scores, perCategory };
 }
 
-export function resolveWinner(scoreOne, scoreTwo) {
-  if (scoreOne > scoreTwo) return 1;
-  if (scoreTwo > scoreOne) return 2;
-  return null;
+/**
+ * Winner = the player with the strictly highest score. Returns null when the
+ * top score is shared by more than one player (a tie) or when there are no
+ * players/scores at all.
+ */
+export function resolveWinner(scores = {}) {
+  const entries = Object.entries(scores);
+  if (entries.length === 0) return null;
+
+  const max = Math.max(...entries.map(([, v]) => v));
+  const top = entries.filter(([, v]) => v === max);
+  if (top.length !== 1) return null;
+  return top[0][0];
 }

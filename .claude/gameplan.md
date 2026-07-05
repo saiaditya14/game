@@ -24,10 +24,17 @@ Their homepage cards stay.
 1. ~~**Tic-Tac-Toe**~~ ✅ **SHIPPED** — `src/games/sugar/TicTacToe.jsx` + lobby + board. Supabase realtime room-code pattern proven end to end. Route: `/tic-tac-toe`.
 2. ~~**Quick-Maths Duel**~~ ✅ **SHIPPED** — `src/games/sugar/QuickMaths*.jsx`. Seeded PRNG, realtime room, configurable number size / operations / operand count / rounds. Route: `/quick-maths`.
 3. ~~**Word Race**~~ ✅ **SHIPPED** — `src/games/sugar/WordRace*.jsx` + `WordRaceRules.js` + `wordRaceWords.js`. Same hidden word (vendored `wordle-words` list), 6 guesses each, opponent board shows color feedback only (never letters), give-up/tie/both-solve handled via `resolveWinner()`. Route: `/word-race`.
-4. ~~**Category Blitz**~~ ✅ **SHIPPED** — `src/games/sugar/CategoryBlitz*.jsx` + `CategoryBlitzRules.js` + vendored `categoryBlitzCategories.js`. One random letter, timer synced from `started_at`, race to fill a shared category list, then a partner-approval reveal + scoring screen (dupes auto-cancel). Extra `reveal` status between playing/finished. Route: `/category-blitz`.
-5. **Gambling Corner** ← **NEXT** — A heads-up "gambling" hub: **three** 2-player card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). *(Replaced Spot-the-Difference + Speed Trivia Buzz; sits above Same Wavelength.)*
-6. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
-7. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
+4. ~~**Category Blitz**~~ ✅ **SHIPPED** — `src/games/sugar/CategoryBlitz*.jsx` + `CategoryBlitzRules.js` + vendored `categoryBlitzCategories.js`. One random letter, timer synced from `started_at`, race to fill a shared category list, then a **vote-tally** reveal (each player votes one answer per category, score = votes received). **Now 2–8 players** (`players` jsonb array + host-Start waiting room + `jsonb_set` RPCs for concurrent writes). Extra `reveal` status between playing/finished. Route: `/category-blitz`.
+> **✅ DONE (2026-07-05) — Category Blitz multiplayer expansion.** The elevated
+> change shipped: Category Blitz is now **2–8 players** with **vote-tally** scoring
+> (one vote per category, score = votes received, no dupe rule), flow unchanged
+> (the "creator decides what happens next" idea was dropped by the user). See the
+> `category-blitz` + `category-blitz-multiplayer` memories.
+
+5. **Gambling Corner** ← **NEXT NEW GAME** — A "gambling" hub: **three** card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). Now N-player-preferred, not heads-up-only — see the ⚠ scope-change callout in the per-game notes. *(Replaced Spot-the-Difference + Speed Trivia Buzz.)*
+6. **Verbal Memory (competitive)** ← **NEW** (user, 2026-07-05; build AFTER Gambling Corner) — a memory game with a competitive head-to-head twist. Concept from a playtester; design details TBD with the user before building. See the `verbal-memory-game` memory.
+7. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
+8. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
 > **Removed:** Tug-of-War (cut), Spot-the-Difference (cut), Speed Trivia Buzz (cut).
 > **Parked:** Gerbil Ball — pulled out of the web build order, see "Parked ideas" at the bottom.
 
@@ -179,3 +186,24 @@ Work top-down, check in after each game, and keep everything theme-native.
   needs the board array + `board_size`/`win_length` columns, and the board UI must
   stay legible as the grid grows (coin/cell sizing like the Sugaropoly crowded-tile
   concern). Decide whether it replaces or sits beside the current 3×3.
+
+---
+
+## Post-launch polish pass (playtester feedback 2026-07-05 — do after more games ship)
+
+Batch of feedback from a real playtester (verbatim at the bottom of `README.md`). The
+two elevated items were pulled OUT of this list: Category Blitz multiplayer expansion
+(→ ELEVATED NEXT CHANGE above) and Verbal Memory competitive (→ build order #6). The
+rest are a polish pass, not blocking new games — see the `playtester-feedback` memory.
+
+- **Tic-Tac-Toe — winning-line highlight bug.** The win highlight misbehaves; fix it.
+  (Candidate for the E2E-retrofit pass above.)
+- **Tic-Tac-Toe — redundant buttons / exit.** It still has overlapping quit/exit
+  controls; collapse to ONE contextual button like the newer games
+  (`feedback-single-action-buttons`), and reuse the shared `GameExitScreen`.
+- **Quick-Maths Duel — add a per-round timer.** Currently first-correct-answer with no
+  clock; a visible round timer would raise the pressure (sync it off a server
+  timestamp + deadline, NOT a stale local counter — see the Category Blitz board bug).
+- **Emotes / stickers (cross-game).** A lightweight emote/sticker reaction feature the
+  partner ("babie") wants — react to your opponent mid/post-game. Scope TBD: which
+  games, sticker set, how it's broadcast over realtime.

@@ -80,24 +80,36 @@ Schema file: `src/games/sugar/monopoly-schema.sql`
 Schema file: `src/games/sugar/word-race-schema.sql`. Pattern for "each player only ever writes their own columns, a `useEffect` reconciles once both sides are done" — reuse this for any future race-style game where hidden state must stay asymmetric.
 
 ### `category_blitz_rooms`
+2-8 players (originally a 2-player-only table; migrated in place — see `20260705120000_category_blitz_multiplayer.sql`).
+
 | column | type | notes |
 |---|---|---|
 | `id` | uuid PK | |
 | `code` | text UNIQUE | 4-6 chars |
 | `status` | text | `waiting \| playing \| reveal \| finished \| aborted \| closed` — note the extra `reveal` phase |
-| `player_one` / `player_two` | text | localStorage UUID |
-| `round_letter` | text | single letter, picked client-side at creation |
+| `players` | jsonb | array of `{ id, name }`; seat = array index; auto-named "Player 1", "Player 2", … by join order |
+| `host_id` | text | localStorage UUID of `players[0]` (the creator) |
+| `round_letter` | text | single letter; picked once at creation (to remember the category count) and re-picked for real when the host starts |
 | `categories` | jsonb | array of category strings for the round |
 | `timer_seconds` | int | 60 / 90 / 120, set by creator |
-| `started_at` | timestamptz | set on join; the shared countdown deadline = `started_at + timer_seconds` |
-| `answers_one` / `answers_two` | jsonb | each player writes ONLY their own array |
-| `submitted_one_at` / `submitted_two_at` | timestamptz | lock-in time; both set ⇒ `playing→reveal` |
-| `approvals_one` / `approvals_two` | jsonb | **cross-named**: `approvals_one` = the verdicts on player ONE's answers, WRITTEN BY player two (each side judges the other). Booleans/null per category. |
-| `review_one_done` / `review_two_done` | boolean | both true ⇒ `reveal→finished` |
-| `score_one` / `score_two` | int | computed once at finalize by `computeScores` |
-| `winner` | int | `1`, `2`, or `null` (draw) |
+| `started_at` | timestamptz | set when the host starts (or on play-again); the shared countdown deadline = `started_at + timer_seconds` |
+| `answers` | jsonb | map `{ playerId: string[] }`, parallel to `categories`; each player writes ONLY `answers[myId]` |
+| `submitted` | jsonb | map `{ playerId: isoTimestamp }`; all players present ⇒ `playing→reveal` (or the timer expires) |
+| `votes` | jsonb | map `{ voterId: (targetPlayerId\|null)[] }`, one vote per category, `null` = abstain; a player never votes for themself |
+| `reviews_done` | jsonb | map `{ playerId: boolean }`; all true ⇒ `reveal→finished` |
+| `scores` | jsonb | map `{ playerId: number }` — total votes that player's answers received, computed once at finalize by `computeScores` |
+| `winner` | text | winning playerId, or `null` on an exact tie (including all-zero) |
 
-Schema/migration: `supabase/migrations/20260704180000_create_category_blitz_rooms.sql`. **Two realtime gotchas this game hit (both caught only by a two-client E2E, not unit tests):** (1) a countdown that keys off `started_at` reads null on the creator's client until the peer joins — gate auto-submit on `Boolean(deadline) && Date.now() >= deadline`, never on a stale `remaining===0`, or you force-submit the creator on join; (2) never write a whole jsonb array (like `approvals_*`) from a stale realtime snapshot per-interaction — concurrent whole-array overwrites lose updates. Buffer in local React state and write once.
+Schema/migrations: `supabase/migrations/20260704180000_create_category_blitz_rooms.sql` (original 2-player table) + `supabase/migrations/20260705120000_category_blitz_multiplayer.sql` (the N-player migration — drops `player_one/two`-style paired columns, adds the jsonb-map columns above, and adds 3 RPCs).
+
+**Safe concurrent per-player jsonb writes (RPCs, not plain updates):** `answers`/`votes`/`submitted`/`reviews_done`/`players` are shared jsonb columns written by MULTIPLE different players — a plain client read-modify-write races under N concurrent writers (unlike the old per-player top-level columns, e.g. `answers_one`/`answers_two`, which never collided). Three `security definer` RPCs do the merge server-side instead:
+- `category_blitz_join(p_code, p_player_id)` — `select ... for update` row-locks the room, then appends `{id, name}` to `players` (rejects `ROOM_NOT_FOUND` / `ROOM_FULL` (8) / `ROOM_NOT_JOINABLE`).
+- `category_blitz_submit_answers(p_room_id, p_player_id, p_answers)` — `jsonb_set`s `answers[playerId]` + `submitted[playerId]` in one `UPDATE`, guarded by `status='playing'`.
+- `category_blitz_submit_votes(p_room_id, p_player_id, p_votes)` — `jsonb_set`s `votes[playerId]` + `reviews_done[playerId]` in one `UPDATE`, guarded by `status='reveal'`.
+
+A single `UPDATE ... SET col = jsonb_set(col, ...)` is safe under concurrency because Postgres re-evaluates it against the latest committed row once a blocking concurrent writer's transaction commits (EvalPlanQual) — so two players writing to *different* keys in the same jsonb column never clobber each other, even though they'd race under a naive client-side read-then-write.
+
+**Realtime gotchas this game hit (caught only by two/three-client E2E, not unit tests) — still apply at N players:** (1) a countdown that keys off `started_at` reads null on the creator's client until a peer joins — gate auto-submit on `Boolean(deadline) && Date.now() >= deadline`, never on a stale `remaining===0`, or you force-submit the creator on join; (2) never write a whole jsonb map from a stale realtime snapshot per-interaction — buffer votes/answers in local React state and write once (now via the RPCs above, since each writer targets a different key but the column itself is shared).
 
 RLS policy on all tables above: open read/insert/update for `anon` and `authenticated` (no row-level restrictions — all access control is enforced in app logic or RPC functions).
 

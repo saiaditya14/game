@@ -465,10 +465,10 @@ const HomePage = () => {
               <Link to="/category-blitz" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Category Blitz"
-                  description="One random letter, a page of categories. Race the timer, then judge each other's answers."
+                  description="One random letter, a page of categories. Race the timer, then vote on everyone's best answers."
                   badge="New"
                   category="Party"
-                  meta="2 player live"
+                  meta="2-8 players"
                 />
               </Link>
             </motion.div>

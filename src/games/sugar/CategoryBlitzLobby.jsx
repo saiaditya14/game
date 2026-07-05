@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { LogIn, Plus, Copy, Check, ArrowLeft, ListChecks } from 'lucide-react';
+import { LogIn, Plus, Copy, Check, ArrowLeft, ListChecks, Crown, Sparkles, Users, LogOut } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 import SplitText from '../../components/reactbits/SplitText';
 import DecryptedText from '../../components/reactbits/DecryptedText';
@@ -144,14 +144,144 @@ const RoomCodeDisplay = ({ roomCode, isArcade }) => {
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </motion.button>
       </div>
-      <motion.p
-        className="mt-[0.625rem] text-xs"
-        style={{ color: 'var(--muted)' }}
-        animate={{ opacity: [0.42, 1, 0.42] }}
-        transition={{ repeat: Infinity, duration: 2.6, ease: 'easeInOut' }}
-      >
-        {isArcade ? 'WAITING FOR P2...' : 'waiting for your partner…'}
-      </motion.p>
+    </motion.div>
+  );
+};
+
+// ─── Waiting room copy ──────────────────────────────────────────────────────────
+
+const waitingCopyByTheme = {
+  'theme-pink': {
+    joined:    (n) => `${n}/8 players joined ♡`,
+    host:      'host',
+    start:     'start game ♡',
+    needMore:  'need at least 2 players to start~',
+    waitHost:  'waiting for the host to start…',
+    leave:     'leave room',
+  },
+  'theme-arcade': {
+    joined:    (n) => `${n}/8 PLAYERS JOINED`,
+    host:      'HOST',
+    start:     'START GAME',
+    needMore:  'NEED AT LEAST 2 PLAYERS',
+    waitHost:  'WAITING FOR HOST TO START…',
+    leave:     'LEAVE ROOM',
+  },
+  'theme-cozy': {
+    joined:    (n) => `${n}/8 players joined`,
+    host:      'host',
+    start:     'start game',
+    needMore:  'need at least 2 players to start',
+    waitHost:  'waiting for the host to start…',
+    leave:     'leave room',
+  },
+  'theme-champagne': {
+    joined:    (n) => `${n}/8 players joined`,
+    host:      'Host',
+    start:     'Start Game',
+    needMore:  'Need at least 2 players to start.',
+    waitHost:  'Waiting for the host to start…',
+    leave:     'Leave room',
+  },
+};
+
+// ─── Waiting room — players list + host start control ──────────────────────────
+
+const WaitingRoom = ({ room, playerId, isHost, onStartGame, onLeaveRoom, isBusy, isArcade }) => {
+  const { theme } = useTheme();
+  const wc = waitingCopyByTheme[theme] ?? waitingCopyByTheme['theme-champagne'];
+  const players = Array.isArray(room?.players) ? room.players : [];
+  const canStart = isHost && players.length >= 2;
+
+  return (
+    <motion.div
+      className="mt-[1.5rem] text-left"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <RoomCodeDisplay roomCode={room.code} isArcade={isArcade} />
+
+      <div className="mt-[1.25rem] flex items-center justify-center gap-[0.4rem]">
+        <Users className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
+        <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--muted)' }}>
+          {wc.joined(players.length)}
+        </p>
+      </div>
+
+      <div className="mt-[0.75rem] flex flex-col gap-[0.4rem]">
+        {players.map((p) => (
+          <motion.div
+            key={p.id}
+            className="flex items-center gap-[0.625rem] border px-[0.875rem] py-[0.5rem]"
+            style={{
+              borderRadius: 'var(--radius)',
+              borderColor: p.id === playerId ? 'var(--primary)' : 'var(--divider)',
+              background: 'var(--surface)',
+            }}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.24 }}
+          >
+            {room.host_id === p.id
+              ? <Crown className="h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
+              : <Sparkles className="h-4 w-4 shrink-0" style={{ color: 'var(--muted)' }} />}
+            <span className="min-w-0 flex-1 truncate text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+              {p.name}{p.id === playerId ? ' (you)' : ''}
+            </span>
+            {room.host_id === p.id && (
+              <span className="shrink-0 text-[0.58rem] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--primary)' }}>
+                {wc.host}
+              </span>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-[1.25rem] flex flex-col gap-[0.625rem]">
+        {isHost ? (
+          <motion.button
+            type="button"
+            onClick={onStartGame}
+            disabled={!canStart || isBusy}
+            className={`${btnBase} w-full`}
+            style={{
+              borderRadius: 'var(--radius)',
+              background: 'var(--primary)',
+              color: isArcade ? '#000' : 'var(--surface)',
+              boxShadow: isArcade ? '0 0 14px var(--primary), 0 0 28px rgba(255,0,255,0.4)' : 'var(--shadow)',
+            }}
+            whileHover={canStart ? { scale: 1.02, y: -1 } : {}}
+            whileTap={canStart ? { scale: 0.97 } : {}}
+          >
+            <Sparkles className="h-4 w-4" />
+            {wc.start}
+          </motion.button>
+        ) : (
+          <motion.p
+            className="text-center text-xs"
+            style={{ color: 'var(--muted)' }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 2.2 }}
+          >
+            {wc.waitHost}
+          </motion.p>
+        )}
+        {isHost && !canStart && (
+          <p className="text-center text-[0.68rem]" style={{ color: 'var(--muted)' }}>{wc.needMore}</p>
+        )}
+
+        <button
+          type="button"
+          onClick={onLeaveRoom}
+          className={`${btnBase} border`}
+          style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'transparent', color: 'var(--muted)' }}
+        >
+          <LogOut className="h-4 w-4" />
+          {wc.leave}
+        </button>
+      </div>
     </motion.div>
   );
 };
@@ -223,10 +353,21 @@ const ChipGroup = ({ label, options, value, onChange, isArcade }) => (
 
 // ─── Lobby ─────────────────────────────────────────────────────────────────────
 
-const CategoryBlitzLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) => {
+const CategoryBlitzLobby = ({
+  room,
+  playerId,
+  isHost,
+  onCreateRoom,
+  onJoinRoom,
+  onStartGame,
+  onLeaveRoom,
+  isBusy,
+  error,
+}) => {
   const { theme } = useTheme();
   const [mode, setMode]         = useState(null);
   const [joinCode, setJoinCode] = useState('');
+  const inWaitingRoom = Boolean(room);
 
   // Create flow config
   const [timerSeconds,  setTimerSeconds]  = useState(90);
@@ -304,7 +445,7 @@ const CategoryBlitzLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode 
 
           {/* Description */}
           <AnimatePresence>
-            {!mode && (
+            {!mode && !inWaitingRoom && (
               <motion.p
                 variants={childVariants}
                 className="mx-auto mt-[1rem] max-w-[22rem] text-sm leading-6 sm:text-base"
@@ -319,6 +460,7 @@ const CategoryBlitzLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode 
           </AnimatePresence>
 
           {/* ── Mode switcher ─────────────────────────────────────────────── */}
+          {!inWaitingRoom && (
           <AnimatePresence mode="wait">
 
             {/* Default: two entry buttons */}
@@ -439,10 +581,6 @@ const CategoryBlitzLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode 
                     {isArcade ? 'CREATE ROOM' : isPink ? 'create room ♡' : 'Create Room'}
                   </motion.button>
                 </div>
-
-                <AnimatePresence>
-                  {roomCode && <RoomCodeDisplay roomCode={roomCode} isArcade={isArcade} />}
-                </AnimatePresence>
               </motion.div>
             )}
 
@@ -520,6 +658,19 @@ const CategoryBlitzLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode 
             )}
 
           </AnimatePresence>
+          )}
+
+          {inWaitingRoom && (
+            <WaitingRoom
+              room={room}
+              playerId={playerId}
+              isHost={isHost}
+              onStartGame={onStartGame}
+              onLeaveRoom={onLeaveRoom}
+              isBusy={isBusy}
+              isArcade={isArcade}
+            />
+          )}
 
           {/* Error */}
           <AnimatePresence>

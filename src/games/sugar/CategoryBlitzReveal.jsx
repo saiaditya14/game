@@ -1,87 +1,82 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, ThumbsDown, Copy, Trophy, RotateCcw } from 'lucide-react';
+import { Trophy, RotateCcw, Vote, MinusCircle, Users } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
-import { computeScores } from './CategoryBlitzRules';
+import { computeScores, resolveWinner } from './CategoryBlitzRules';
 
 // ─── Per-theme copy ───────────────────────────────────────────────────────────
 
 const copyByTheme = {
   'theme-pink': {
-    reviewTitle: 'judge their answers~ ♡',
-    reviewHint:  "tap thumbs up if it's fair, thumbs down if it's not",
-    yourAnswer:  'you wrote',
-    theirAnswer: 'they wrote',
-    dupe:        'same answer — no points either way',
-    confirm:     'confirm my reviews ♡',
-    waitingThem: 'waiting for them to finish reviewing…',
+    reviewTitle: 'cast your votes~ ♡',
+    reviewHint:  'pick the best answer in each category, or abstain',
+    abstain:     'abstain',
+    noAnswers:   '(no one else answered — skipped)',
+    confirm:     'confirm my votes ♡',
+    waitingOthers: (n) => `waiting for ${n} more…`,
     youWin:      'you won!! ♡',
-    theyWin:     'they won this one :(',
+    otherWins:   (name) => `${name} won this one!`,
     draw:        "it's a tie~",
     playAgain:   'play again ♡',
     exit:        'exit game',
-    empty:       '(blank)',
+    results:     'results',
+    votes:       'votes',
+    noVotes:     'no votes',
   },
   'theme-arcade': {
-    reviewTitle: 'JUDGE THEIR ANSWERS',
-    reviewHint:  'THUMBS UP IF FAIR, THUMBS DOWN IF NOT',
-    yourAnswer:  'YOU WROTE',
-    theirAnswer: 'THEY WROTE',
-    dupe:        'IDENTICAL — NO POINTS EITHER WAY',
-    confirm:     'CONFIRM MY REVIEWS',
-    waitingThem: 'WAITING FOR THEM TO FINISH REVIEWING…',
+    reviewTitle: 'CAST YOUR VOTES',
+    reviewHint:  'PICK THE BEST ANSWER PER CATEGORY, OR ABSTAIN',
+    abstain:     'ABSTAIN',
+    noAnswers:   '(NO OTHER ANSWERS — SKIPPED)',
+    confirm:     'CONFIRM MY VOTES',
+    waitingOthers: (n) => `WAITING FOR ${n} MORE…`,
     youWin:      'YOU WIN!',
-    theyWin:     'THEY WON THIS ROUND',
+    otherWins:   (name) => `${name} WINS THIS ROUND`,
     draw:        'DRAW!',
     playAgain:   'PLAY AGAIN',
     exit:        'EXIT',
-    empty:       '(BLANK)',
+    results:     'RESULTS',
+    votes:       'VOTES',
+    noVotes:     'NO VOTES',
   },
   'theme-cozy': {
-    reviewTitle: 'judge their answers',
-    reviewHint:  "thumbs up if it's fair, thumbs down if not",
-    yourAnswer:  'you wrote',
-    theirAnswer: 'they wrote',
-    dupe:        'same answer — no points either way',
-    confirm:     'confirm my reviews',
-    waitingThem: 'waiting for them to finish reviewing…',
+    reviewTitle: 'cast your votes',
+    reviewHint:  'pick the best answer in each category, or abstain',
+    abstain:     'abstain',
+    noAnswers:   '(no one else answered — skipped)',
+    confirm:     'confirm my votes',
+    waitingOthers: (n) => `waiting for ${n} more…`,
     youWin:      'you won ✨',
-    theyWin:     'they won this one',
+    otherWins:   (name) => `${name} won this one`,
     draw:        'a draw~',
     playAgain:   'play again',
     exit:        'exit game',
-    empty:       '(blank)',
+    results:     'results',
+    votes:       'votes',
+    noVotes:     'no votes',
   },
   'theme-champagne': {
-    reviewTitle: 'Judge their answers',
-    reviewHint:  "Thumbs up if it's fair, thumbs down if not.",
-    yourAnswer:  'You wrote',
-    theirAnswer: 'They wrote',
-    dupe:        'Identical answer — no points either way',
-    confirm:     'Confirm my reviews',
-    waitingThem: 'Waiting for them to finish reviewing…',
+    reviewTitle: 'Cast your votes',
+    reviewHint:  'Pick the best answer in each category, or abstain.',
+    abstain:     'Abstain',
+    noAnswers:   '(No other answers — skipped)',
+    confirm:     'Confirm my votes',
+    waitingOthers: (n) => `Waiting for ${n} more…`,
     youWin:      'You win!',
-    theyWin:     'They won this round',
+    otherWins:   (name) => `${name} wins this round`,
     draw:        'Draw',
     playAgain:   'Play again',
     exit:        'Exit game',
-    empty:       '(blank)',
+    results:     'Results',
+    votes:       'votes',
+    noVotes:     'No votes',
   },
 };
 
-// Functional status colors: fixed for approve/reject so verdicts read
-// identically everywhere; a per-theme tint for the neutral "duplicate" state
-// (same pattern as ABSENT_BY_THEME in WordRaceBoard.jsx).
-const APPROVE_COLOR = '#16a34a';
-const APPROVE_GLOW   = '#00e676';
-const REJECT_COLOR  = '#dc2626';
-const REJECT_GLOW    = '#ff3b5c';
-const DUPE_BY_THEME = {
-  'theme-pink':      '#8a5b68',
-  'theme-champagne': '#8a7350',
-  'theme-arcade':    '#0d0d10',
-  'theme-cozy':      '#5c4630',
-};
+// Functional status colors: a fixed "selected vote" tint so a cast vote reads
+// identically across every theme (same reasoning as APPROVE_COLOR before).
+const VOTE_COLOR = '#16a34a';
+const VOTE_GLOW   = '#00e676';
 
 const rowContainerVariants = {
   hidden: {},
@@ -92,70 +87,61 @@ const rowVariants = {
   show:   { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const CategoryBlitzReveal = ({
-  room,
-  playerNumber,
-  onConfirmReview,
-  onPlayAgain,
-  onExit,
-}) => {
+const CategoryBlitzReveal = ({ room, playerId, onConfirmVotes, onPlayAgain, onExit }) => {
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
   const copy = copyByTheme[theme] ?? copyByTheme['theme-champagne'];
 
   const categories = room?.categories ?? [];
-  const isOne = playerNumber === 1;
+  const players = useMemo(() => (Array.isArray(room?.players) ? room.players : []), [room?.players]);
+  const answers = room?.answers ?? {};
+  const reviewsDone = room?.reviews_done ?? {};
 
-  // I judge the OTHER player's answers, writing into "their" approvals column.
-  const partnerAnswers  = isOne ? room?.answers_two   : room?.answers_one;
-  const myApprovals     = isOne ? room?.approvals_two : room?.approvals_one;
-  const myReviewDone    = isOne ? room?.review_one_done : room?.review_two_done;
-  const partnerReviewDone = isOne ? room?.review_two_done : room?.review_one_done;
-  const myOwnAnswers    = isOne ? room?.answers_one   : room?.answers_two;
-
-  const [confirmed, setConfirmed] = useState(Boolean(myReviewDone));
-
-  // Track my verdicts LOCALLY and commit them in one atomic write at confirm.
-  // Writing each toggle straight to the DB raced: every write overwrote the
-  // whole approvals array from a stale realtime snapshot, so rapid clicks lost
-  // all but the last verdict and scores collapsed toward ~1 each. (Caught by E2E.)
-  const [verdicts, setVerdicts] = useState(() =>
-    (Array.isArray(myApprovals) && myApprovals.length === categories.length)
-      ? [...myApprovals]
+  const myExistingVotes = room?.votes?.[playerId];
+  const [localVotes, setLocalVotes] = useState(() =>
+    (Array.isArray(myExistingVotes) && myExistingVotes.length === categories.length)
+      ? [...myExistingVotes]
       : categories.map(() => null),
   );
-  const setVerdict = (index, value) =>
-    setVerdicts((prev) => { const next = [...prev]; next[index] = value; return next; });
+  const [confirmed, setConfirmed] = useState(Boolean(reviewsDone[playerId]));
+
+  const setVote = (index, targetId) =>
+    setLocalVotes((prev) => { const next = [...prev]; next[index] = targetId; return next; });
 
   const isOver = room?.status === 'finished';
 
   const results = useMemo(() => {
     if (!isOver) return null;
     return computeScores({
+      players,
       categories,
-      answersOne: room?.answers_one ?? [],
-      answersTwo: room?.answers_two ?? [],
-      approvalsOne: room?.approvals_one ?? [],
-      approvalsTwo: room?.approvals_two ?? [],
+      answers,
+      votes: room?.votes ?? {},
     });
-  }, [isOver, categories, room?.answers_one, room?.answers_two, room?.approvals_one, room?.approvals_two]);
+  }, [isOver, players, categories, answers, room?.votes]);
 
-  const scoreOne = isOver ? (room?.score_one ?? results?.scoreOne ?? 0) : null;
-  const scoreTwo = isOver ? (room?.score_two ?? results?.scoreTwo ?? 0) : null;
-  const myScore  = isOver ? (isOne ? scoreOne : scoreTwo) : null;
-  const theirScore = isOver ? (isOne ? scoreTwo : scoreOne) : null;
-  const didIWin = isOver && room?.winner === playerNumber;
-  const didTheyWin = isOver && room?.winner !== null && room?.winner !== playerNumber;
-  const isDraw = isOver && room?.winner === null;
+  const scores = isOver ? (room?.scores ?? results?.scores ?? {}) : null;
+  const winnerId = isOver ? (room?.winner ?? resolveWinner(scores)) : null;
+  const isDraw = isOver && winnerId === null;
+  const didIWin = isOver && winnerId === playerId;
+  const winnerName = isOver && winnerId ? (players.find((p) => p.id === winnerId)?.name ?? '') : '';
 
-  const confirmReview = () => {
+  const sortedPlayers = useMemo(() => {
+    if (!isOver || !scores) return [];
+    return [...players].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+  }, [isOver, scores, players]);
+
+  const reviewedCount = players.filter((p) => reviewsDone[p.id]).length;
+  const remainingCount = Math.max(0, players.length - reviewedCount);
+
+  const confirmVotes = () => {
     setConfirmed(true);
-    onConfirmReview(verdicts);
+    onConfirmVotes(localVotes);
   };
 
   return (
     <main
-      className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-[42rem] flex-col px-[1rem] py-[1.5rem]"
+      className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-[46rem] flex-col px-[1rem] py-[1.5rem]"
       style={{ color: 'var(--foreground)' }}
     >
       {!isOver && (
@@ -170,7 +156,7 @@ const CategoryBlitzReveal = ({
           </header>
 
           <motion.section
-            className="mt-[1.5rem] flex flex-1 flex-col gap-[0.75rem] border p-[1rem]"
+            className="mt-[1.5rem] flex flex-1 flex-col gap-[1rem] border p-[1rem]"
             style={{
               borderRadius: 'var(--radius)',
               borderColor: 'var(--divider)',
@@ -182,84 +168,74 @@ const CategoryBlitzReveal = ({
             animate="show"
           >
             {categories.map((category, i) => {
-              const mine = myOwnAnswers?.[i] ?? '';
-              const theirs = partnerAnswers?.[i] ?? '';
-              const normMine = String(mine).trim().toLowerCase();
-              const normTheirs = String(theirs).trim().toLowerCase();
-              const isDupe = Boolean(normMine) && Boolean(normTheirs) && normMine === normTheirs;
-              const verdict = verdicts[i];
-              const canJudge = Boolean(normTheirs) && !isDupe && !confirmed;
+              const options = players
+                .filter((p) => p.id !== playerId)
+                .map((p) => ({ id: p.id, name: p.name, answer: String(answers?.[p.id]?.[i] ?? '') }))
+                .filter((o) => o.answer.trim() !== '');
+              const myVote = localVotes[i];
 
               return (
                 <motion.div
                   key={category}
-                  className="flex flex-col gap-[0.5rem] border-b pb-[0.75rem] last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-[0.5rem] border-b pb-[1rem] last:border-b-0 last:pb-0"
                   style={{ borderColor: 'var(--divider)' }}
                   variants={rowVariants}
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-                      {category}
-                    </p>
-                    <p className="mt-[0.15rem] text-sm" style={{ color: 'var(--foreground)', opacity: 0.75 }}>
-                      {copy.yourAnswer}: <strong>{mine || copy.empty}</strong>
-                    </p>
-                    <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
-                      {copy.theirAnswer}: {theirs || copy.empty}
-                    </p>
-                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+                    {category}
+                  </p>
 
-                  {isDupe ? (
-                    <span
-                      className="inline-flex shrink-0 items-center gap-[0.3rem] px-[0.625rem] py-[0.3rem] text-[0.62rem] font-bold uppercase tracking-[0.08em]"
-                      style={{
-                        borderRadius: 'var(--radius)',
-                        background: DUPE_BY_THEME[theme] ?? DUPE_BY_THEME['theme-champagne'],
-                        color: '#ffffff',
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                      {copy.dupe}
-                    </span>
+                  {options.length === 0 ? (
+                    <p className="text-sm" style={{ color: 'var(--muted)' }}>{copy.noAnswers}</p>
                   ) : (
-                    <div className="flex shrink-0 gap-[0.4rem]">
+                    <div className="flex flex-wrap gap-[0.5rem]">
+                      {options.map((opt) => {
+                        const isSelected = myVote === opt.id;
+                        return (
+                          <motion.button
+                            key={opt.id}
+                            type="button"
+                            disabled={confirmed}
+                            onClick={() => setVote(i, opt.id)}
+                            className="flex min-w-[8rem] flex-1 flex-col items-start gap-[0.15rem] border px-[0.875rem] py-[0.625rem] text-left transition disabled:cursor-not-allowed"
+                            style={{
+                              borderRadius: 'var(--radius)',
+                              borderColor: isSelected ? VOTE_COLOR : 'var(--divider)',
+                              background: isSelected ? (isArcade ? 'rgba(0,230,118,0.10)' : 'var(--surface-strong)') : 'transparent',
+                              boxShadow: isArcade && isSelected ? `0 0 10px ${VOTE_GLOW}` : undefined,
+                            }}
+                            whileHover={!confirmed ? { scale: 1.02 } : {}}
+                            whileTap={!confirmed ? { scale: 0.97 } : {}}
+                          >
+                            <span
+                              className="flex items-center gap-[0.3rem] text-[0.6rem] font-bold uppercase tracking-[0.1em]"
+                              style={{ color: isSelected ? VOTE_COLOR : 'var(--muted)' }}
+                            >
+                              <Vote className="h-3 w-3" />
+                              {opt.name}
+                            </span>
+                            <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                              {opt.answer}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
                       <motion.button
                         type="button"
-                        disabled={!canJudge}
-                        onClick={() => setVerdict(i, true)}
-                        className="grid h-[2.25rem] w-[2.25rem] place-items-center border transition disabled:cursor-not-allowed"
+                        disabled={confirmed}
+                        onClick={() => setVote(i, null)}
+                        className="flex min-w-[6rem] items-center justify-center gap-[0.3rem] border px-[0.875rem] py-[0.625rem] text-xs font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed"
                         style={{
                           borderRadius: 'var(--radius)',
-                          borderColor: verdict === true ? APPROVE_COLOR : 'var(--divider)',
-                          background: verdict === true ? APPROVE_COLOR : 'transparent',
-                          color: verdict === true ? '#ffffff' : 'var(--muted)',
-                          boxShadow: isArcade && verdict === true ? `0 0 10px ${APPROVE_GLOW}` : undefined,
-                          opacity: !normTheirs ? 0.4 : 1,
+                          borderColor: myVote == null ? 'var(--primary)' : 'var(--divider)',
+                          color: myVote == null ? 'var(--primary)' : 'var(--muted)',
+                          background: 'transparent',
                         }}
-                        whileHover={canJudge ? { scale: 1.1 } : {}}
-                        whileTap={canJudge ? { scale: 0.9 } : {}}
-                        aria-label="Approve answer"
+                        whileHover={!confirmed ? { scale: 1.04 } : {}}
+                        whileTap={!confirmed ? { scale: 0.95 } : {}}
                       >
-                        <ThumbsUp className="h-4 w-4" />
-                      </motion.button>
-                      <motion.button
-                        type="button"
-                        disabled={!canJudge}
-                        onClick={() => setVerdict(i, false)}
-                        className="grid h-[2.25rem] w-[2.25rem] place-items-center border transition disabled:cursor-not-allowed"
-                        style={{
-                          borderRadius: 'var(--radius)',
-                          borderColor: verdict === false ? REJECT_COLOR : 'var(--divider)',
-                          background: verdict === false ? REJECT_COLOR : 'transparent',
-                          color: verdict === false ? '#ffffff' : 'var(--muted)',
-                          boxShadow: isArcade && verdict === false ? `0 0 10px ${REJECT_GLOW}` : undefined,
-                          opacity: !normTheirs ? 0.4 : 1,
-                        }}
-                        whileHover={canJudge ? { scale: 1.1 } : {}}
-                        whileTap={canJudge ? { scale: 0.9 } : {}}
-                        aria-label="Reject answer"
-                      >
-                        <ThumbsDown className="h-4 w-4" />
+                        <MinusCircle className="h-3.5 w-3.5" />
+                        {copy.abstain}
                       </motion.button>
                     </div>
                   )}
@@ -274,7 +250,7 @@ const CategoryBlitzReveal = ({
                 <motion.button
                   key="confirm"
                   type="button"
-                  onClick={confirmReview}
+                  onClick={confirmVotes}
                   className="inline-flex min-h-[2.75rem] w-full items-center justify-center gap-[0.5rem] px-[1.5rem] py-[0.75rem] text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
                   style={{
                     borderRadius: 'var(--radius)',
@@ -291,16 +267,24 @@ const CategoryBlitzReveal = ({
                   {copy.confirm}
                 </motion.button>
               ) : (
-                <motion.p
+                <motion.div
                   key="waiting"
-                  className="text-center text-sm"
+                  className="flex items-center justify-center gap-[0.4rem] text-center text-sm"
                   style={{ color: 'var(--muted)' }}
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 2.2 }}
+                  animate={{ opacity: 1 }}
                 >
-                  {partnerReviewDone ? '' : copy.waitingThem}
-                </motion.p>
+                  {remainingCount > 0 && (
+                    <motion.span
+                      className="flex items-center gap-[0.4rem]"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ repeat: Infinity, duration: 2.2 }}
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      {copy.waitingOthers(remainingCount)}
+                    </motion.span>
+                  )}
+                </motion.div>
               )}
             </AnimatePresence>
           </footer>
@@ -319,7 +303,7 @@ const CategoryBlitzReveal = ({
           >
             <motion.div
               style={{
-                width: '100%', maxWidth: '28rem', maxHeight: '86vh', overflowY: 'auto', padding: '2rem', textAlign: 'center',
+                width: '100%', maxWidth: '30rem', maxHeight: '86vh', overflowY: 'auto', padding: '2rem', textAlign: 'center',
                 border: '1px solid var(--ring)', borderRadius: 'var(--radius)', background: 'var(--surface)',
                 boxShadow: isArcade ? '0 0 0 1px var(--ring), 0 0 40px rgba(0,255,255,0.12), 0 0 80px rgba(255,0,255,0.08)' : 'var(--shadow)',
               }}
@@ -345,37 +329,56 @@ const CategoryBlitzReveal = ({
                 className="mt-[0.375rem] font-serif text-3xl font-medium"
                 style={{ color: 'var(--foreground)', ...(isArcade && didIWin ? { textShadow: '0 0 16px var(--primary), 0 0 32px rgba(255,0,255,0.5)' } : {}) }}
               >
-                {didIWin ? copy.youWin : didTheyWin ? copy.theyWin : copy.draw}
+                {didIWin ? copy.youWin : isDraw ? copy.draw : copy.otherWins(winnerName)}
               </h2>
 
               <div
-                className="mt-[1.25rem] flex items-center justify-center gap-[1.5rem] border px-[1.5rem] py-[1rem]"
+                className="mt-[1.25rem] flex flex-col gap-[0.4rem] border px-[1.25rem] py-[1rem] text-left"
                 style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'var(--surface-strong)' }}
               >
-                <div>
-                  <p className="text-[0.6rem] uppercase tracking-[0.16em]" style={{ color: 'var(--muted)' }}>you</p>
-                  <p className="mt-[0.15rem] text-2xl font-black" style={{ color: 'var(--primary)' }}>{myScore}</p>
-                </div>
-                <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--divider)' }} />
-                <div>
-                  <p className="text-[0.6rem] uppercase tracking-[0.16em]" style={{ color: 'var(--muted)' }}>them</p>
-                  <p className="mt-[0.15rem] text-2xl font-black" style={{ color: 'var(--foreground)' }}>{theirScore}</p>
-                </div>
+                <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--muted)' }}>
+                  {copy.results}
+                </p>
+                {sortedPlayers.map((p) => {
+                  const isWinnerRow = winnerId === p.id;
+                  const isMe = p.id === playerId;
+                  return (
+                    <div key={p.id} className="flex items-center justify-between gap-[0.5rem] py-[0.15rem]">
+                      <span
+                        className="flex min-w-0 items-center gap-[0.4rem] truncate text-sm font-bold"
+                        style={{ color: isWinnerRow ? 'var(--primary)' : 'var(--foreground)' }}
+                      >
+                        {isWinnerRow && <Trophy className="h-3.5 w-3.5 shrink-0" />}
+                        {p.name}{isMe ? ' (you)' : ''}
+                      </span>
+                      <span className="shrink-0 font-mono text-lg font-black" style={{ color: isWinnerRow ? 'var(--primary)' : 'var(--foreground)' }}>
+                        {scores?.[p.id] ?? 0}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-[1.25rem] flex flex-col gap-[0.4rem] text-left">
-                {results?.perCategory?.map((row) => (
-                  <div
-                    key={row.category}
-                    className="flex items-center justify-between gap-[0.5rem] border-b px-[0.25rem] py-[0.35rem] text-xs"
-                    style={{ borderColor: 'var(--divider)' }}
-                  >
-                    <span style={{ color: 'var(--muted)' }} className="truncate">{row.category}</span>
-                    <span className="shrink-0 font-bold" style={{ color: 'var(--foreground)' }}>
-                      {row.scoreOne + row.scoreTwo === 0 && (row.answerOne || row.answerTwo) ? '0 pts' : `+${row.scoreOne + row.scoreTwo}`}
-                    </span>
-                  </div>
-                ))}
+                {results?.perCategory?.map((row) => {
+                  const entries = Object.entries(row.votesReceived).filter(([, v]) => v > 0);
+                  return (
+                    <div
+                      key={row.category}
+                      className="flex items-center justify-between gap-[0.5rem] border-b px-[0.25rem] py-[0.35rem] text-xs"
+                      style={{ borderColor: 'var(--divider)' }}
+                    >
+                      <span style={{ color: 'var(--muted)' }} className="truncate">{row.category}</span>
+                      <span className="shrink-0 text-right font-bold" style={{ color: 'var(--foreground)' }}>
+                        {entries.length === 0
+                          ? copy.noVotes
+                          : entries
+                              .map(([pid, v]) => `${players.find((p) => p.id === pid)?.name ?? '?'} +${v}`)
+                              .join(', ')}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-[1.5rem] flex flex-col gap-[0.75rem]">

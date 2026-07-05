@@ -8,6 +8,7 @@ import CategoryBlitzReveal from './CategoryBlitzReveal';
 import GameExitScreen from './GameExitScreen';
 
 const PLAYER_ID_KEY = 'lovelyland-category-blitz-player-id';
+const MAX_PLAYERS = 8;
 
 const getOrCreatePlayerId = () => {
   const existing = window.localStorage.getItem(PLAYER_ID_KEY);
@@ -22,11 +23,7 @@ const getOrCreatePlayerId = () => {
 const generateRoomCode = () =>
   Math.random().toString(36).slice(2, 8).toUpperCase();
 
-const getPlayerNumber = (room, playerId) => {
-  if (room?.player_one === playerId) return 1;
-  if (room?.player_two === playerId) return 2;
-  return null;
-};
+const playersOf = (room) => (Array.isArray(room?.players) ? room.players : []);
 
 const CategoryBlitz = () => {
   const navigate = useNavigate();
@@ -35,7 +32,9 @@ const CategoryBlitz = () => {
   const [error, setError]   = useState('');
   const [isBusy, setIsBusy] = useState(false);
 
-  const playerNumber = getPlayerNumber(room, playerId);
+  const players  = playersOf(room);
+  const myPlayer = players.find((p) => p.id === playerId) ?? null;
+  const isHost   = Boolean(room) && room.host_id === playerId;
 
   // ── Realtime subscription ──────────────────────────────────────────────────
 
@@ -52,7 +51,7 @@ const CategoryBlitz = () => {
     return () => { supabase.removeChannel(channel); };
   }, [room?.id]);
 
-  // ── Navigate both players home on abort or exit ────────────────────────────
+  // ── Navigate home on abort or exit ─────────────────────────────────────────
 
   useEffect(() => {
     if (room?.status !== 'aborted' && room?.status !== 'closed') return;
@@ -60,11 +59,20 @@ const CategoryBlitz = () => {
     return () => clearTimeout(t);
   }, [room?.status, navigate]);
 
-  // ── Playing → Reveal once both players have locked in answers ─────────────
+  // ── Playing → Reveal once EVERY player has submitted OR the timer expired ──
 
   useEffect(() => {
     if (!supabase || !room || room.status !== 'playing') return;
-    if (!room.submitted_one_at || !room.submitted_two_at) return;
+    const ids = playersOf(room).map((p) => p.id);
+    const submitted = room.submitted ?? {};
+    const allSubmitted = ids.length > 0 && ids.every((id) => submitted[id]);
+
+    const deadline = room.started_at && room.timer_seconds
+      ? new Date(room.started_at).getTime() + room.timer_seconds * 1000
+      : null;
+    const timeUp = Boolean(deadline) && Date.now() >= deadline;
+
+    if (!allSubmitted && !timeUp) return;
 
     supabase
       .from('category_blitz_rooms')
@@ -74,34 +82,35 @@ const CategoryBlitz = () => {
       .then(() => {});
   }, [room]);
 
-  // ── Reveal → Finished once both players confirm their reviews ─────────────
+  // ── Reveal → Finished once EVERY player has confirmed their votes ──────────
 
   useEffect(() => {
     if (!supabase || !room || room.status !== 'reveal') return;
-    if (!room.review_one_done || !room.review_two_done) return;
+    const ids = playersOf(room).map((p) => p.id);
+    const reviewsDone = room.reviews_done ?? {};
+    const allDone = ids.length > 0 && ids.every((id) => reviewsDone[id]);
+    if (!allDone) return;
 
-    const { scoreOne, scoreTwo } = computeScores({
+    const { scores } = computeScores({
+      players: playersOf(room),
       categories: room.categories ?? [],
-      answersOne: room.answers_one ?? [],
-      answersTwo: room.answers_two ?? [],
-      approvalsOne: room.approvals_one ?? [],
-      approvalsTwo: room.approvals_two ?? [],
+      answers: room.answers ?? {},
+      votes: room.votes ?? {},
     });
+    const winner = resolveWinner(scores);
 
     supabase
       .from('category_blitz_rooms')
-      .update({
-        status: 'finished',
-        score_one: scoreOne,
-        score_two: scoreTwo,
-        winner: resolveWinner(scoreOne, scoreTwo),
-      })
+      .update({ status: 'finished', scores, winner })
       .eq('id', room.id)
       .eq('status', 'reveal')
       .then(() => {});
   }, [room]);
 
   // ── Create room ────────────────────────────────────────────────────────────
+  // round_letter/categories are picked once here purely so the room remembers
+  // the creator's chosen category COUNT (there's no separate column for it);
+  // `startGame` below re-picks a fresh letter + category set for the real round.
 
   const createRoom = async (config = {}) => {
     const { timerSeconds = 90, categoryCount = 8 } = config;
@@ -118,14 +127,11 @@ const CategoryBlitz = () => {
       .insert({
         code:          generateRoomCode(),
         status:        'waiting',
-        player_one:    playerId,
+        host_id:       playerId,
+        players:       [{ id: playerId, name: 'Player 1' }],
         round_letter:  pickRandomLetter(),
         categories,
         timer_seconds: timerSeconds,
-        answers_one:   categories.map(() => ''),
-        answers_two:   categories.map(() => ''),
-        approvals_one: categories.map(() => null),
-        approvals_two: categories.map(() => null),
       })
       .select()
       .single();
@@ -134,7 +140,7 @@ const CategoryBlitz = () => {
     setRoom(data);
   };
 
-  // ── Join room ──────────────────────────────────────────────────────────────
+  // ── Join room (RPC — safely appends to the shared `players` array) ─────────
 
   const joinRoom = async (rawCode) => {
     setError('');
@@ -146,79 +152,77 @@ const CategoryBlitz = () => {
     if (code.length < 4) { setError('Enter the 4-6 character room code.'); return; }
     setIsBusy(true);
 
-    const { data: existing, error: lookupError } = await supabase
-      .from('category_blitz_rooms')
-      .select('*')
-      .eq('code', code)
-      .maybeSingle();
-    if (lookupError || !existing) {
-      setIsBusy(false);
-      setError('No Category Blitz room found for that code.');
-      return;
-    }
-    if (existing.player_one === playerId || existing.player_two === playerId) {
-      setIsBusy(false);
-      setRoom(existing);
-      return;
-    }
-    if (existing.player_two) {
-      setIsBusy(false);
-      setError('That room already has two players.');
-      return;
-    }
-
-    const { data, error: joinError } = await supabase
-      .from('category_blitz_rooms')
-      .update({ player_two: playerId, status: 'playing', started_at: new Date().toISOString() })
-      .eq('id', existing.id)
-      .is('player_two', null)
-      .select()
-      .single();
+    const { data, error: joinError } = await supabase.rpc('category_blitz_join', {
+      p_code: code,
+      p_player_id: playerId,
+    });
     setIsBusy(false);
-    if (joinError) { setError(joinError.message); return; }
+    if (joinError) {
+      if (joinError.message?.includes('ROOM_NOT_FOUND')) setError('No Category Blitz room found for that code.');
+      else if (joinError.message?.includes('ROOM_FULL')) setError(`That room already has ${MAX_PLAYERS} players.`);
+      else if (joinError.message?.includes('ROOM_NOT_JOINABLE')) setError('That room has already started.');
+      else setError(joinError.message);
+      return;
+    }
     setRoom(data);
   };
 
-  // ── Lock in answers (own column only) ──────────────────────────────────────
+  // ── Host starts the round from the waiting room ─────────────────────────────
 
-  const submitAnswers = async (answers) => {
-    if (!supabase || !room || room.status !== 'playing' || !playerNumber) return;
-    const isOne = playerNumber === 1;
-    if (isOne ? room.submitted_one_at : room.submitted_two_at) return;
+  const startGame = async () => {
+    if (!supabase || !room || room.status !== 'waiting' || !isHost) return;
+    if (players.length < 2) return;
+
+    const categoryCount = room.categories?.length || 8;
+    const categories = pickCategories(categoryCount);
+    const answers = Object.fromEntries(players.map((p) => [p.id, categories.map(() => '')]));
 
     await supabase
       .from('category_blitz_rooms')
       .update({
-        [isOne ? 'answers_one' : 'answers_two']: answers,
-        [isOne ? 'submitted_one_at' : 'submitted_two_at']: new Date().toISOString(),
+        status:       'playing',
+        started_at:   new Date().toISOString(),
+        round_letter: pickRandomLetter(),
+        categories,
+        answers,
+        submitted:     {},
+        votes:         {},
+        reviews_done:  {},
+        scores:        {},
+        winner:        null,
       })
       .eq('id', room.id)
-      .eq('status', 'playing');
+      .eq('status', 'waiting');
   };
 
-  // ── Confirm my review — commit my verdicts on the PARTNER's answers plus my
-  // review-done flag in ONE atomic write. I judge the other player's answers,
-  // so I write the column named after THEM. Writing per-toggle instead raced:
-  // concurrent whole-array overwrites from stale snapshots dropped verdicts.
+  // ── Lock in answers (own key only, via RPC) ─────────────────────────────────
 
-  const confirmReview = async (verdicts = []) => {
-    if (!supabase || !room || room.status !== 'reveal' || !playerNumber) return;
-    const isOne = playerNumber === 1;
-    await supabase
-      .from('category_blitz_rooms')
-      .update({
-        [isOne ? 'approvals_two' : 'approvals_one']: verdicts,
-        [isOne ? 'review_one_done' : 'review_two_done']: true,
-      })
-      .eq('id', room.id)
-      .eq('status', 'reveal');
+  const submitAnswers = async (answers) => {
+    if (!supabase || !room || room.status !== 'playing' || !myPlayer) return;
+    if (room.submitted?.[playerId]) return;
+    await supabase.rpc('category_blitz_submit_answers', {
+      p_room_id: room.id,
+      p_player_id: playerId,
+      p_answers: answers,
+    });
+  };
+
+  // ── Confirm my votes (own key only, via RPC) ────────────────────────────────
+
+  const confirmVotes = async (votes) => {
+    if (!supabase || !room || room.status !== 'reveal' || !myPlayer) return;
+    if (room.reviews_done?.[playerId]) return;
+    await supabase.rpc('category_blitz_submit_votes', {
+      p_room_id: room.id,
+      p_player_id: playerId,
+      p_votes: votes,
+    });
   };
 
   // ── Leave — one contextual control ─────────────────────────────────────────
-  // No opponent yet: nothing to forfeit, so it aborts the unstarted room.
-  // Mid-round (playing or reveal): the round is a shared timer + joint reveal,
-  // so there's no meaningful way for the other player to continue solo —
-  // leaving ends the whole room for both, same as an abort.
+  // Category Blitz shares a single timer + joint reveal across everyone, so
+  // there's no meaningful way for the room to continue without a player —
+  // leaving (at any stage before finish) ends the whole room for everyone.
 
   const leaveGame = async () => {
     if (!supabase || !room) { navigate('/'); return; }
@@ -226,7 +230,7 @@ const CategoryBlitz = () => {
     await supabase.from('category_blitz_rooms').update({ status: 'aborted' }).eq('id', room.id);
   };
 
-  // ── Exit — after game finishes, both clients navigate home ────────────────
+  // ── Exit — after game finishes, everyone navigates home ────────────────────
 
   const exitGame = async () => {
     if (!supabase || !room) { navigate('/'); return; }
@@ -241,25 +245,23 @@ const CategoryBlitz = () => {
 
   const playAgain = async () => {
     if (!supabase || !room) return;
-    const categories = pickCategories(room.categories?.length ?? 8);
+    const categoryCount = room.categories?.length ?? 8;
+    const categories = pickCategories(categoryCount);
+    const answers = Object.fromEntries(players.map((p) => [p.id, categories.map(() => '')]));
+
     await supabase
       .from('category_blitz_rooms')
       .update({
-        status:            'playing',
-        round_letter:      pickRandomLetter(),
+        status:       'playing',
+        round_letter: pickRandomLetter(),
         categories,
-        answers_one:       categories.map(() => ''),
-        answers_two:       categories.map(() => ''),
-        approvals_one:     categories.map(() => null),
-        approvals_two:     categories.map(() => null),
-        submitted_one_at:  null,
-        submitted_two_at:  null,
-        review_one_done:   false,
-        review_two_done:   false,
-        score_one:         null,
-        score_two:         null,
-        winner:            null,
-        started_at:        new Date().toISOString(),
+        answers,
+        submitted:    {},
+        votes:        {},
+        reviews_done: {},
+        scores:       {},
+        winner:       null,
+        started_at:   new Date().toISOString(),
       })
       .eq('id', room.id)
       .eq('status', 'finished');
@@ -267,14 +269,18 @@ const CategoryBlitz = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (!room || !playerNumber) {
+  if (!room || !myPlayer || room.status === 'waiting') {
     return (
       <CategoryBlitzLobby
+        room={room}
+        playerId={playerId}
+        isHost={isHost}
         onCreateRoom={createRoom}
         onJoinRoom={joinRoom}
+        onStartGame={startGame}
+        onLeaveRoom={leaveGame}
         isBusy={isBusy}
         error={error}
-        roomCode={room?.code}
       />
     );
   }
@@ -286,8 +292,8 @@ const CategoryBlitz = () => {
     return (
       <CategoryBlitzReveal
         room={room}
-        playerNumber={playerNumber}
-        onConfirmReview={confirmReview}
+        playerId={playerId}
+        onConfirmVotes={confirmVotes}
         onPlayAgain={playAgain}
         onExit={exitGame}
       />
@@ -297,7 +303,7 @@ const CategoryBlitz = () => {
   return (
     <CategoryBlitzBoard
       room={room}
-      playerNumber={playerNumber}
+      playerId={playerId}
       onSubmitAnswers={submitAnswers}
       onLeave={leaveGame}
     />

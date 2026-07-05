@@ -1,46 +1,38 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XCircle, Flag, Clock, Check } from 'lucide-react';
+import { Flag, Clock, Check, Users } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 
 // ─── Per-theme copy ───────────────────────────────────────────────────────────
 
 const copyByTheme = {
   'theme-pink': {
-    waitingP2:  'waiting for your partner to join~ ♡',
-    waitingSub: 'waiting for them to finish their list…',
     submitted:  "you're locked in ♡",
     submit:     'lock in answers ♡',
-    leave:      'leave game',
     forfeit:    'forfeit round',
     letter:     'the letter is',
+    lockedIn:   (n, total) => `${n} / ${total} locked in ♡`,
   },
   'theme-arcade': {
-    waitingP2:  'P2 JOINING…',
-    waitingSub: 'WAITING FOR THEM TO FINISH…',
     submitted:  'LOCKED IN',
     submit:     'LOCK IN ANSWERS',
-    leave:      'LEAVE GAME',
     forfeit:    'FORFEIT ROUND',
     letter:     'THE LETTER IS',
+    lockedIn:   (n, total) => `${n} / ${total} LOCKED IN`,
   },
   'theme-cozy': {
-    waitingP2:  'waiting for your partner to join…',
-    waitingSub: 'waiting for them to finish their list…',
     submitted:  "you're locked in",
     submit:     'lock in answers',
-    leave:      'leave game',
     forfeit:    'forfeit round',
     letter:     'the letter is',
+    lockedIn:   (n, total) => `${n} / ${total} locked in`,
   },
   'theme-champagne': {
-    waitingP2:  'Waiting for Player 2',
-    waitingSub: 'Waiting for them to finish their list…',
     submitted:  "You're locked in",
     submit:     'Lock In Answers',
-    leave:      'Leave game',
     forfeit:    'Forfeit round',
     letter:     'The letter is',
+    lockedIn:   (n, total) => `${n} / ${total} locked in`,
   },
 };
 
@@ -66,24 +58,24 @@ const fieldVariants = {
   show:   { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) => {
+const CategoryBlitzBoard = ({ room, playerId, onSubmitAnswers, onLeave }) => {
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
-  const isPink   = theme === 'theme-pink';
   const copy = copyByTheme[theme] ?? copyByTheme['theme-champagne'];
 
   const categories = room?.categories ?? [];
-  const isOne = playerNumber === 1;
-  const ownAnswers = isOne ? room?.answers_one : room?.answers_two;
-  const ownSubmittedAt = isOne ? room?.submitted_one_at : room?.submitted_two_at;
-  const oppSubmittedAt = isOne ? room?.submitted_two_at : room?.submitted_one_at;
+  const players = useMemo(() => (Array.isArray(room?.players) ? room.players : []), [room?.players]);
+  const submittedMap = room?.submitted ?? {};
+  const lockedCount = players.filter((p) => submittedMap[p.id]).length;
+
+  const ownAnswers = room?.answers?.[playerId];
+  const ownSubmittedAt = submittedMap[playerId];
 
   const [answers, setAnswers] = useState(() => {
-    const base = ownSubmittedAt ? ownAnswers : [];
+    const base = ownSubmittedAt ? ownAnswers : null;
     return categories.map((_, i) => base?.[i] ?? '');
   });
 
-  const hasOpponent = Boolean(room?.player_two);
   const isSubmitted = Boolean(ownSubmittedAt);
   const submittedRef = useRef(isSubmitted);
   submittedRef.current = isSubmitted;
@@ -107,21 +99,21 @@ const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) =>
   }, [deadline]);
 
   // "Time's up" only counts once a REAL deadline exists and we've actually
-  // passed it — never when the timer simply hasn't initialized yet. On the
-  // creator's client `deadline` stays null until the opponent joins and
-  // `started_at` propagates; trusting a stale `remaining === 0` here would
-  // auto-submit the whole round the instant P2 joins. (Regression caught by E2E.)
+  // passed it — never when the timer simply hasn't initialized yet locally.
+  // Trusting a stale `remaining === 0` here would auto-submit the instant the
+  // component mounts before `deadline` is derived from realtime data.
+  // (Regression caught by E2E in the 2-player version — kept identical here.)
   const timeExpired = Boolean(deadline) && Date.now() >= deadline;
 
   // Auto-submit whatever's typed the instant the shared timer genuinely runs out.
   useEffect(() => {
-    if (!hasOpponent || submittedRef.current || !deadline) return;
+    if (submittedRef.current || !deadline) return;
     if (Date.now() < deadline) return;
     onSubmitAnswers(answers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remaining, hasOpponent, deadline]);
+  }, [remaining, deadline]);
 
-  const isInteractive = hasOpponent && !isSubmitted && !timeExpired;
+  const isInteractive = !isSubmitted && !timeExpired;
   const isTimeCritical = remaining <= TIMER_WARNING_THRESHOLD && remaining > 0 && !timeExpired;
 
   const setAnswer = (index, value) => {
@@ -178,7 +170,7 @@ const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) =>
             className="font-mono text-2xl font-black tabular-nums"
             style={{ color: isTimeCritical ? TIMER_WARNING_COLOR : 'var(--foreground)' }}
           >
-            {hasOpponent ? formatClock(remaining) : '--:--'}
+            {formatClock(remaining)}
           </span>
         </motion.div>
 
@@ -186,11 +178,12 @@ const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) =>
           className="flex min-w-0 flex-col items-center gap-[0.2rem] border px-[1rem] py-[0.625rem] sm:justify-self-end"
           style={{ borderColor: 'var(--divider)', borderRadius: 'var(--radius)', background: 'var(--surface)' }}
         >
-          <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--muted)' }}>
-            {isArcade ? 'THEM' : 'Them'}
+          <p className="flex items-center gap-[0.3rem] text-[0.62rem] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--muted)' }}>
+            <Users className="h-3 w-3" />
+            {isArcade ? 'PRESENCE' : 'Presence'}
           </p>
-          <p className="text-sm font-bold" style={{ color: oppSubmittedAt ? 'var(--primary)' : 'var(--muted)' }}>
-            {oppSubmittedAt ? (isArcade ? 'LOCKED IN' : 'Locked in') : (isArcade ? 'WRITING…' : 'Writing…')}
+          <p className="text-sm font-bold" style={{ color: lockedCount === players.length ? 'var(--primary)' : 'var(--foreground)' }}>
+            {copy.lockedIn(lockedCount, players.length)}
           </p>
         </div>
       </header>
@@ -210,110 +203,88 @@ const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) =>
         {isArcade && (
           <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)' }} />
         )}
-        {isPink && (
-          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 20%, rgba(251,113,133,0.08) 0%, transparent 70%)' }} />
-        )}
 
-        {!hasOpponent ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-[0.5rem]" style={{ position: 'relative', zIndex: 1 }}>
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--primary)' }}>
-              {isArcade ? 'ROOM CODE' : 'room code'}
-            </p>
-            <p className="font-mono text-4xl font-black tracking-[0.28em]" style={{ color: 'var(--foreground)' }}>
-              {room?.code}
-            </p>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <motion.div
+            className="grid gap-[0.75rem] sm:grid-cols-2"
+            variants={gridVariants}
+            initial="hidden"
+            animate="show"
+          >
+            {categories.map((category, i) => (
+              <motion.div key={category} className="flex flex-col gap-[0.3rem]" variants={fieldVariants}>
+                <label
+                  htmlFor={`category-blitz-${i}`}
+                  className="text-xs font-bold"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  {category}
+                </label>
+                <motion.input
+                  id={`category-blitz-${i}`}
+                  value={answers[i] ?? ''}
+                  onChange={(e) => setAnswer(i, e.target.value)}
+                  disabled={!isInteractive}
+                  placeholder={`${room?.round_letter}…`}
+                  className="min-h-[2.5rem] border px-[0.875rem] text-sm font-semibold outline-none transition focus:ring-2 focus:ring-[color:var(--ring)] disabled:opacity-70"
+                  style={{
+                    borderColor: 'var(--divider)',
+                    borderRadius: 'calc(var(--radius) * 0.6)',
+                    background: isArcade ? 'rgba(0,20,0,0.55)' : 'var(--surface-strong)',
+                    color: 'var(--foreground)',
+                  }}
+                  whileFocus={{ scale: 1.015 }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <AnimatePresence>
+            {isSubmitted ? (
+              <motion.div
+                key="locked"
+                className="mt-[1.5rem] flex items-center justify-center gap-[0.5rem] border px-[1rem] py-[0.75rem] text-sm font-bold"
+                style={{ borderRadius: 'var(--radius)', borderColor: 'var(--primary)', color: 'var(--primary)', background: 'var(--surface-strong)' }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <Check className="h-4 w-4" />
+                {copy.submitted}
+              </motion.div>
+            ) : (
+              <motion.button
+                key="submit"
+                type="button"
+                onClick={submit}
+                disabled={!isInteractive}
+                className="mt-[1.5rem] inline-flex min-h-[2.75rem] w-full items-center justify-center gap-[0.5rem] px-[1.5rem] py-[0.75rem] text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--primary)',
+                  color: isArcade ? '#000' : 'var(--surface)',
+                  boxShadow: isArcade ? '0 0 12px var(--primary), 0 0 24px rgba(255,0,255,0.3)' : 'var(--shadow)',
+                }}
+                whileHover={{ scale: 1.01, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Check className="h-4 w-4" />
+                {copy.submit}
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {isSubmitted && lockedCount < players.length && (
             <motion.p
-              className="mt-[0.5rem] text-sm"
+              className="mt-[0.75rem] text-center text-xs"
               style={{ color: 'var(--muted)' }}
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 2.2 }}
             >
-              {copy.waitingP2}
+              {copy.lockedIn(lockedCount, players.length)}
             </motion.p>
-          </div>
-        ) : (
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <motion.div
-              className="grid gap-[0.75rem] sm:grid-cols-2"
-              variants={gridVariants}
-              initial="hidden"
-              animate="show"
-            >
-              {categories.map((category, i) => (
-                <motion.div key={category} className="flex flex-col gap-[0.3rem]" variants={fieldVariants}>
-                  <label
-                    htmlFor={`category-blitz-${i}`}
-                    className="text-xs font-bold"
-                    style={{ color: 'var(--muted)' }}
-                  >
-                    {category}
-                  </label>
-                  <motion.input
-                    id={`category-blitz-${i}`}
-                    value={answers[i] ?? ''}
-                    onChange={(e) => setAnswer(i, e.target.value)}
-                    disabled={!isInteractive}
-                    placeholder={`${room?.round_letter}…`}
-                    className="min-h-[2.5rem] border px-[0.875rem] text-sm font-semibold outline-none transition focus:ring-2 focus:ring-[color:var(--ring)] disabled:opacity-70"
-                    style={{
-                      borderColor: 'var(--divider)',
-                      borderRadius: 'calc(var(--radius) * 0.6)',
-                      background: isArcade ? 'rgba(0,20,0,0.55)' : 'var(--surface-strong)',
-                      color: 'var(--foreground)',
-                    }}
-                    whileFocus={{ scale: 1.015 }}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-
-            <AnimatePresence>
-              {isSubmitted ? (
-                <motion.div
-                  key="locked"
-                  className="mt-[1.5rem] flex items-center justify-center gap-[0.5rem] border px-[1rem] py-[0.75rem] text-sm font-bold"
-                  style={{ borderRadius: 'var(--radius)', borderColor: 'var(--primary)', color: 'var(--primary)', background: 'var(--surface-strong)' }}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <Check className="h-4 w-4" />
-                  {copy.submitted}
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="submit"
-                  type="button"
-                  onClick={submit}
-                  disabled={!isInteractive}
-                  className="mt-[1.5rem] inline-flex min-h-[2.75rem] w-full items-center justify-center gap-[0.5rem] px-[1.5rem] py-[0.75rem] text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--primary)',
-                    color: isArcade ? '#000' : 'var(--surface)',
-                    boxShadow: isArcade ? '0 0 12px var(--primary), 0 0 24px rgba(255,0,255,0.3)' : 'var(--shadow)',
-                  }}
-                  whileHover={{ scale: 1.01, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Check className="h-4 w-4" />
-                  {copy.submit}
-                </motion.button>
-              )}
-            </AnimatePresence>
-
-            {isSubmitted && !oppSubmittedAt && (
-              <motion.p
-                className="mt-[0.75rem] text-center text-xs"
-                style={{ color: 'var(--muted)' }}
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 2.2 }}
-              >
-                {copy.waitingSub}
-              </motion.p>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </section>
 
       {/* ── Footer — one contextual leave/forfeit control ───────────────── */}
@@ -324,8 +295,8 @@ const CategoryBlitzBoard = ({ room, playerNumber, onSubmitAnswers, onLeave }) =>
           className="inline-flex min-h-[2.75rem] items-center gap-[0.5rem] border px-[1rem] py-[0.5rem] text-sm font-bold transition hover:-translate-y-[0.125rem] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
           style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--foreground)' }}
         >
-          {hasOpponent ? <Flag className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-          {hasOpponent ? copy.forfeit : copy.leave}
+          <Flag className="h-4 w-4" />
+          {copy.forfeit}
         </button>
       </footer>
     </main>

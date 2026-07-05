@@ -31,56 +31,90 @@ test('normalizeAnswer trims whitespace and lowercases', () => {
   assert.equal(normalizeAnswer(null), '');
 });
 
-test('computeScores awards a point for a non-empty, approved, non-duplicate answer', () => {
-  const { perCategory, scoreOne, scoreTwo } = computeScores({
+const PLAYERS3 = [
+  { id: 'p1', name: 'Player 1' },
+  { id: 'p2', name: 'Player 2' },
+  { id: 'p3', name: 'Player 3' },
+];
+
+test('computeScores tallies votes across 3 players', () => {
+  // Category 0: p1 gets 2 votes (from p2, p3), p2 gets 1 vote (from p1), p3 gets 0.
+  const { scores, perCategory } = computeScores({
+    players: PLAYERS3,
     categories: ['Fruits'],
-    answersOne: ['Banana'],
-    answersTwo: ['Apple'],
-    approvalsOne: [true],
-    approvalsTwo: [true],
+    answers: { p1: ['Apple'], p2: ['Banana'], p3: ['Cherry'] },
+    votes: { p1: ['p2'], p2: ['p1'], p3: ['p1'] },
   });
-  assert.equal(scoreOne, 1);
-  assert.equal(scoreTwo, 1);
-  assert.equal(perCategory[0].isDupe, false);
+  assert.equal(scores.p1, 2);
+  assert.equal(scores.p2, 1);
+  assert.equal(scores.p3, 0);
+  assert.deepEqual(perCategory[0].votesReceived, { p1: 2, p2: 1, p3: 0 });
 });
 
-test('computeScores zeroes out an unapproved answer', () => {
-  const { scoreOne } = computeScores({
+test('computeScores treats a null vote as an abstain', () => {
+  const { scores } = computeScores({
+    players: PLAYERS3,
     categories: ['Fruits'],
-    answersOne: ['Banana'],
-    answersTwo: [''],
-    approvalsOne: [false],
-    approvalsTwo: [],
+    answers: { p1: ['Apple'], p2: ['Banana'], p3: ['Cherry'] },
+    votes: { p1: [null], p2: ['p1'], p3: [null] },
   });
-  assert.equal(scoreOne, 0);
+  assert.equal(scores.p1, 1);
+  assert.equal(scores.p2, 0);
+  assert.equal(scores.p3, 0);
 });
 
-test('computeScores cancels identical answers regardless of approval', () => {
-  const { perCategory, scoreOne, scoreTwo } = computeScores({
+test('computeScores ignores a self-vote', () => {
+  const { scores } = computeScores({
+    players: PLAYERS3,
     categories: ['Fruits'],
-    answersOne: [' Banana'],
-    answersTwo: ['banana '],
-    approvalsOne: [true],
-    approvalsTwo: [true],
+    answers: { p1: ['Apple'], p2: ['Banana'], p3: ['Cherry'] },
+    votes: { p1: ['p1'], p2: ['p1'], p3: ['p1'] },
   });
-  assert.equal(perCategory[0].isDupe, true);
-  assert.equal(scoreOne, 0);
-  assert.equal(scoreTwo, 0);
+  // p1's own self-vote does not count, only p2 and p3's votes for p1 do.
+  assert.equal(scores.p1, 2);
 });
 
-test('computeScores gives zero for an empty answer even if approved', () => {
-  const { scoreOne } = computeScores({
+test('computeScores ignores a vote for an empty answer', () => {
+  const { scores } = computeScores({
+    players: PLAYERS3,
     categories: ['Fruits'],
-    answersOne: [''],
-    answersTwo: ['Apple'],
-    approvalsOne: [true],
-    approvalsTwo: [true],
+    answers: { p1: [''], p2: ['Banana'], p3: ['Cherry'] },
+    votes: { p2: ['p1'], p3: ['p1'] },
   });
-  assert.equal(scoreOne, 0);
+  assert.equal(scores.p1, 0);
 });
 
-test('resolveWinner picks the higher score and draws on a tie', () => {
-  assert.equal(resolveWinner(5, 3), 1);
-  assert.equal(resolveWinner(2, 6), 2);
-  assert.equal(resolveWinner(4, 4), null);
+test('computeScores ignores a vote for an unknown/removed player id', () => {
+  const { scores } = computeScores({
+    players: PLAYERS3,
+    categories: ['Fruits'],
+    answers: { p1: ['Apple'], p2: ['Banana'], p3: ['Cherry'] },
+    votes: { p1: ['ghost'], p2: ['p1'] },
+  });
+  assert.equal(scores.p1, 1);
+});
+
+test('computeScores in a 2-player room reduces to a single approve/abstain per category', () => {
+  const players2 = [{ id: 'p1', name: 'Player 1' }, { id: 'p2', name: 'Player 2' }];
+  const { scores } = computeScores({
+    players: players2,
+    categories: ['Fruits', 'Colors'],
+    answers: { p1: ['Apple', 'Amber'], p2: ['Banana', 'Blue'] },
+    // p1 approves p2's "Banana" but abstains on "Blue"; p2 approves both of p1's.
+    votes: { p1: ['p2', null], p2: ['p1', 'p1'] },
+  });
+  assert.equal(scores.p1, 2);
+  assert.equal(scores.p2, 1);
+});
+
+test('resolveWinner picks the single strictly-highest scorer', () => {
+  assert.equal(resolveWinner({ p1: 5, p2: 3, p3: 1 }), 'p1');
+});
+
+test('resolveWinner returns null on an exact tie', () => {
+  assert.equal(resolveWinner({ p1: 4, p2: 4 }), null);
+});
+
+test('resolveWinner returns null when scores are empty', () => {
+  assert.equal(resolveWinner({}), null);
 });
