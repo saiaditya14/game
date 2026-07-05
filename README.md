@@ -235,3 +235,15 @@ i want sparkles when the game get over and the congrats box pops up.
 
 Future Future:
 Monopoly could eventually get a dedicated phone interaction pattern instead of trying to make the full 15x15 board readable at extremely tiny viewport sizes, but phone is not the intended base target right now.
+
+
+Tic tac toe highlight bugfix
+,tic tac tow buttons redundancu exitt etc
+
+quick maths, timer would be nice
+
+category blitz expanded to multiplayer but only one vote per person (allow 2)
+
+Verbal memory but competitive
+
+Emotes (the sticker babie wated)
