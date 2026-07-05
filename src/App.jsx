@@ -13,6 +13,7 @@ import PastelMonopoly from './games/sugar/monopoly/PastelMonopoly';
 import TicTacToe from './games/sugar/TicTacToe';
 import QuickMathsDuel from './games/sugar/QuickMathsDuel';
 import WordRace from './games/sugar/WordRace';
+import CategoryBlitz from './games/sugar/CategoryBlitz';
 
 const ThemeScene = lazy(() => import('./components/ThemeScene'));
 
@@ -39,6 +40,7 @@ function App() {
             <Route path="/tic-tac-toe" element={<TicTacToe />} />
             <Route path="/quick-maths" element={<QuickMathsDuel />} />
             <Route path="/word-race" element={<WordRace />} />
+            <Route path="/category-blitz" element={<CategoryBlitz />} />
             <Route path="/monopoly" element={<PastelMonopoly />} />
           </Routes>
         </div>

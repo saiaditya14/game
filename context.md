@@ -98,6 +98,17 @@ Sugaropoly deferred visual polish:
 - Absent-letter tile color is a per-theme tint (not a generic surface token) — see `ABSENT_BY_THEME` in `WordRaceBoard.jsx`.
 - `GameExitScreen` (see below) is shared with Quick-Maths Duel.
 
+## Category Blitz
+
+- Source: `src/games/sugar/CategoryBlitz*.jsx` (root `CategoryBlitz.jsx` + `CategoryBlitzLobby.jsx`, `CategoryBlitzBoard.jsx`, `CategoryBlitzReveal.jsx`), pure `CategoryBlitzRules.js` (+ tests), vendored `categoryBlitzCategories.js` (public Scattergories list).
+- Route: `/category-blitz`.
+- Supabase migration: `supabase/migrations/20260704180000_create_category_blitz_rooms.sql` (applied to LOCAL supabase).
+- Scattergories-style: one random letter (`LETTER_POOL` excludes Q/U/V/X/Y/Z), a shared category list, race a timer synced from the room's `started_at`, then a partner-approval reveal + scoring screen. Single round for v1; creator picks timer (60/90/120s) + category count (6/8/10/12) at room creation.
+- Status flow: `waiting → playing → reveal → finished` (+ `aborted`/`closed`). Answers are PRIVATE during play (each side writes only its own `answers_one/two` + `submitted_*_at`); a `useEffect` flips `playing→reveal` once both submitted, and `reveal→finished` (computing scores + winner via `computeScores`/`resolveWinner`) once both `review_*_done`. Same asymmetric write pattern as Word Race.
+- Scoring is **partner approval, not dictionary validation**: each player judges the OTHER's answers (player 1 writes `approvals_two`, player 2 writes `approvals_one`). Identical answers between players auto-cancel to 0. Approve/reject status colors are fixed hex + a per-theme `DUPE_BY_THEME` tint.
+- Two realtime race bugs were fixed during the two-player E2E pass and must not regress: (a) the board's countdown must gate "time's up" on `Boolean(deadline) && Date.now() >= deadline`, never on a stale `remaining` (else the room creator is force-submitted the instant P2 joins); (b) review verdicts are held in LOCAL state in `CategoryBlitzReveal` and written in ONE update at confirm — never per-toggle whole-array writes (which race and lose updates).
+- Reuses shared `GameExitScreen`; one contextual Leave/Forfeit button.
+
 ## Shared abort / game-over modal
 
 - `src/games/sugar/GameExitScreen.jsx` — extracted from `QuickMathsDuel.jsx` during the Word Race build. Handles `status="aborted"` and `status="closed"`, both auto-navigating home after 1.8s. Currently consumed by Quick-Maths Duel and Word Race only; other games (Tic-Tac-Toe, Connect Four) keep their own abort screens until a later retrofit pass.

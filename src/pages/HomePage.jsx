@@ -461,6 +461,17 @@ const HomePage = () => {
                 />
               </Link>
             </motion.div>
+            <motion.div variants={cardItemVariants}>
+              <Link to="/category-blitz" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Category Blitz"
+                  description="One random letter, a page of categories. Race the timer, then judge each other's answers."
+                  badge="New"
+                  category="Party"
+                  meta="2 player live"
+                />
+              </Link>
+            </motion.div>
             {newGames.map((game) => (
               <motion.div key={game.title} variants={cardItemVariants}>
                 <GameCard {...game} />

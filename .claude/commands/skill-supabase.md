@@ -79,6 +79,26 @@ Schema file: `src/games/sugar/monopoly-schema.sql`
 
 Schema file: `src/games/sugar/word-race-schema.sql`. Pattern for "each player only ever writes their own columns, a `useEffect` reconciles once both sides are done" — reuse this for any future race-style game where hidden state must stay asymmetric.
 
+### `category_blitz_rooms`
+| column | type | notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `code` | text UNIQUE | 4-6 chars |
+| `status` | text | `waiting \| playing \| reveal \| finished \| aborted \| closed` — note the extra `reveal` phase |
+| `player_one` / `player_two` | text | localStorage UUID |
+| `round_letter` | text | single letter, picked client-side at creation |
+| `categories` | jsonb | array of category strings for the round |
+| `timer_seconds` | int | 60 / 90 / 120, set by creator |
+| `started_at` | timestamptz | set on join; the shared countdown deadline = `started_at + timer_seconds` |
+| `answers_one` / `answers_two` | jsonb | each player writes ONLY their own array |
+| `submitted_one_at` / `submitted_two_at` | timestamptz | lock-in time; both set ⇒ `playing→reveal` |
+| `approvals_one` / `approvals_two` | jsonb | **cross-named**: `approvals_one` = the verdicts on player ONE's answers, WRITTEN BY player two (each side judges the other). Booleans/null per category. |
+| `review_one_done` / `review_two_done` | boolean | both true ⇒ `reveal→finished` |
+| `score_one` / `score_two` | int | computed once at finalize by `computeScores` |
+| `winner` | int | `1`, `2`, or `null` (draw) |
+
+Schema/migration: `supabase/migrations/20260704180000_create_category_blitz_rooms.sql`. **Two realtime gotchas this game hit (both caught only by a two-client E2E, not unit tests):** (1) a countdown that keys off `started_at` reads null on the creator's client until the peer joins — gate auto-submit on `Boolean(deadline) && Date.now() >= deadline`, never on a stale `remaining===0`, or you force-submit the creator on join; (2) never write a whole jsonb array (like `approvals_*`) from a stale realtime snapshot per-interaction — concurrent whole-array overwrites lose updates. Buffer in local React state and write once.
+
 RLS policy on all tables above: open read/insert/update for `anon` and `authenticated` (no row-level restrictions — all access control is enforced in app logic or RPC functions).
 
 All tables above are added to the `supabase_realtime` publication.

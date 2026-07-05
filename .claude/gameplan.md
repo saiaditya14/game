@@ -3,10 +3,6 @@
 Real-time (sync) pair games. Both players present at once, synced over Supabase
 Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted.
 
-> **Exception:** **Gerbil Ball** (bottom of the list) is a *local same-screen*
-> co-op 3D game — no Supabase / no netcode for the POC. Everything else is
-> Supabase-synced.
-
 ---
 
 ## Survivors — already built, DO NOT rebuild or touch their logic
@@ -17,6 +13,7 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 - **Tic-Tac-Toe** (`/tic-tac-toe`) ✅ shipped 2026-07-02
 - **Quick-Maths Duel** (`/quick-maths`) ✅ shipped 2026-07-02
 - **Word Race** (`/word-race`) ✅ shipped 2026-07-04
+- **Category Blitz** (`/category-blitz`) ✅ shipped 2026-07-05
 
 Their homepage cards stay.
 
@@ -27,13 +24,12 @@ Their homepage cards stay.
 1. ~~**Tic-Tac-Toe**~~ ✅ **SHIPPED** — `src/games/sugar/TicTacToe.jsx` + lobby + board. Supabase realtime room-code pattern proven end to end. Route: `/tic-tac-toe`.
 2. ~~**Quick-Maths Duel**~~ ✅ **SHIPPED** — `src/games/sugar/QuickMaths*.jsx`. Seeded PRNG, realtime room, configurable number size / operations / operand count / rounds. Route: `/quick-maths`.
 3. ~~**Word Race**~~ ✅ **SHIPPED** — `src/games/sugar/WordRace*.jsx` + `WordRaceRules.js` + `wordRaceWords.js`. Same hidden word (vendored `wordle-words` list), 6 guesses each, opponent board shows color feedback only (never letters), give-up/tie/both-solve handled via `resolveWinner()`. Route: `/word-race`.
-4. **Category Blitz** ← **NEXT** — One random letter, race to fill categories before the timer.
-5. **Gambling Corner** — A heads-up "gambling" hub: **three** 2-player card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). *(Replaced Spot-the-Difference + Speed Trivia Buzz; sits above Same Wavelength.)*
+4. ~~**Category Blitz**~~ ✅ **SHIPPED** — `src/games/sugar/CategoryBlitz*.jsx` + `CategoryBlitzRules.js` + vendored `categoryBlitzCategories.js`. One random letter, timer synced from `started_at`, race to fill a shared category list, then a partner-approval reveal + scoring screen (dupes auto-cancel). Extra `reveal` status between playing/finished. Route: `/category-blitz`.
+5. **Gambling Corner** ← **NEXT** — A heads-up "gambling" hub: **three** 2-player card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). *(Replaced Spot-the-Difference + Speed Trivia Buzz; sits above Same Wavelength.)*
 6. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
 7. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
-8. **Gerbil Ball (Arcade 3D roller)** ← **hardest, build LAST** — Super-Monkey-Ball-style tilt-the-world 3D roller; local same-screen 2-player co-op. Both players input full direction (two gamepads via Gamepad API, or WASD-vs-arrows); **tilts SUM** so synergy = speed → time-attack leaderboard. R3F + `@react-three/rapier`, heavy ball. **POC = Arcade motif only**, gated to `theme-arcade`.
-
 > **Removed:** Tug-of-War (cut), Spot-the-Difference (cut), Speed Trivia Buzz (cut).
+> **Parked:** Gerbil Ball — pulled out of the web build order, see "Parked ideas" at the bottom.
 
 All leftover placeholder cards (`Battleship`, `Guess Who?`, `Checkers` in
 `newGames`) have now been replaced by shipped games; `newGames` is empty. Future
@@ -58,8 +54,6 @@ You are building these games one at a time, top of the list down. For EACH game:
 2. **Match the four themes.** Every game must feel native to `theme-pink`,
    `theme-champagne`, `theme-arcade`, `theme-cozy`. Read `src/styles/index.css`
    and `src/components/ThemeProvider.jsx`. Use CSS tokens, not hardcoded colors.
-   *(Exception: **Gerbil Ball** matches themes by full per-theme **motif**, not
-   token tint, and the POC ships only the Arcade motif — see its note.)*
 3. **Build the vertical slice**: root component (state + Supabase realtime),
    lobby (create/join with room code), the game UI, and a `*-schema.sql` file.
    Place new games under `src/games/sugar/<game>/` (or a flat file for simple
@@ -97,11 +91,6 @@ You are building these games one at a time, top of the list down. For EACH game:
   GitHub repos / datasets have hundreds of "left↔right" pairs) as a local array.
 - **Codenames Duet**: use an open-source Codenames word bank (public-domain
   noun lists on GitHub) or a common-English-nouns dataset. ~400 simple nouns.
-- **Gerbil Ball**: engine libs = `three` + `@react-three/fiber` (already in repo)
-  + `@react-three/rapier` (physics) + `drei` + postprocessing (bloom). The Arcade
-  neon world is simple **emissive geometry from primitives** (cheap); source CC0
-  low-poly models (Quaternius / Kenney 3D / Poly Pizza) only if needed. **No pixel
-  art.** Runs 100% client-side on the static host; no Supabase for the local POC.
 
 ### Per-game notes
 1. **Tic-Tac-Toe** — Trivial. Flat file `src/games/sugar/TicTacToe.jsx`. No
@@ -122,10 +111,16 @@ You are building these games one at a time, top of the list down. For EACH game:
    (see sourcing). **Skip automated dictionary validation** — use self/partner
    approve toggles on the reveal screen (dupes cancel). Timer synced from the
    room's start timestamp.
-5. **Gambling Corner** — Three heads-up variants under one roof, sharing a chip
-   bankroll + the realtime room pattern (copy Connect Four / Quick-Maths). Build
-   the **shared base once** (room/lobby, chip stacks, showdown/reveal, exit
-   screen), then the variants:
+5. **Gambling Corner** — Three variants under one roof, sharing a chip
+   bankroll + the realtime room pattern. Build the **shared base once** (room/lobby,
+   chip stacks, showdown/reveal, exit screen), then the variants:
+   > **⚠ Scope change (2026-07-05, user):** prefer supporting **N players (>2)** at a
+   > table, not heads-up-only, while still working for a couple (2). Lean on
+   > **Sugaropoly's N-player `players` jsonb array** for lobby/turn/seat order rather
+   > than Connect Four's fixed two slots. BUT this is a *preference, not a hard
+   > requirement* — if a variant's mechanic doesn't generalize past 2 cleanly, a
+   > 2-player-only variant is fine (user: "lowkey fine"). Hold'em is naturally
+   > multiplayer; Indian Poker / Dice Poker are the judgement calls.
    - **Indian Poker** *(easiest)* — see the opponent's card, not your own; bet /
      fold; high card wins. No hand-eval, barely any state.
    - **Dice Poker** *(medium)* — 5 dice, up to 2 re-rolls, dice-poker hand eval as
@@ -142,21 +137,45 @@ You are building these games one at a time, top of the list down. For EACH game:
 7. **Codenames Duet** — Co-op variant: shared 5×5 grid, alternating clues, shared
    win/lose, limited turns + assassin. Put grid/turn logic in a pure `*Rules.js`
    with tests. Needs the noun word bank above.
-8. **Gerbil Ball (Arcade roller)** — The one NON-standard-architecture game and
-   the one theme exception. **Local same-screen co-op — NO Supabase / no netcode
-   for the POC.** R3F + `@react-three/rapier`: one tiltable level, a **heavy**
-   ball, follow-camera. **Controls:** two gamepads (Gamepad API, distinct
-   indices) *or* WASD-vs-arrows; both players' direction inputs **SUM** into the
-   world tilt (aligned = steeper tilt = faster; opposed = cancel; fine control
-   emerges when one eases off). Synergy → fast clears → **time-attack leaderboard**
-   (personal bests). **Per-theme MOTIF, not palette tint** (user's explicit call):
-   each theme is its own motif world; **POC ships the Arcade neon motif only**,
-   gated to `theme-arcade`. Other themes' motif worlds are on-demand later.
-   **Perf discipline:** merge static geo, keep movers *kinematic*, one shadow
-   light, cap simultaneous dynamic bodies. Model the POC level closely on a real
-   Monkey Ball stage for tuning. The real work is **feel-tuning** (heavy-ball
-   momentum, tilt response, the sum cap), not rendering. *Remote play (later):*
-   single machine runs the game, relay P2's keystrokes over Supabase, Discord
-   screen-share carries P2's view — accept that P2 eats stacked input + stream lag.
 
 Work top-down, check in after each game, and keep everything theme-native.
+
+---
+
+## Parked ideas (NOT in the web build order)
+
+- **Gerbil Ball** — a 3D Super-Monkey-Ball-style co-op tilt roller. Novel mechanic:
+  local 2-player co-op where both players input full direction and their **tilts
+  SUM** into one shared heavy ball (synergy = speed, time-attack). **Parked
+  2026-07-04:** it's the highest-friction, most feel-risky idea here and fits the
+  frictionless-social web lane *least* (Wordle-style shareable/async games fit it
+  best). Better as a future **standalone Unity project** — which also makes a
+  stronger engine-studio portfolio piece than R3F-in-a-browser. Full design notes
+  are preserved in the `gerbil-ball` memory. Don't build it into the web hub;
+  revisit as its own engine project later.
+
+---
+
+## Backlog / to research (future, not scheduled — revisit between shipped games)
+
+- **Retrofit the two-player E2E harness onto the earlier shipped games**
+  (Tic-Tac-Toe, Quick-Maths Duel, Word Race). Category Blitz's build pass drove
+  BOTH clients with two Playwright BrowserContexts and that's the only thing that
+  surfaced its two realtime race bugs (a stale-`remaining` premature auto-submit and
+  a lost-update approvals race) — build-green + unit-green + single-side manual all
+  missed them. The three earlier games were verified with lighter testing and may be
+  harboring similar two-client races (turn/claim ordering in Tic-Tac-Toe, the
+  first-correct-answer claim in Quick-Maths, the both-done reconcile in Word Race).
+  **To research:** stand up a reusable two-context E2E driver (see the
+  `e2e-two-player-realtime-games` memory for the selector/timing traps) and run each
+  of the three through a full both-sides round, asserting real outcomes; fix anything
+  it finds. Not blocking new games — slot it in when appetite allows.
+
+- **Tic-Tac-Toe on a bigger board (variable board size + win length).** Today it's a
+  fixed 3×3. **To research:** generalize to an N×N board (e.g. 4×4 / 5×5) with a
+  configurable win-length (k-in-a-row, à la Gomoku/m,n,k-games), chosen by the room
+  creator like Quick-Maths' config chips. Keep win-detection in a pure `*Rules.js`
+  (generic k-in-a-row scan over rows/cols/both diagonals) with tests; the schema
+  needs the board array + `board_size`/`win_length` columns, and the board UI must
+  stay legible as the grid grows (coin/cell sizing like the Sugaropoly crowded-tile
+  concern). Decide whether it replaces or sits beside the current 3×3.

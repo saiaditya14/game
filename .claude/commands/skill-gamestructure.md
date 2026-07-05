@@ -106,7 +106,7 @@ Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root c
 
 If a new game needs more than one quit-like action (e.g. "abort an empty room" vs "forfeit mid-race"), collapse them into a **single contextual button** whose label/behavior branches on game state — don't surface two separate buttons for overlapping quit/forfeit intents (see `WordRace.jsx`'s `onLeave`/`leaveGame`).
 
-DB status values to include in every new game schema: `'waiting' | 'playing' | 'finished' | 'aborted' | 'closed'`
+DB status values to include in every new game schema: `'waiting' | 'playing' | 'finished' | 'aborted' | 'closed'`. A game with a distinct mid-game phase may insert extra statuses — e.g. Category Blitz adds `'reveal'` between `playing` and `finished` for its partner-approval scoring step (`waiting → playing → reveal → finished`), with a `useEffect` in the root advancing each phase once both players meet the condition.
 
 ---
 
