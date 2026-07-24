@@ -472,6 +472,17 @@ const HomePage = () => {
                 />
               </Link>
             </motion.div>
+            <motion.div variants={cardItemVariants}>
+              <Link to="/gambling-corner" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Gambling Corner"
+                  description="A hub of bluff games sharing one chip bankroll. Start with Indian Poker — see their card, never your own."
+                  badge="New"
+                  category="Bluff"
+                  meta="2-8 players"
+                />
+              </Link>
+            </motion.div>
             {newGames.map((game) => (
               <motion.div key={game.title} variants={cardItemVariants}>
                 <GameCard {...game} />

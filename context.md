@@ -112,6 +112,83 @@ Sugaropoly deferred visual polish:
 - Realtime race guards that must not regress (originally fixed during the 2-player E2E pass, re-verified for N players): (a) the board's countdown gates "time's up" on `Boolean(deadline) && Date.now() >= deadline`, never a stale `remaining`; (b) vote/answer writes are buffered in LOCAL React state and committed in ONE RPC call at lock-in/confirm, never per-toggle.
 - Reuses shared `GameExitScreen`; one contextual Leave/Forfeit button. Leaving at any stage before `finished` aborts the whole room for everyone (no partial-room continuation with N players).
 
+## Gambling Corner
+
+- Source: `src/games/sugar/gambling/` — `GamblingCorner.jsx` (root), `GamblingHub.jsx` (mode-picker tiles), `GamblingLobby.jsx` (create/join + waiting room), `IndianPokerTable.jsx` + `IndianPokerRules.js` (+ tests), `DicePokerTable.jsx` + `DicePokerRules.js` (+ tests), `BettingRound.js` (+ tests, shared turn-based betting engine).
+- Route: `/gambling-corner`. **Part 1 (shipped 2026-07-05)**: shared N-player base + Indian Poker. **Part 2 (shipped 2026-07-06)**: Dice Poker, fully playable. Heads-up Hold'em is still a disabled "coming soon" tile.
+- Supabase migrations: `supabase/migrations/20260705150000_create_gambling_corner_rooms.sql` (base + Indian Poker) + `supabase/migrations/20260705180000_add_dice_poker_columns.sql` (Dice Poker, ADD-only, applied to local Supabase). Table `gambling_corner_rooms`: `players` jsonb array (`{id,name,chips,seat,active}`), `mode` (not-null: `indian_poker|dice_poker|holdem`), plus Indian Poker's `round_phase`/`hands`/`decisions` and Dice Poker's `dice_phase`/`dice`/`reroll_done`/`betting`/`end_mode`/`hand_cap`/`hands_played`/`dealer_seat` (all below), shared `pot`, `ante` (20), `starting_chips` (200), `winner_ids`.
+- Identity: `localStorage` UUID (`lovelyland-gambling-corner-player-id`), same pattern as Category Blitz — not Supabase Auth.
+- **Indian Poker rules**: everyone sees everyone else's card, never their own (client-side render skip, like Word Race's hidden `secret_word` — nothing is actually hidden server-side). Every dealt-in player independently decides `stay` (pay the ante into the pot) or `fold` (forfeit) whenever they want — **simultaneous decisions, no turn order and no raising**, closer to Category Blitz's simultaneous-vote model than a real poker betting round. Once every dealt-in player has decided, highest card among stayers takes the pot (ties split it).
+- Indian Poker RPCs: `gambling_corner_join` (row-lock append to `players`), `gambling_corner_decide` (stay/fold), `gambling_corner_settle` (payouts computed client-side by `resolveRound`, idempotent no-op once `round_phase !== 'dealt'`). Dealing (`round_phase: idle→dealt`) is a plain host-gated update, not an RPC.
+- Reuses shared `GameExitScreen`; leaving at any stage aborts the whole table for everyone.
+- Indian Poker visual: 3D card-flip reveal, spring-animated chip counters (`AnimatedChips`), staggered seat-grid mount, one-shot winner-glow pulse.
+
+### Dice Poker (Part 2)
+
+Per hand: ante in → roll 5 dice each (hidden from opponents, own dice always visible) →
+**real turn-based betting round 1** (check/bet/call/raise/fold/all-in, seat order) →
+one reroll (each player keeps what they want, rerolls the rest, simultaneous not
+turn-based) → **betting round 2** → showdown: best 5-dice poker hand among non-folded
+players wins the pot (ties split it). N-player (2-8), ante-only, no blinds (deferred).
+
+- **`BettingRound.js`** (pure, tested, `node --test`) — the shared turn-based betting
+  engine: `createBettingRound`/`applyAction`/`isRoundClosed`/`remainingContenders`/
+  `potContribution`. Deliberately game-agnostic (no dice/card knowledge) so **Hold'em
+  (Part 3) reuses it unchanged** for its own betting rounds. Single main pot only, no
+  side pots — a documented simplification for 2-8 player couples games, not
+  tournament-grade. All-in/raise/fold/check-close logic fully unit tested.
+- **`DicePokerRules.js`** (pure, tested) — 5-dice hand evaluator (`evaluateHand`/
+  `compareHands`, categories five-of-a-kind down to high-die, 1-5 and 2-6 straights,
+  correct tiebreaks), `dealDice`/`rerollDice`, `resolveShowdown` (best hand among
+  non-folded, ties split), `splitPot`, `checkTableGameOver` (bust mode: last player
+  with chips wins; hands mode: stop at `hand_cap`, most chips wins, ties list every
+  winner).
+- **End condition** (host-chosen at table creation, stored on the room): `end_mode`
+  `'hands'` (`hand_cap` 5/8/10, most chips wins after the cap) or `'bust'` (play until
+  one player has all the chips). A player hitting 0 chips is eliminated in both modes.
+- **Schema additions** (`20260705180000`, ADD-only, never touches Indian Poker's
+  columns): `dice_phase` (`idle|bet1|reroll|bet2|showdown`), `dice` (map
+  `{playerId: number[5]}`, committed dice only — reroll keep-selection stays in local
+  React state until confirmed, the Category Blitz "buffer locally, commit once"
+  pattern), `reroll_done` (map `{playerId: true}`), `betting` (the serialized
+  `BettingRound.js` state — order/currentActor/toCall/minRaise/committed/acted/folded/
+  allIn — computed client-side and applied atomically by the RPCs below, the same
+  trust model `gambling_corner_settle` already uses), `end_mode`/`hand_cap`/
+  `hands_played`, `dealer_seat` (rotates the first-to-act seat each hand).
+- **RPCs**: `dice_poker_deal` (host-gated, applies a precomputed hand: dice, antes
+  deducted, fresh betting round), `dice_poker_bet_action` (rejects unless
+  `p_player_id` matches `betting->>'currentActor'` — the server-side turn guard the
+  brief called for — then applies the next betting state/players/pot/phase computed
+  client-side), `dice_poker_reroll_commit` (per-key `jsonb_set` on `dice`/
+  `reroll_done`, safe under concurrent simultaneous rerolls like Category Blitz's
+  answer submission), `dice_poker_advance_phase` (reroll→bet2 once every non-folded
+  player has committed, idempotent), `dice_poker_settle` (applies payouts on a
+  fold-out or a closed final betting round, idempotent once `dice_phase==='showdown'`).
+- **Phase transitions live client-side**: whichever player's action closes a betting
+  round computes the next phase (`bet1`→`reroll` if 2+ contenders remain, or stays
+  put with `currentActor:null` signaling "closed" if only one contender remains or
+  it's bet2) in the same RPC call; a `useEffect` on any client detects a closed round
+  or a fully-rerolled table and calls `dice_poker_advance_phase`/`dice_poker_settle`
+  — both idempotent, so a race between multiple clients noticing at once is harmless.
+- **Visual**: dice render via lucide `Dice1`-`Dice6` icons (no external art); each die
+  does a staggered spring "tumble" (scale+rotate+fade) whenever its value changes
+  (deal/reroll/showdown); a themed `.dice-poker-slider` CSS class (in
+  `src/styles/index.css`) replaces the native range-input chrome for the bet/raise
+  slider across all four themes; status colors (active/fold/all-in/turn/win) follow
+  Indian Poker's fixed-per-theme-hex template, never a generic surface token.
+- Verified with a 3-context Playwright E2E: create with a hand-cap config → 2 join →
+  host start → bet round 1 (bet + raise + 2 calls) → reroll → bet round 2 (check-
+  around) → showdown with the dice independently re-evaluated and compared against
+  the displayed winner (exact hand-ranking match, not just "a screen rendered") →
+  turn-order guard asserted (non-actor has zero action controls rendered) → repeat
+  hands to the hand cap → game-over banner → exit flow. See the `gambling-corner`
+  memory for the realtime-timing traps this build hit (uppercase-arcade text
+  breaking a lowercase string match; actor-detection races needing poll-based waits,
+  not fixed sleeps).
+- **Next (Part 3, later session)**: Heads-up Hold'em reuses `BettingRound.js`
+  unchanged for its betting rounds; needs hole + community cards, a vendored
+  `pokersolver` for hand ranking, and its own schema columns.
+
 ## Shared abort / game-over modal
 
 - `src/games/sugar/GameExitScreen.jsx` — extracted from `QuickMathsDuel.jsx` during the Word Race build. Handles `status="aborted"` and `status="closed"`, both auto-navigating home after 1.8s. Currently consumed by Quick-Maths Duel and Word Race only; other games (Tic-Tac-Toe, Connect Four) keep their own abort screens until a later retrofit pass.

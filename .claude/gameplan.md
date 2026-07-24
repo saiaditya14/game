@@ -14,6 +14,7 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 - **Quick-Maths Duel** (`/quick-maths`) ✅ shipped 2026-07-02
 - **Word Race** (`/word-race`) ✅ shipped 2026-07-04
 - **Category Blitz** (`/category-blitz`) ✅ shipped 2026-07-05
+- **Gambling Corner — Indian Poker + Dice Poker** (`/gambling-corner`) ✅ Part 1 (Indian Poker) shipped 2026-07-05, Part 2 (Dice Poker) shipped 2026-07-06 (Hold'em still a stub)
 
 Their homepage cards stay.
 
@@ -31,7 +32,36 @@ Their homepage cards stay.
 > (the "creator decides what happens next" idea was dropped by the user). See the
 > `category-blitz` + `category-blitz-multiplayer` memories.
 
-5. **Gambling Corner** ← **NEXT NEW GAME** — A "gambling" hub: **three** card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). Now N-player-preferred, not heads-up-only — see the ⚠ scope-change callout in the per-game notes. *(Replaced Spot-the-Difference + Speed Trivia Buzz.)*
+5. **Gambling Corner** — A "gambling" hub: **three** card/dice bluff variants sharing one chip bankroll, as a difficulty/effort ladder so a couple picks by mood. **Indian Poker** (easy/silly — see the opponent's card, not your own, bet/fold), **Dice Poker** (medium — 5 dice, two re-rolls, poker hands, bet), **Heads-up Hold'em** (hard/standard — hole + community cards, betting rounds). N-player, not heads-up-only — see the ⚠ scope-change callout in the per-game notes. *(Replaced Spot-the-Difference + Speed Trivia Buzz.)*
+> **✅ PART 1 SHIPPED (2026-07-05)** — shared N-player base (hub, lobby, chip
+> bankroll, realtime room) + **Indian Poker** fully playable at `/gambling-corner`.
+> `src/games/sugar/gambling/`: `GamblingCorner.jsx` (root), `GamblingHub.jsx`
+> (mode picker — Dice Poker/Hold'em shown as disabled "coming soon" tiles),
+> `GamblingLobby.jsx` (create/join + waiting room), `IndianPokerTable.jsx` (table:
+> 3D card-flip reveal, spring chip counters, one-shot winner pulse), `IndianPokerRules.js`
+> + tests (pure `dealHands`/`resolveRound`/`checkTableGameOver`). DB: `gambling_corner_rooms`
+> (migration `20260705150000`, applied locally) with `gambling_corner_join`/`decide`/`settle`
+> RPCs — **simultaneous stay/fold decisions, not sequential turn-based betting** (any
+> dealt-in player decides whenever; round resolves once everyone has). Verified with a
+> 3-client Playwright E2E (create → join × 2 → start → decide → reveal with correct
+> chip math → deal next round → leave/abort). See the `gambling-corner` memory for
+> full detail.
+> **✅ PART 2 SHIPPED (2026-07-06)** — **Dice Poker**, real turn-based betting (unlike
+> Indian Poker's simultaneous decide): ante → roll 5 dice → bet round 1 → one reroll →
+> bet round 2 → showdown. New files: `DicePokerTable.jsx`, `DicePokerRules.js` (+
+> tests — 5-dice hand eval/comparator), `BettingRound.js` (+ tests — a **shared,
+> reusable, pure turn-based betting engine** with no dice/card knowledge, built so
+> **Hold'em (Part 3) reuses it unchanged**). DB: migration `20260705180000` (ADD-only)
+> adds `dice_phase`/`dice`/`reroll_done`/`betting`/`end_mode`/`hand_cap`/
+> `hands_played`/`dealer_seat`, plus `dice_poker_deal`/`bet_action`/`reroll_commit`/
+> `advance_phase`/`settle` RPCs — `bet_action` is the server-side turn guard (rejects
+> unless the caller matches `betting.currentActor`). Host picks the end condition at
+> creation: hand cap (5/8/10, most chips wins) or "all the way" (play until bust).
+> Single main pot only (no side pots) — a documented simplification. Verified with a
+> 3-context Playwright E2E asserting exact dice-ranked showdown winners (not just
+> that a screen rendered) and a structural turn-order-blocking check. **NEXT UP:
+> Heads-up Hold'em** (Part 3) — reuses `BettingRound.js`, needs hole + community
+> cards and a vendored `pokersolver` for hand ranking.
 6. **Verbal Memory (competitive)** ← **NEW** (user, 2026-07-05; build AFTER Gambling Corner) — a memory game with a competitive head-to-head twist. Concept from a playtester; design details TBD with the user before building. See the `verbal-memory-game` memory.
 7. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
 8. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.

@@ -2653,3 +2653,44 @@
     display: none;
   }
 }
+
+/* Dice Poker raise/bet slider — themed to replace default browser chrome */
+.dice-poker-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: var(--divider);
+  outline: none;
+  cursor: pointer;
+}
+.dice-poker-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.dice-poker-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.dice-poker-slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.theme-arcade .dice-poker-slider::-webkit-slider-thumb {
+  box-shadow: 0 0 8px var(--primary), 0 0 16px rgba(255, 0, 255, 0.5);
+}
+.theme-arcade .dice-poker-slider::-moz-range-thumb {
+  box-shadow: 0 0 8px var(--primary), 0 0 16px rgba(255, 0, 255, 0.5);
+}
