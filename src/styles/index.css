@@ -20,7 +20,7 @@
     --border: #dfcdb2;
     --surface: #fffdf8;
     --surface-strong: #fff4dd;
-    --muted: #7d7469;
+    --muted: #6b6156;
     --ring: #f1b46d;
     --shadow: 0 18px 50px rgba(93, 71, 46, 0.13);
     --divider: rgba(102, 81, 63, 0.2);
@@ -2693,4 +2693,13 @@
 }
 .theme-arcade .dice-poker-slider::-moz-range-thumb {
   box-shadow: 0 0 8px var(--primary), 0 0 16px rgba(255, 0, 255, 0.5);
+}
+
+/* Homepage game-card links — focus:ring-2/[color:var(--ring)] compiles to no
+   CSS on this project's Tailwind setup (same root cause as the documented
+   named-spacing bug), so keyboard focus was invisible. Plain CSS instead. */
+.game-card-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius);
 }

@@ -394,7 +394,7 @@ const HomePage = () => {
             viewport={{ once: true, margin: '-60px' }}
           >
             <motion.div variants={cardItemVariants}>
-              <Link to="/draw-off" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/draw-off" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Draw Off"
                   description="Sketch against the clock, play with a friend, or experiment in testing modes."
@@ -406,7 +406,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/connect-four" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/connect-four" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Connect Four"
                   description="A classic game of strategy. Drop your pieces and race to connect four in a row."
@@ -417,7 +417,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/monopoly" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/monopoly" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Sugaropoly"
                   description="A super cutesy, pastel property trading game. Buy properties, build bakeries, and collect pastry rent!"
@@ -429,7 +429,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/tic-tac-toe" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/tic-tac-toe" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Tic-Tac-Toe"
                   description="Classic 3×3 showdown. Take turns, mark your spot, and be the first to line up three in a row."
@@ -440,7 +440,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/quick-maths" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/quick-maths" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Quick-Maths Duel"
                   description="Ten rapid-fire arithmetic rounds. Race your partner — first correct answer steals the point."
@@ -451,7 +451,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/word-race" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/word-race" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Word Race"
                   description="Same secret word, six guesses each. Watch their tiles light up as you race to solve it first."
@@ -462,7 +462,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/category-blitz" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/category-blitz" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Category Blitz"
                   description="One random letter, a page of categories. Race the timer, then vote on everyone's best answers."
@@ -473,7 +473,7 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
-              <Link to="/gambling-corner" className="block text-inherit no-underline focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]" style={{ borderRadius: 'var(--radius)' }}>
+              <Link to="/gambling-corner" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Gambling Corner"
                   description="A hub of bluff games sharing one chip bankroll. Start with Indian Poker — see their card, never your own."

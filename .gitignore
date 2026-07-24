@@ -35,3 +35,13 @@ handoff.md
 
 # Dev notes (local scratch, not for source control)
 .claude/dev-notes.md
+
+# Claude Code local/personal settings (per-developer, not shared)
+.claude/settings.local.json
+.github/settings.local.json
+
+# Impeccable design skill (vendored, reinstall via `npx impeccable install`
+# rather than committing it — keeps other tracked skills unaffected)
+.claude/skills/impeccable/
+.github/skills/impeccable/
+.github/hooks/impeccable.json
