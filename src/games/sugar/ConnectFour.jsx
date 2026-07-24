@@ -103,6 +103,13 @@ const ConnectFour = () => {
     };
   }, [room?.id]);
 
+  useEffect(() => {
+    if (room?.status !== 'aborted') return undefined;
+
+    const timeout = window.setTimeout(() => setRoom(null), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [room?.status]);
+
   const createRoom = async () => {
     setError('');
 
@@ -248,11 +255,46 @@ const ConnectFour = () => {
     if (abortError) setError(abortError.message);
   };
 
+  const playAgain = async () => {
+    if (!supabase || !room) return;
+
+    const { data, error: resetError } = await supabase
+      .from('connect_four_rooms')
+      .update({
+        board: EMPTY_BOARD,
+        current_player: 1,
+        status: 'playing',
+        winner: null,
+        last_move: null,
+        started_at: new Date().toISOString(),
+      })
+      .eq('id', room.id)
+      .in('status', ['won', 'draw'])
+      .select()
+      .single();
+
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+
+    setRoom(data);
+  };
+
   if (!room || !playerNumber) {
     return <ConnectFourLobby onCreateRoom={createRoom} onJoinRoom={joinRoom} isBusy={isBusy} error={error} roomCode={room?.code} />;
   }
 
-  return <ConnectFourBoard room={room} playerNumber={playerNumber} onDropPiece={dropPiece} onAbortGame={abortGame} onExitGame={() => setRoom(null)} />;
+  return (
+    <ConnectFourBoard
+      room={room}
+      playerNumber={playerNumber}
+      onDropPiece={dropPiece}
+      onAbortGame={abortGame}
+      onPlayAgain={playAgain}
+      onExitGame={() => setRoom(null)}
+    />
+  );
 };
 
 export default ConnectFour;

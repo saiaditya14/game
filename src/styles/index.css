@@ -2703,3 +2703,157 @@
   outline-offset: 2px;
   border-radius: var(--radius);
 }
+
+/* ── Connect Four — win/draw modal celebration sparkles ─────────────────────── */
+/* Pure-CSS burst, positioned via --sparkle-x/--sparkle-y per span. Colors pull
+   from theme tokens so the same markup reads correctly in every theme. */
+.connect-four-win-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.connect-four-win-sparkles span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0;
+  color: var(--primary);
+  animation: connect-four-sparkle-burst 900ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.connect-four-win-sparkles span:nth-child(odd) {
+  color: var(--accent);
+}
+
+.connect-four-win-sparkles span:nth-child(1) { --sparkle-x: -5.4rem; --sparkle-y: -3.2rem; animation-delay: 0ms; }
+.connect-four-win-sparkles span:nth-child(2) { --sparkle-x: 5.2rem;  --sparkle-y: -3.6rem; animation-delay: 60ms; }
+.connect-four-win-sparkles span:nth-child(3) { --sparkle-x: -6.4rem; --sparkle-y: 1.2rem;  animation-delay: 120ms; }
+.connect-four-win-sparkles span:nth-child(4) { --sparkle-x: 6.6rem;  --sparkle-y: 0.8rem;  animation-delay: 90ms; }
+.connect-four-win-sparkles span:nth-child(5) { --sparkle-x: -3.4rem; --sparkle-y: 4.2rem;  animation-delay: 180ms; }
+.connect-four-win-sparkles span:nth-child(6) { --sparkle-x: 3.6rem;  --sparkle-y: 4.4rem;  animation-delay: 150ms; }
+.connect-four-win-sparkles span:nth-child(7) { --sparkle-x: -0.4rem; --sparkle-y: -5rem;   animation-delay: 220ms; }
+.connect-four-win-sparkles span:nth-child(8) { --sparkle-x: 0.6rem;  --sparkle-y: 5.2rem;  animation-delay: 40ms; }
+
+.theme-arcade .connect-four-win-sparkles span {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+@keyframes connect-four-sparkle-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(-10deg);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--sparkle-x) * 0.5), calc(-50% + var(--sparkle-y) * 0.5)) scale(1.15) rotate(6deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--sparkle-x)), calc(-50% + var(--sparkle-y))) scale(0.7) rotate(16deg);
+  }
+}
+
+/* ── Connect Four — Arcade: drifting piece watermarks in the background ─────── */
+.connect-four-arcade-drift {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connect-four-drift-piece {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.075;
+}
+
+.connect-four-drift-piece--primary {
+  top: -6rem;
+  left: -6rem;
+  width: 22rem;
+  height: 22rem;
+  background: var(--primary);
+  animation: connect-four-piece-drift 22s ease-in-out infinite;
+}
+
+.connect-four-drift-piece--accent {
+  bottom: -7rem;
+  right: -7rem;
+  width: 26rem;
+  height: 26rem;
+  background: var(--accent);
+  animation: connect-four-piece-drift 26s ease-in-out infinite reverse;
+}
+
+@keyframes connect-four-piece-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(2rem, 1.5rem) scale(1.08);
+  }
+}
+
+/* ── Connect Four — Cozy: lanterns hanging from the top of the page ─────────── */
+.connect-four-lanterns {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connect-four-lantern {
+  position: absolute;
+  top: -1.5rem;
+  transform-origin: top center;
+  animation: connect-four-lantern-sway ease-in-out infinite;
+}
+
+.connect-four-lantern-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 1.75rem;
+  background: linear-gradient(to bottom, rgba(180, 130, 60, 0.5), rgba(180, 130, 60, 0.15));
+}
+
+.connect-four-lantern-glow {
+  position: absolute;
+  left: 50%;
+  top: 1.5rem;
+  width: 6rem;
+  height: 6rem;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 190, 100, 0.28) 0%, rgba(240, 190, 100, 0.1) 55%, transparent 80%);
+  filter: blur(4px);
+}
+
+.connect-four-lantern img {
+  position: relative;
+  display: block;
+  margin: 1.75rem auto 0;
+  filter: drop-shadow(0 0 10px rgba(240, 190, 100, 0.35)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+@keyframes connect-four-lantern-sway {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
