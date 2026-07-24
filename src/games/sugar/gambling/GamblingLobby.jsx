@@ -6,7 +6,7 @@ import DecryptedText from '../../../components/reactbits/DecryptedText';
 import SplitText from '../../../components/reactbits/SplitText';
 import BlurText from '../../../components/reactbits/BlurText';
 
-const MODE_TITLE = { indian_poker: 'Indian Poker', dice_poker: 'Dice Poker', holdem: "Heads-up Hold'em" };
+const MODE_TITLE = { indian_poker: 'Indian Poker', dice_poker: 'Dice Poker', holdem: "Hold'em" };
 const MODE_ICON = { indian_poker: Eye, dice_poker: Dices, holdem: Spade };
 
 const descByThemeByMode = {
@@ -21,6 +21,12 @@ const descByThemeByMode = {
     'theme-arcade':    'ROLL 5 DICE, BET, REROLL ONCE, BET AGAIN. BEST POKER HAND TAKES THE POT.',
     'theme-cozy':      'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot.',
     'theme-champagne': 'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot.',
+  },
+  holdem: {
+    'theme-pink':      'Two hole cards, five shared cards, blinds and real betting — the classic~',
+    'theme-arcade':    'TWO HOLE CARDS, FIVE SHARED CARDS, BLINDS AND REAL BETTING. THE CLASSIC.',
+    'theme-cozy':      'Two hole cards, five shared cards, blinds and real betting — the classic.',
+    'theme-champagne': 'Two hole cards, five shared cards, blinds and real betting — the classic.',
   },
 };
 
@@ -154,7 +160,7 @@ const WaitingRoom = ({ room, playerId, isHost, onStartGame, onLeaveRoom, isBusy,
         <Users className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--muted)' }}>
           {players.length}/8 players joined · {room.starting_chips} chips each
-          {room.mode === 'dice_poker' && (
+          {(room.mode === 'dice_poker' || room.mode === 'holdem') && (
             room.end_mode === 'bust' ? ' · play until bust' : ` · ${room.hand_cap}-hand cap`
           )}
         </p>
@@ -253,6 +259,8 @@ const GamblingLobby = ({
   const isArcade = theme === 'theme-arcade';
   const isCozy   = theme === 'theme-cozy';
   const isDicePoker = mode === 'dice_poker';
+  const isHoldem = mode === 'holdem';
+  const hasEndModeConfig = isDicePoker || isHoldem;
 
   const descByTheme = descByThemeByMode[mode] ?? descByThemeByMode.indian_poker;
   const desc      = descByTheme[theme]      ?? descByTheme['theme-champagne'];
@@ -261,7 +269,7 @@ const GamblingLobby = ({
   const title     = MODE_TITLE[mode] ?? 'Gambling Corner';
   const ModeIcon  = MODE_ICON[mode] ?? Eye;
 
-  const submitCreate = () => onCreateRoom(isDicePoker ? { endMode, handCap } : {});
+  const submitCreate = () => onCreateRoom(hasEndModeConfig ? { endMode, handCap } : {});
 
   const submitJoin = (e) => { e.preventDefault(); onJoinRoom(joinCode); };
   const back       = () => setEntry(null);
@@ -380,10 +388,12 @@ const GamblingLobby = ({
                     {isArcade ? 'TABLE SETTINGS' : 'table settings'}
                   </p>
                   <p className="text-sm leading-6" style={{ color: 'var(--muted)' }}>
-                    Every seat starts with 200 chips, ante is 20 chips a{isDicePoker ? ' hand' : ' round'} — 2 to 8 players.
+                    {isHoldem
+                      ? 'Every seat starts with 200 chips, blinds are 10/20 — 2 to 8 players.'
+                      : `Every seat starts with 200 chips, ante is 20 chips a${isDicePoker ? ' hand' : ' round'} — 2 to 8 players.`}
                   </p>
 
-                  {isDicePoker && (
+                  {hasEndModeConfig && (
                     <div className="mt-[1.25rem]">
                       <p className="mb-[0.625rem] text-[0.62rem] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>
                         {isArcade ? 'HOW DOES THE TABLE END?' : 'how does the table end?'}

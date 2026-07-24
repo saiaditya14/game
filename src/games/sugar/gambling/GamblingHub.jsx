@@ -104,10 +104,10 @@ const MODES = [
   {
     id: 'holdem',
     icon: Spade,
-    title: "Heads-up Hold'em",
+    title: "Hold'em",
     difficulty: 'Hard · Standard',
-    desc: 'Hole cards, community cards, real betting rounds.',
-    enabled: false,
+    desc: 'Hole cards, community cards, blinds, real betting rounds.',
+    enabled: true,
   },
 ];
 

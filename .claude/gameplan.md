@@ -14,7 +14,7 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 - **Quick-Maths Duel** (`/quick-maths`) ✅ shipped 2026-07-02
 - **Word Race** (`/word-race`) ✅ shipped 2026-07-04
 - **Category Blitz** (`/category-blitz`) ✅ shipped 2026-07-05
-- **Gambling Corner — Indian Poker + Dice Poker** (`/gambling-corner`) ✅ Part 1 (Indian Poker) shipped 2026-07-05, Part 2 (Dice Poker) shipped 2026-07-06 (Hold'em still a stub)
+- **Gambling Corner — Indian Poker + Dice Poker + Hold'em** (`/gambling-corner`) ✅ Part 1 (Indian Poker) shipped 2026-07-05, Part 2 (Dice Poker) shipped 2026-07-06, Part 3 (Hold'em) shipped 2026-07-25
 
 Their homepage cards stay.
 
@@ -59,9 +59,28 @@ Their homepage cards stay.
 > creation: hand cap (5/8/10, most chips wins) or "all the way" (play until bust).
 > Single main pot only (no side pots) — a documented simplification. Verified with a
 > 3-context Playwright E2E asserting exact dice-ranked showdown winners (not just
-> that a screen rendered) and a structural turn-order-blocking check. **NEXT UP:
-> Heads-up Hold'em** (Part 3) — reuses `BettingRound.js`, needs hole + community
-> cards and a vendored `pokersolver` for hand ranking.
+> that a screen rendered) and a structural turn-order-blocking check.
+> **✅ PART 3 SHIPPED (2026-07-25)** — **Hold'em**, fully playable, N-player (2-8),
+> not heads-up-only. New file: `HoldemTable.jsx` + `HoldemRules.js` (+ tests —
+> deck/shuffle, blind posting, showdown resolution via vendored `pokersolver`).
+> Reuses `BettingRound.js` unchanged for every street's betting, and reuses Dice
+> Poker's already-generic `end_mode`/`hand_cap`/`hands_played`/`dealer_seat`/
+> `betting`/`winner_ids` columns rather than re-adding them. DB: migration
+> `20260724120000` (ADD-only) adds `holdem_phase`/`hole_cards`/`community_cards`,
+> plus `holdem_deal`/`bet_action`/`advance_street`/`settle` RPCs. Blinds are
+> derived from `ante` (big blind) with small blind = half; standard button/SB/BB
+> seat rotation for 3+ players, heads-up special-case (button posts SB, acts
+> first preflop, last postflop). Community cards are dealt in full up-front like
+> Dice Poker's dice (nothing hidden server-side) and the client only renders the
+> first 0/3/4/5 for the current street. See the `gambling-corner` memory for two
+> real bugs the build caught and fixed before shipping: a post-flop action-order
+> bug (was reusing preflop's UTG-first order instead of rotating to start after
+> the button) and a missing z-index on the dealer/blind seat badge. Verified with
+> a 3-context Playwright E2E across 5 hands to a hand-cap game-over, using the
+> room row fetched directly from the Supabase REST API (not DOM state) as the
+> turn-order oracle to avoid realtime-propagation-lag false positives.
+
+All three Gambling Corner variants are now shipped. Gambling Corner is complete.
 6. **Verbal Memory (competitive)** ← **NEW** (user, 2026-07-05; build AFTER Gambling Corner) — a memory game with a competitive head-to-head twist. Concept from a playtester; design details TBD with the user before building. See the `verbal-memory-game` memory.
 7. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
 8. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
