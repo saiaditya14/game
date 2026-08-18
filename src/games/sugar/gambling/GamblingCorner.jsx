@@ -7,10 +7,14 @@ import {
   checkTableGameOver as checkDiceTableGameOver,
 } from './DicePokerRules';
 import { createBettingRound, applyAction, isRoundClosed, remainingContenders } from './BettingRound';
+import {
+  dealHoldemRound, advanceStreetBetting, resolveHoldemShowdown, STREET_AFTER,
+} from './HoldemRules';
 import GamblingHub from './GamblingHub';
 import GamblingLobby from './GamblingLobby';
 import IndianPokerTable from './IndianPokerTable';
 import DicePokerTable from './DicePokerTable';
+import HoldemTable from './HoldemTable';
 import GameExitScreen from '../GameExitScreen';
 
 const PLAYER_ID_KEY = 'lovelyland-gambling-corner-player-id';
@@ -136,11 +140,66 @@ const GamblingCorner = () => {
     }).then(() => {});
   }, [room]);
 
+  // ── Hold'em: advance to the next street once the current street's betting
+  // has closed with 2+ contenders remaining (a fold-out or a closed river
+  // settle directly below instead). Also fires with no player action at all
+  // on an all-in runout, since advanceStreetBetting can leave currentActor
+  // null immediately. Idempotent via the RPC's p_from_phase guard, so a race
+  // between clients noticing the close at once is harmless.
+
+  useEffect(() => {
+    if (!supabase || !room || room.mode !== 'holdem' || room.status !== 'playing') return;
+    const phase = room.holdem_phase;
+    if (phase !== 'preflop' && phase !== 'flop' && phase !== 'turn') return;
+    if (!room.betting || room.betting.currentActor) return; // still someone's turn
+
+    const contenders = remainingContenders(room.betting);
+    if (contenders.length <= 1) return; // settle effect below handles the fold-win
+
+    const nextBetting = advanceStreetBetting(room.betting, room.ante ?? ANTE);
+    supabase.rpc('holdem_advance_street', {
+      p_room_id: room.id,
+      p_from_phase: phase,
+      p_to_phase: STREET_AFTER[phase],
+      p_betting: nextBetting,
+    }).then(() => {});
+  }, [room]);
+
+  // ── Hold'em: settle a hand once it's a fold-win on any street, or the
+  // river's betting has closed with 2+ contenders (real showdown). Idempotent
+  // (no-op once holdem_phase is already 'showdown').
+
+  useEffect(() => {
+    if (!supabase || !room || room.mode !== 'holdem' || room.status !== 'playing') return;
+    const phase = room.holdem_phase;
+    if (phase !== 'preflop' && phase !== 'flop' && phase !== 'turn' && phase !== 'river') return;
+    if (!room.betting || room.betting.currentActor) return; // still someone's turn
+
+    const contenders = remainingContenders(room.betting);
+    if (contenders.length > 1 && phase !== 'river') return; // advance-street effect above handles this
+
+    const winners = contenders.length <= 1
+      ? contenders
+      : resolveHoldemShowdown({
+          holeCards: room.hole_cards ?? {},
+          communityCards: room.community_cards ?? [],
+          folded: room.betting.folded ?? {},
+        }).winners;
+    const payouts = splitPot(room.pot ?? 0, winners);
+
+    supabase.rpc('holdem_settle', {
+      p_room_id: room.id,
+      p_payouts: payouts,
+      p_winner_ids: winners,
+      p_hands_played: (room.hands_played ?? 0) + 1,
+    }).then(() => {});
+  }, [room]);
+
   // ── Create room ──────────────────────────────────────────────────────────
-  // `diceConfig` (end_mode/hand_cap) only matters for Dice Poker; Indian
+  // `endConfig` (end_mode/hand_cap) matters for Dice Poker and Hold'em; Indian
   // Poker ignores it and keeps its Part 1 defaults.
 
-  const createRoom = async (diceConfig = {}) => {
+  const createRoom = async (endConfig = {}) => {
     setError('');
     if (!supabase) {
       setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.');
@@ -159,8 +218,8 @@ const GamblingCorner = () => {
         starting_chips: STARTING_CHIPS,
         ante: ANTE,
         round_phase: 'idle',
-        end_mode: diceConfig.endMode ?? 'hands',
-        hand_cap: diceConfig.handCap ?? 8,
+        end_mode: endConfig.endMode ?? 'hands',
+        hand_cap: endConfig.handCap ?? 8,
       })
       .select()
       .single();
@@ -205,6 +264,10 @@ const GamblingCorner = () => {
 
     if (room.mode === 'dice_poker') {
       await dealDiceHand();
+      return;
+    }
+    if (room.mode === 'holdem') {
+      await dealHoldemRoundAction();
       return;
     }
 
@@ -366,6 +429,77 @@ const GamblingCorner = () => {
     await dealDiceHand();
   };
 
+  // ── Hold'em: deal a hand (first deal from the waiting room, or the next
+  // hand from showdown) — host-gated, blinds already posted client-side by
+  // the pure dealHoldemRound helper, applied atomically by holdem_deal.
+
+  const dealHoldemRoundAction = async () => {
+    if (!supabase || !room || !isHost) return;
+    const bigBlind = room.ante ?? ANTE;
+    const dealt = dealHoldemRound({ players, dealerSeat: room.dealer_seat ?? -1, bigBlind });
+    if (!dealt) return;
+
+    await supabase.rpc('holdem_deal', {
+      p_room_id: room.id,
+      p_host_id: playerId,
+      p_players: dealt.players,
+      p_hole_cards: dealt.holeCards,
+      p_community_cards: dealt.communityCards,
+      p_betting: dealt.betting,
+      p_pot: dealt.pot,
+      p_dealer_seat: dealt.dealerSeat,
+    });
+  };
+
+  // ── Hold'em: one turn-based betting action within the current street ───────
+
+  const holdemBetAction = async (action, amount = 0) => {
+    if (!supabase || !room || !myPlayer) return;
+    const bettablePhases = ['preflop', 'flop', 'turn', 'river'];
+    if (!bettablePhases.includes(room.holdem_phase)) return;
+    if (room.betting?.currentActor !== playerId) return;
+
+    const { round: nextBetting, stack: nextStack, error: actionError } =
+      applyAction(room.betting, playerId, action, amount, myPlayer.chips);
+    if (actionError) return;
+
+    const newPlayers = players.map((p) => (p.id === playerId ? { ...p, chips: nextStack } : p));
+    const delta = (nextBetting.committed[playerId] ?? 0) - (room.betting.committed?.[playerId] ?? 0);
+    const newPot = (room.pot ?? 0) + delta;
+
+    await supabase.rpc('holdem_bet_action', {
+      p_room_id: room.id,
+      p_player_id: playerId,
+      p_betting: nextBetting,
+      p_players: newPlayers,
+      p_pot: newPot,
+    });
+  };
+
+  // ── Hold'em: host deals the next hand, or ends the table if the
+  // end-condition (hand cap / bust) has been reached ─────────────────────────
+
+  const dealNextHoldemHand = async () => {
+    if (!supabase || !room || room.holdem_phase !== 'showdown' || !isHost) return;
+
+    const { gameOver, winnerIds } = checkDiceTableGameOver({
+      players,
+      endMode: room.end_mode,
+      handCap: room.hand_cap,
+      handsPlayed: room.hands_played ?? 0,
+    });
+    if (gameOver) {
+      await supabase
+        .from('gambling_corner_rooms')
+        .update({ status: 'finished', winner_ids: winnerIds })
+        .eq('id', room.id)
+        .eq('status', 'playing');
+      return;
+    }
+
+    await dealHoldemRoundAction();
+  };
+
   // ── Leave — one contextual control ─────────────────────────────────────────
   // Like Category Blitz, chips/hands are shared table state with no clean way
   // to continue without a seated player, so leaving ends the whole table.
@@ -431,6 +565,19 @@ const GamblingCorner = () => {
         onBetAction={diceBetAction}
         onRerollCommit={diceRerollCommit}
         onDealNextHand={dealNextDiceHand}
+        onLeave={leaveGame}
+        onExit={exitGame}
+      />
+    );
+  }
+
+  if (room.mode === 'holdem') {
+    return (
+      <HoldemTable
+        room={room}
+        playerId={playerId}
+        onBetAction={holdemBetAction}
+        onDealNextHand={dealNextHoldemHand}
         onLeave={leaveGame}
         onExit={exitGame}
       />
