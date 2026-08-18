@@ -94,6 +94,16 @@ Key tokens: `--surface`, `--surface-strong`, `--primary`, `--muted`, `--ring`, `
 ```
 Never use `className="fixed inset-0 flex items-center justify-center"` — it will render in the top-left corner.
 
+**CRITICAL — this repo's Tailwind build is broken far beyond spacing.** This project runs Tailwind v4 (`@tailwindcss/postcss`) but `index.css` still uses the v3 `@tailwind base/components/utilities` entrypoint plus a v3-style `tailwind.config.js` — the two don't fully talk to each other. Confirmed by inspecting the actual compiled `dist/assets/index-*.css` and by `getComputedStyle` in a live browser (source review alone will NOT reveal these — a class can look completely normal in JSX and still emit zero CSS):
+
+- **Named spacing-scale classes** (`h-16`, `p-8`, `gap-3`, `max-w-xl`, `min-h-11`, etc.) emit no CSS. Already known; see the overlay-centering note above.
+- **Responsive variants (`sm:`, `md:`, `lg:`, `xl:`) generate ZERO media queries, anywhere in the app.** The compiled CSS has ~11 hand-authored `@media` blocks (custom pixel breakpoints for things like Monopoly) and none of them are Tailwind's own breakpoint system. Every `sm:grid-cols-2`, `sm:text-5xl`, `lg:grid-cols-[1fr_auto_1fr]` in the codebase is dead weight — confirmed by measuring `gridTemplateColumns` on a live page well above the breakpoint width and seeing it stay single-column. **For responsive layouts use `flex flex-wrap` instead of `sm:grid-cols-N`** — it reflows naturally at any width without needing a breakpoint to fire.
+- **Bare/named Tailwind color utilities routed through `tailwind.config.js`'s custom palette don't compile**: `bg-primary`, `text-primary`, `bg-accent`, `text-accent`, `text-foreground`, `border-border`, static colors like `text-black` — none of these generate CSS (0 occurrences in the compiled stylesheet). A `<button className="bg-primary">` renders as native browser `buttonface` gray, not the theme color.
+- **Named font-size scale classes are also dead**: `text-xl`, `text-4xl`, `text-5xl`, etc. don't compile.
+- **What DOES work**: arbitrary-bracket values of any kind (`text-[color:var(--primary)]`, `p-[1rem]`, `text-[1.5rem]`), inline `style` props, and non-scale structural utilities (`flex`, an *unprefixed* `grid-cols-N` like `grid-cols-7`, `rounded-full`, `uppercase`, position/display keywords).
+
+**Rule: for ANY color, font-size, or responsive-breakpoint styling in this repo, use arbitrary-bracket syntax or inline `style` — never a bare/named Tailwind utility for those three categories.** This is exactly why `TicTacToeBoard.jsx`/`TicTacToeLobby.jsx` use inline `style={{ background: 'var(--primary)' }}` instead of `className="bg-primary"` throughout — copy that pattern, not the older Connect Four code that predates this being discovered. If you're unsure whether a class you're about to use actually compiles, verify with Playwright + `getComputedStyle` against the dev server before trusting it.
+
 ---
 
 ## Shared abort / game-over modal
@@ -102,7 +112,7 @@ Never use `className="fixed inset-0 flex items-center justify-center"` — it wi
 - `status="aborted"` — mid-game abort, shows "Game Aborted / heading home"
 - `status="closed"` — exit after game over, shows "Game Over / heading home"
 
-Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root component watching `room.status`). Import it directly (`import GameExitScreen from './GameExitScreen'`) for every new game that needs abort/exit — do not redefine it inline. Currently consumed by Quick-Maths Duel and Word Race. **TODO: retrofit Tic-Tac-Toe / Connect Four** to use the same modal instead of their own abort screens (a later pass, not automatic).
+Both auto-navigate to `'/'` after 1800 ms (driven by a `useEffect` in the root component watching `room.status`). Import it directly (`import GameExitScreen from './GameExitScreen'`) for every new game that needs abort/exit — do not redefine it inline. Currently consumed by Quick-Maths Duel, Word Race, and (as of the 2026-07-24/25 Connect Four pass) Connect Four for its `aborted` status. **Connect Four's retrofit is a deliberate variant, not the standard pattern**: instead of `navigate('/')` to the site homepage, its root `useEffect` calls local `setRoom(null)` 1.8s after abort, returning to Connect Four's own in-app lobby. Match that if you want "stay in the game's own flow" behavior, or use the standard `navigate('/')` version if you want "leave the game entirely" behavior — decide per-game, don't assume one is universally correct. **TODO: retrofit Tic-Tac-Toe** the same way (still on its own inline abort screen).
 
 If a new game needs more than one quit-like action (e.g. "abort an empty room" vs "forfeit mid-race"), collapse them into a **single contextual button** whose label/behavior branches on game state — don't surface two separate buttons for overlapping quit/forfeit intents (see `WordRace.jsx`'s `onLeave`/`leaveGame`).
 

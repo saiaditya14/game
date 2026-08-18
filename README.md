@@ -247,3 +247,17 @@ category blitz expanded to multiplayer but only one vote per person (allow 2)
 Verbal memory but competitive
 
 Emotes (the sticker babie wated)
+
+QUICK MATHS - instead of 5 rounds -> change it to first to 5 wins OR keep only odd number of rounds (we cant have 10 and 20 round games)
+	    - when abording game or quitting game, we need to go back to the game main page, not the website home page.
+
+on the home page of pink theme the top line of the game cards is getting cut off when hovering over a card
+
+TIC-TAK-TOE - change the players colors to match that of connect 4.
+	    - change the end game box to match that of other games.
+
+FOR ALL GAMES - LET WHO STARTS BE RANDOMISED, NOT JUST WHO CREATES THE GAME ROOM
+(similarly for tic-tac-toe - let who be x and who be o also be randomized at the start of each game.)
+	      - all games' room code should have a copy button to allow for the ease of copying.
+
+ON the website home page, can we add a direct room code, so that we dont need to enter the game to type the code?

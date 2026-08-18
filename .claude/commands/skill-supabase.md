@@ -40,7 +40,7 @@ Use Supabase Auth (anonymous) for games that need server-side identity (RPC func
 | `winner` | int | `1`, `2`, or `null` |
 | `player_one` | text | localStorage UUID |
 | `player_two` | text | localStorage UUID, nullable until joined |
-| `last_move` | jsonb | `{ row, column, player, winning_cells, at }` |
+| `last_move` | jsonb | `{ row, column, player, winning_cells, at }`, reset to `null` on replay |
 | `started_at` | timestamptz | set on join |
 | `created_at / updated_at` | timestamptz | auto-managed via trigger |
 
@@ -166,6 +166,8 @@ Known RPC functions: `monopoly_create_room`, `monopoly_join_room`, `monopoly_sta
 
 **Direct update pattern (Connect Four):**  
 Game moves are `supabase.from(...).update({...}).eq('id', room.id).eq('current_player', playerNumber)` — the extra `.eq` acts as an optimistic concurrency guard.
+
+**Play-again / rematch reset (Connect Four, added 2026-07-25):** a plain `update` (no RPC needed here, unlike Monopoly's `monopoly_play_again`) resets `board`/`current_player`/`status`/`winner`/`last_move`/`started_at` back to a fresh game, guarded by `.in('status', ['won', 'draw'])` so it only fires from a genuinely-finished game and keeps both players in the same room row. Good reference for any other simple 2-player game that wants a rematch without Monopoly-style RPC overhead.
 
 **Room persistence across reload:**  
 Monopoly stores `room.id` in `localStorage` under `ROOM_KEY` and re-fetches on mount. Connect Four does not persist room state across reloads (player re-enters lobby).

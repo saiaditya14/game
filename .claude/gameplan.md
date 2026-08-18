@@ -75,8 +75,11 @@ games get a real `<Link>` + `<GameCard>` added directly — no placeholder to sw
 **GameExitScreen extraction — DONE (2026-07-04, Word Race pass):** the
 abort/game-over modal now lives in `src/games/sugar/GameExitScreen.jsx`.
 `QuickMathsDuel.jsx` and `WordRace.jsx` both import it — no duplicate definitions
-left. Do NOT retrofit any OTHER game (Tic-Tac-Toe, Connect Four, etc.) yet —
-those stay on their own abort screens until a later pass the user drives.
+left. **Connect Four was retrofitted 2026-07-24/25** (its `aborted` status now
+renders `GameExitScreen`, but returns to Connect Four's own lobby via local
+`setRoom(null)` instead of `navigate('/')` — see `skill-gamestructure`'s
+GameExitScreen section for why that's a deliberate variant, not a bug). Tic-Tac-Toe
+still stays on its own inline abort screen until a later pass.
 
 ---
 

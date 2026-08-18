@@ -195,8 +195,21 @@ players wins the pot (ties split it). N-player (2-8), ante-only, no blinds (defe
 
 ## Connect Four
 
-- Source: `src/games/sugar/ConnectFour.jsx`, `ConnectFourLobby.jsx`, `ConnectFourBoard.jsx`.
+- Source: `src/games/sugar/ConnectFour.jsx` (root), `ConnectFourLobby.jsx`, `ConnectFourBoard.jsx`, `ConnectFourLanterns.jsx` (Cozy-only decoration, see below).
 - Route: `/connect-four`.
 - Supabase schema/migration exist for `connect_four_rooms`.
 - Pieces must stay true circles with stable keys so old pieces do not reanimate on every realtime update.
-- Desired future polish: sparkles when the winner modal appears.
+
+**UI-upgrade pass (2026-07-24/25), Arcade theme — fully revamped:** neon void backdrop + drifting piece watermarks in the background, `DecryptedText` scramble-reveal title, `MagneticButton` cursor-follow Create/Join buttons, glowing copy-to-clipboard room-code display, arcade-cased copy throughout, neon-glowing player badges/board frame/win-line/discs, and a CSS sparkle-burst celebration on the win modal (fires once for the winner, colored via theme tokens so it also reads correctly in the other 3 themes). Glow intensity was dialed down ~25-30% after user feedback that the first pass was too bright — treat the current box-shadow/textShadow/filter values as the tuned baseline.
+
+**Pink and Champagne have NOT had a dedicated theme pass yet** — the user wants these done one at a time, on explicit request (see the `feedback-ui-upgrade-workflow` memory). Only cross-theme bugfixes and small targeted changes have landed on top of the base styling for those two so far.
+
+**Cross-theme changes (apply regardless of which theme pass is "official"):**
+- Piece-color overrides where the shared `--primary`/`--accent` tokens were too similar to tell P1/P2 apart: Pink is now dark-pink `#9d174d` (P1) vs. light-pink `#f472b6` (P2); Cozy's P2 is overridden to a cool teal `#3f7a8c` against P1's warm gold `--primary`. See `DISC_COLOR_OVERRIDE` in `ConnectFourBoard.jsx`.
+- Cozy also has hanging paper lanterns (`ConnectFourLanterns.jsx`) — 5 lanterns built from user-supplied `images/lan1-5.svg` (transparent versions stripped of their baked-in opaque backgrounds live in `images/lanterns/`), swaying independently with a warm glow. This replaced an earlier rain-streak effect that was tried first and explicitly rejected in favor of lanterns — don't reintroduce rain.
+- Fixed several `text-foreground`/`bg-primary`-on-`<button>`/`<input>` instances that rendered as invisible black text on dark themes — this repo's Tailwind build doesn't apply `color: inherit` resets to form controls, so bare/dead utility classes there fall back to native black. See the `project-tailwind-build-quirks` memory and `skill-gamestructure`'s expanded Tailwind section for the full (much bigger than previously documented) list of dead utility categories in this repo.
+- Removed the per-turn timer and the Settings button (direct user request, not bug-driven).
+- Added a "Restart game" button in the win/draw modal — calls a new `playAgain()` in the root `ConnectFour.jsx` that resets the room to a fresh game while keeping both players in it.
+- Fixed a real bug where aborting got stuck forever on "Game Aborted / Returning home…" with no actual return — `GameExitScreen` has no navigation logic of its own, and Connect Four never had the `useEffect`+`navigate` that other games rely on. Now returns to Connect Four's own lobby via local `setRoom(null)` (not `navigate('/')` to the site home — a deliberate difference from Word Race/Quick-Maths/Category Blitz/Gambling Corner's pattern; see `skill-gamestructure`'s GameExitScreen note).
+
+See the `project-connect-four-arcade-pass` memory for full detail on this pass.
