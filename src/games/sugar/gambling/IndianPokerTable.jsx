@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
-import { Coins, Crown, EyeOff, Gamepad2, Home, LogOut, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Coins, Crown, Home, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { canAffordAnte } from './IndianPokerRules';
+import { CardArt, CARD_BACK_ID, rankSymbolId } from './cardArt';
+import TableStatusBar from './TableStatusBar';
 
 // Fixed/per-theme-tinted status colors — never a generic surface token, or
 // they wash out in some themes (see the Word Race ABSENT_BY_THEME lesson).
@@ -30,35 +31,25 @@ const WIN_GLOW = {
 // the card-back → face transition gets a proper turn instead of a hard swap.
 // Framer Motion only animates `animate` prop CHANGES, so the very first
 // render (mount) snaps straight to the correct side with no spurious flip.
+// Real vector card art (see cardArt.js) — Indian Poker only ever deals a
+// RANK (2-14), never a suit, so every card renders fixed to clubs; suit
+// never being real is intentional (it's irrelevant to this game's rules),
+// not a missing feature.
 const CardFace = ({ rank, hidden, small }) => {
-  const label = rank >= 11 ? { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' }[rank] : String(rank);
-  const size = small ? { w: '2.75rem', h: '3.75rem', font: '1.1rem' } : { w: '3.75rem', h: '5.25rem', font: '1.6rem' };
+  const width = small ? '2.75rem' : '3.75rem';
 
   return (
-    <div style={{ perspective: '600px', width: size.w, height: size.h }}>
+    <div style={{ perspective: '600px', width, aspectRatio: '169.075 / 244.64' }}>
       <motion.div
         animate={{ rotateY: hidden ? 0 : 180 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         style={{ position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d' }}
       >
-        <div
-          className="grid place-items-center border"
-          style={{
-            position: 'absolute', inset: 0, backfaceVisibility: 'hidden', borderRadius: '0.5rem',
-            borderColor: 'var(--divider)',
-            background: 'repeating-linear-gradient(45deg, var(--surface-strong), var(--surface-strong) 6px, var(--surface) 6px, var(--surface) 12px)',
-          }}
-        >
-          <EyeOff className="h-4 w-4" style={{ color: 'var(--muted)' }} />
+        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
+          <CardArt symbolId={CARD_BACK_ID} width="100%" />
         </div>
-        <div
-          className="grid place-items-center border font-black"
-          style={{
-            position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)',
-            borderRadius: '0.5rem', borderColor: 'var(--ring)', background: 'var(--surface)', color: 'var(--foreground)', fontSize: size.font,
-          }}
-        >
-          {label}
+        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          {rank !== undefined && <CardArt symbolId={rankSymbolId(rank)} width="100%" />}
         </div>
       </motion.div>
     </div>
@@ -132,10 +123,9 @@ const tableGridVariants = {
 };
 
 const IndianPokerTable = ({ room, playerId, onDecide, onDealNextRound, onLeave, onExit }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
   const isPink   = theme === 'theme-pink';
-  const themes = [{ id: 'theme-champagne', label: 'Champagne' }, { id: 'theme-pink', label: 'Pink' }, { id: 'theme-arcade', label: 'Arcade' }, { id: 'theme-cozy', label: 'Cozy' }];
 
   const players = useMemo(() => (Array.isArray(room?.players) ? room.players : []), [room?.players]);
   const hands = room?.hands ?? {};
@@ -154,34 +144,7 @@ const IndianPokerTable = ({ room, playerId, onDecide, onDealNextRound, onLeave, 
 
   return (
     <div className="mx-auto max-w-[64rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
-      <nav className="flex flex-wrap items-center justify-between gap-[0.75rem] py-[1.25rem]">
-        <Link to="/" className="flex items-center gap-[0.5rem] no-underline" style={{ color: 'var(--foreground)' }}>
-          <span className="grid place-items-center" style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius)', background: 'var(--primary)', color: isArcade ? '#000' : 'var(--surface)' }}>
-            <Gamepad2 className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-bold">Lovelyland</span>
-        </Link>
-        <div className="flex items-center gap-[0.5rem]">
-          {room?.code && (
-            <button type="button" onClick={() => navigator.clipboard?.writeText(room.code)} className="border px-[0.75rem] py-[0.375rem] text-xs font-bold uppercase tracking-[0.14em]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)' }}>
-              {room.code}
-            </button>
-          )}
-          <label className="flex items-center gap-[0.375rem] border px-[0.625rem] py-[0.375rem]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)' }}>
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="bg-transparent text-xs font-bold outline-none" style={{ color: 'var(--foreground)' }}>
-              {themes.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
-          </label>
-          {!isFinished ? (
-            <button type="button" onClick={onLeave} className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Leave table">
-              <LogOut className="h-4 w-4" />
-            </button>
-          ) : null}
-          <Link to="/" className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Home">
-            <Home className="h-4 w-4" />
-          </Link>
-        </div>
-      </nav>
+      <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
       <div className="mb-[1.5rem] flex flex-col items-center gap-[0.375rem]">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--primary)' }}>Indian Poker</p>

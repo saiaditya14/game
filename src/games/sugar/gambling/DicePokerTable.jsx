@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import {
-  Coins, Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Gamepad2, Home, LogOut,
+  Coins, Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Home,
   RefreshCw, Sparkles, ThumbsDown, Lock,
 } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { evaluateHand, rankHandLabel } from './DicePokerRules';
+import TableStatusBar from './TableStatusBar';
 
 // Fixed/per-theme-tinted status colors — never a generic surface token (see
 // Word Race's ABSENT_BY_THEME / Indian Poker's STAY_COLOR precedent).
@@ -196,10 +196,9 @@ const btnBase =
   'inline-flex min-h-[2.75rem] items-center justify-center gap-[0.5rem] px-[1.5rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50';
 
 const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNextHand, onLeave, onExit }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
   const isPink   = theme === 'theme-pink';
-  const themes = [{ id: 'theme-champagne', label: 'Champagne' }, { id: 'theme-pink', label: 'Pink' }, { id: 'theme-arcade', label: 'Arcade' }, { id: 'theme-cozy', label: 'Cozy' }];
 
   const players = useMemo(() => (Array.isArray(room?.players) ? room.players : []), [room?.players]);
   const dice = room?.dice ?? {};
@@ -249,34 +248,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
 
   return (
     <div className="mx-auto max-w-[68rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
-      <nav className="flex flex-wrap items-center justify-between gap-[0.75rem] py-[1.25rem]">
-        <Link to="/" className="flex items-center gap-[0.5rem] no-underline" style={{ color: 'var(--foreground)' }}>
-          <span className="grid place-items-center" style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius)', background: 'var(--primary)', color: isArcade ? '#000' : 'var(--surface)' }}>
-            <Gamepad2 className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-bold">Lovelyland</span>
-        </Link>
-        <div className="flex items-center gap-[0.5rem]">
-          {room?.code && (
-            <button type="button" onClick={() => navigator.clipboard?.writeText(room.code)} className="border px-[0.75rem] py-[0.375rem] text-xs font-bold uppercase tracking-[0.14em]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)' }}>
-              {room.code}
-            </button>
-          )}
-          <label className="flex items-center gap-[0.375rem] border px-[0.625rem] py-[0.375rem]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)' }}>
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="bg-transparent text-xs font-bold outline-none" style={{ color: 'var(--foreground)' }}>
-              {themes.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
-          </label>
-          {!isFinished ? (
-            <button type="button" onClick={onLeave} className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Leave table">
-              <LogOut className="h-4 w-4" />
-            </button>
-          ) : null}
-          <Link to="/" className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Home">
-            <Home className="h-4 w-4" />
-          </Link>
-        </div>
-      </nav>
+      <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
       <div className="mb-[1.5rem] flex flex-col items-center gap-[0.375rem]">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--primary)' }}>

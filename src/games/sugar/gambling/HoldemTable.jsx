@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
-import {
-  Coins, Crown, EyeOff, Gamepad2, Home, LogOut, Sparkles, ThumbsDown,
-} from 'lucide-react';
+import { Coins, Crown, Sparkles, ThumbsDown } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { resolveHoldemShowdown, handLabel } from './HoldemRules';
+import { CardArt, CARD_BACK_ID, cardSymbolId } from './cardArt';
+import TableStatusBar from './TableStatusBar';
 
 // Fixed/per-theme-tinted status colors — matches Indian Poker / Dice Poker's
 // precedent (never a generic surface token).
@@ -40,51 +39,27 @@ const TURN_GLOW = {
   'theme-champagne': '0 0 0 2px #15803d, 0 4px 16px rgba(21,128,61,0.25)',
 };
 
-const SUIT_SYMBOL = { h: '♥', d: '♦', c: '♣', s: '♠' };
-const RED_SUITS = new Set(['h', 'd']);
-
 const STREET_LABEL = { idle: 'Waiting', preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', showdown: 'Showdown' };
 const COMMUNITY_COUNT = { idle: 0, preflop: 0, flop: 3, turn: 4, river: 5, showdown: 5 };
 
 // A real 3D flip, same precedent as Indian Poker's CardFace — the reveal is
-// the point, so back->face is a proper rotateY turn, not a hard swap.
+// the point, so back->face is a proper rotateY turn, not a hard swap. Faces
+// are real vector card art (see cardArt.js) instead of a hand-drawn box.
 const CardFace = ({ card, hidden, small, faceDown }) => {
-  const size = small ? { w: '2.75rem', h: '3.75rem', font: '1.05rem' } : { w: '3.5rem', h: '4.9rem', font: '1.3rem' };
-  const rank = card ? card[0] : null;
-  const suit = card ? card[1] : null;
-  const isRed = suit && RED_SUITS.has(suit);
+  const width = small ? '2.75rem' : '3.5rem';
 
   return (
-    <div style={{ perspective: '600px', width: size.w, height: size.h }}>
+    <div style={{ perspective: '600px', width, aspectRatio: '169.075 / 244.64' }}>
       <motion.div
         animate={{ rotateY: hidden || faceDown ? 0 : 180 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         style={{ position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d' }}
       >
-        <div
-          className="grid place-items-center border"
-          style={{
-            position: 'absolute', inset: 0, backfaceVisibility: 'hidden', borderRadius: '0.4rem',
-            borderColor: 'var(--divider)',
-            background: 'repeating-linear-gradient(45deg, var(--surface-strong), var(--surface-strong) 6px, var(--surface) 6px, var(--surface) 12px)',
-          }}
-        >
-          <EyeOff className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
+        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
+          <CardArt symbolId={CARD_BACK_ID} width="100%" />
         </div>
-        <div
-          className="grid place-items-center border font-black leading-none"
-          style={{
-            position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)',
-            borderRadius: '0.4rem', borderColor: 'var(--ring)', background: '#fdfaf6',
-            color: isRed ? '#c81e3a' : '#1a1a1a', fontSize: size.font,
-          }}
-        >
-          {card && (
-            <span className="flex flex-col items-center gap-[0.05rem]">
-              <span>{rank}</span>
-              <span style={{ fontSize: '0.85em' }}>{SUIT_SYMBOL[suit]}</span>
-            </span>
-          )}
+        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          {card && <CardArt symbolId={cardSymbolId(card)} width="100%" />}
         </div>
       </motion.div>
     </div>
@@ -202,10 +177,9 @@ const cardPop = {
 const btnBase = 'inline-flex min-h-[2.75rem] items-center justify-center gap-[0.5rem] px-[1.5rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50';
 
 const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onExit }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
   const isPink   = theme === 'theme-pink';
-  const themes = [{ id: 'theme-champagne', label: 'Champagne' }, { id: 'theme-pink', label: 'Pink' }, { id: 'theme-arcade', label: 'Arcade' }, { id: 'theme-cozy', label: 'Cozy' }];
 
   const players = useMemo(() => (Array.isArray(room?.players) ? room.players : []), [room?.players]);
   const holeCards = room?.hole_cards ?? {};
@@ -267,34 +241,7 @@ const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onE
 
   return (
     <div className="mx-auto max-w-[68rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
-      <nav className="flex flex-wrap items-center justify-between gap-[0.75rem] py-[1.25rem]">
-        <Link to="/" className="flex items-center gap-[0.5rem] no-underline" style={{ color: 'var(--foreground)' }}>
-          <span className="grid place-items-center" style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius)', background: 'var(--primary)', color: isArcade ? '#000' : 'var(--surface)' }}>
-            <Gamepad2 className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-bold">Lovelyland</span>
-        </Link>
-        <div className="flex items-center gap-[0.5rem]">
-          {room?.code && (
-            <button type="button" onClick={() => navigator.clipboard?.writeText(room.code)} className="border px-[0.75rem] py-[0.375rem] text-xs font-bold uppercase tracking-[0.14em]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)' }}>
-              {room.code}
-            </button>
-          )}
-          <label className="flex items-center gap-[0.375rem] border px-[0.625rem] py-[0.375rem]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)' }}>
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="bg-transparent text-xs font-bold outline-none" style={{ color: 'var(--foreground)' }}>
-              {themes.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
-          </label>
-          {!isFinished ? (
-            <button type="button" onClick={onLeave} className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Leave table">
-              <LogOut className="h-4 w-4" />
-            </button>
-          ) : null}
-          <Link to="/" className="grid place-items-center border" style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }} aria-label="Home">
-            <Home className="h-4 w-4" />
-          </Link>
-        </div>
-      </nav>
+      <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
       <div className="mb-[1.25rem] flex flex-col items-center gap-[0.375rem]">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--primary)' }}>
