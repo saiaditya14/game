@@ -44,7 +44,7 @@ const TURN_GLOW = {
 const DIE_ICONS = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 
 const DieFace = ({ value, hidden, size = 'md', kept, onToggle, dim, index = 0 }) => {
-  const dims = size === 'sm' ? '2rem' : size === 'lg' ? '3rem' : '2.5rem';
+  const dims = size === 'sm' ? '2rem' : size === 'lg' ? '3rem' : size === 'xl' ? 'clamp(2.75rem, 6vw, 4.25rem)' : '2.5rem';
   const Icon = value ? DIE_ICONS[value - 1] : Dice1;
   const clickable = Boolean(onToggle);
   return (
@@ -72,7 +72,7 @@ const DieFace = ({ value, hidden, size = 'md', kept, onToggle, dim, index = 0 })
         <motion.span
           key={value}
           className="grid place-items-center"
-          style={{ width: '65%', height: '65%' }}
+          style={{ width: '84%', height: '84%' }}
           initial={{ opacity: 0, scale: 0.3, rotate: -140 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 320, damping: 16, delay: index * 0.05 }}
@@ -114,12 +114,13 @@ const PlayerSeat = ({
       variants={seatVariants}
       data-player-seat={player.id}
       data-player-name={player.name}
-      className="relative flex flex-col items-center gap-[0.625rem] border px-[1rem] py-[1rem]"
+      className="relative flex flex-col items-center justify-center gap-[1rem] border px-[1.5rem] py-[2rem]"
       style={{
         borderRadius: 'var(--radius)',
         borderColor: isMe ? 'var(--primary)' : 'var(--divider)',
         background: 'var(--surface)',
         opacity: busted ? 0.5 : isFolded ? 0.65 : 1,
+        minHeight: '18rem',
       }}
     >
       {isWinner && (
@@ -140,48 +141,48 @@ const PlayerSeat = ({
         />
       )}
 
-      <div className="flex gap-[0.3rem]">
+      <div className="flex gap-[0.5rem]">
         {(dice ?? [undefined, undefined, undefined, undefined, undefined]).map((v, i) => (
           <DieFace
             key={i}
             index={i}
             value={v}
             hidden={hideDice}
-            size="sm"
+            size="xl"
             kept={canPickReroll ? keepMask?.[i] : undefined}
             onToggle={canPickReroll ? () => onToggleKeep(i) : undefined}
           />
         ))}
       </div>
 
-      <div className="flex items-center gap-[0.375rem]">
-        {isWinner && <Crown className="h-3.5 w-3.5" style={{ color: 'var(--primary)' }} />}
-        <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+      <div className="flex items-center gap-[0.5rem]">
+        {isWinner && <Crown className="h-5 w-5" style={{ color: 'var(--primary)' }} />}
+        <span className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>
           {player.name}{isMe ? ' (you)' : ''}
         </span>
       </div>
 
-      <span className="flex items-center gap-[0.25rem] text-xs font-bold" style={{ color: 'var(--muted)' }}>
-        <Coins className="h-3 w-3" /><AnimatedChips value={player.chips} />
+      <span className="flex items-center gap-[0.375rem] text-sm font-bold" style={{ color: 'var(--muted)' }}>
+        <Coins className="h-4 w-4" /><AnimatedChips value={player.chips} />
         {committed > 0 && <span style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>&nbsp;(+{committed})</span>}
       </span>
 
       {hand && showHandLabel && (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--primary)' }}>
+        <span className="text-xs font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--primary)' }}>
           {rankHandLabel(hand)}
         </span>
       )}
 
       {busted ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
       ) : isFolded ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
       ) : isAllIn ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: ALLIN_COLOR[theme] ?? ALLIN_COLOR['theme-champagne'] }}>All In</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: ALLIN_COLOR[theme] ?? ALLIN_COLOR['theme-champagne'] }}>All In</span>
       ) : isCurrentActor ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>Their Turn</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>Their Turn</span>
       ) : (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
       )}
     </motion.div>
   );
@@ -247,7 +248,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
     : `Hand ${Math.min((room?.hands_played ?? 0) + (isShowdown || isFinished ? 0 : 1), room?.hand_cap ?? 8)} of ${room?.hand_cap ?? 8}`;
 
   return (
-    <div className="mx-auto max-w-[68rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
+    <div className="mx-auto max-w-[84rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
       <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
       <div className="mb-[1.5rem] flex flex-col items-center gap-[0.375rem]">
@@ -270,7 +271,8 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
       </div>
 
       <motion.div
-        className="grid grid-cols-2 gap-[1rem] sm:grid-cols-3 md:grid-cols-4"
+        className="grid"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: '1.5rem' }}
         variants={tableGridVariants}
         initial="hidden"
         animate="show"

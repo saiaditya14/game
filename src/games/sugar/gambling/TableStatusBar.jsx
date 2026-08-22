@@ -3,6 +3,16 @@ import { motion } from 'framer-motion';
 import { Check, Copy, LogOut } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 
+// A warning/danger red, distinct from every theme's primary accent — Leave
+// is a destructive action (forfeits the whole table) and shouldn't blend
+// into the same neutral outline every other icon button uses.
+const LEAVE_COLOR = {
+  'theme-pink':      '#e11d48',
+  'theme-arcade':    '#ff2d55',
+  'theme-cozy':      '#c2410c',
+  'theme-champagne': '#c2410c',
+};
+
 // The site's global NavBar (src/components/NavBar.jsx) is already sticky at
 // the top of every route and already owns the Lovelyland brand link, the
 // Home icon, and the theme-swatch picker — including on /gambling-corner,
@@ -13,6 +23,7 @@ import { useTheme } from '../../../components/ThemeProvider';
 const TableStatusBar = ({ code, onLeave, showLeave = true }) => {
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
+  const leaveColor = LEAVE_COLOR[theme] ?? LEAVE_COLOR['theme-champagne'];
   const [copied, setCopied] = useState(false);
 
   const doCopy = () => {
@@ -44,15 +55,22 @@ const TableStatusBar = ({ code, onLeave, showLeave = true }) => {
         </motion.button>
       )}
       {showLeave && (
-        <button
+        <motion.button
           type="button"
           onClick={onLeave}
           className="grid place-items-center border"
-          style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--muted)' }}
+          style={{
+            width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius)',
+            borderColor: leaveColor, color: leaveColor,
+            background: isArcade ? 'rgba(20,0,4,0.85)' : 'transparent',
+            boxShadow: isArcade ? `0 0 10px ${leaveColor}66` : undefined,
+          }}
+          whileHover={{ y: -1, scale: 1.05 }}
+          whileTap={{ scale: 0.94 }}
           aria-label="Leave table"
         >
           <LogOut className="h-4 w-4" />
-        </button>
+        </motion.button>
       )}
     </div>
   );

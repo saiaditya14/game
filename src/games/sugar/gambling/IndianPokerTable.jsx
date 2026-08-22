@@ -34,9 +34,10 @@ const WIN_GLOW = {
 // Real vector card art (see cardArt.js) — Indian Poker only ever deals a
 // RANK (2-14), never a suit, so every card renders fixed to clubs; suit
 // never being real is intentional (it's irrelevant to this game's rules),
-// not a missing feature.
+// not a missing feature. `clamp()` lets the card grow with the seat instead
+// of staying pinned to one tiny fixed size on a big screen.
 const CardFace = ({ rank, hidden, small }) => {
-  const width = small ? '2.75rem' : '3.75rem';
+  const width = small ? '3.5rem' : 'clamp(6.5rem, 15vw, 11rem)';
 
   return (
     <div style={{ perspective: '600px', width, aspectRatio: '169.075 / 244.64' }}>
@@ -77,12 +78,13 @@ const PlayerSeat = ({ player, isMe, cardRank, decision, isWinner, revealAll, isA
   return (
     <motion.div
       variants={seatVariants}
-      className="relative flex flex-col items-center gap-[0.5rem] border px-[1rem] py-[1rem]"
+      className="relative flex flex-col items-center justify-center gap-[1rem] border px-[1.5rem] py-[2rem]"
       style={{
         borderRadius: 'var(--radius)',
         borderColor: isMe ? 'var(--primary)' : 'var(--divider)',
         background: 'var(--surface)',
         opacity: busted ? 0.5 : folded ? 0.7 : 1,
+        minHeight: '18rem',
       }}
     >
       {isWinner && (
@@ -95,23 +97,23 @@ const PlayerSeat = ({ player, isMe, cardRank, decision, isWinner, revealAll, isA
         />
       )}
       <CardFace rank={cardRank} hidden={hideCard} />
-      <div className="flex items-center gap-[0.375rem]">
-        {isWinner && <Crown className="h-3.5 w-3.5" style={{ color: 'var(--primary)' }} />}
-        <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+      <div className="flex items-center gap-[0.5rem]">
+        {isWinner && <Crown className="h-5 w-5" style={{ color: 'var(--primary)' }} />}
+        <span className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>
           {player.name}{isMe ? ' (you)' : ''}
         </span>
       </div>
-      <span className="flex items-center gap-[0.25rem] text-xs font-bold" style={{ color: 'var(--muted)' }}>
-        <Coins className="h-3 w-3" /><AnimatedChips value={player.chips} />
+      <span className="flex items-center gap-[0.375rem] text-sm font-bold" style={{ color: 'var(--muted)' }}>
+        <Coins className="h-4 w-4" /><AnimatedChips value={player.chips} />
       </span>
       {busted ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
       ) : decision === 'stay' ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: STAY_COLOR[theme] ?? STAY_COLOR['theme-champagne'] }}>Stayed</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: STAY_COLOR[theme] ?? STAY_COLOR['theme-champagne'] }}>Stayed</span>
       ) : decision === 'fold' ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
       ) : (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
       )}
     </motion.div>
   );
@@ -143,7 +145,7 @@ const IndianPokerTable = ({ room, playerId, onDecide, onDealNextRound, onLeave, 
   const tableWinner = isFinished ? players.find((p) => (p.chips ?? 0) > 0) : null;
 
   return (
-    <div className="mx-auto max-w-[64rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
+    <div className="mx-auto max-w-[80rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
       <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
       <div className="mb-[1.5rem] flex flex-col items-center gap-[0.375rem]">
@@ -158,7 +160,8 @@ const IndianPokerTable = ({ room, playerId, onDecide, onDealNextRound, onLeave, 
       </div>
 
       <motion.div
-        className="grid grid-cols-2 gap-[1rem] sm:grid-cols-3 md:grid-cols-4"
+        className="grid"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(15rem, 1fr))', gap: '1.5rem' }}
         variants={tableGridVariants}
         initial="hidden"
         animate="show"

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
-import { Coins, Crown, Sparkles, ThumbsDown } from 'lucide-react';
+import { Coins, Crown, Home, Sparkles, ThumbsDown } from 'lucide-react';
 import { useTheme } from '../../../components/ThemeProvider';
 import { resolveHoldemShowdown, handLabel } from './HoldemRules';
 import { CardArt, CARD_BACK_ID, cardSymbolId } from './cardArt';
@@ -46,7 +46,7 @@ const COMMUNITY_COUNT = { idle: 0, preflop: 0, flop: 3, turn: 4, river: 5, showd
 // the point, so back->face is a proper rotateY turn, not a hard swap. Faces
 // are real vector card art (see cardArt.js) instead of a hand-drawn box.
 const CardFace = ({ card, hidden, small, faceDown }) => {
-  const width = small ? '2.75rem' : '3.5rem';
+  const width = small ? 'clamp(3rem, 8vw, 5.5rem)' : 'clamp(3.25rem, 11vw, 8.5rem)';
 
   return (
     <div style={{ perspective: '600px', width, aspectRatio: '169.075 / 244.64' }}>
@@ -90,12 +90,13 @@ const PlayerSeat = ({
       variants={seatVariants}
       data-player-seat={player.id}
       data-player-name={player.name}
-      className="relative flex flex-col items-center gap-[0.5rem] border px-[1rem] py-[1rem]"
+      className="relative flex flex-col items-center justify-center gap-[0.875rem] border px-[1.5rem] py-[1.75rem]"
       style={{
         borderRadius: 'var(--radius)',
         borderColor: isMe ? 'var(--primary)' : 'var(--divider)',
         background: 'var(--surface)',
         opacity: busted ? 0.5 : isFolded ? 0.6 : 1,
+        minHeight: '16rem',
       }}
     >
       {isWinner && (
@@ -129,39 +130,39 @@ const PlayerSeat = ({
         </span>
       )}
 
-      <div className="flex gap-[0.3rem]">
-        <CardFace card={holeCards?.[0]} hidden={hideCards} small />
-        <CardFace card={holeCards?.[1]} hidden={hideCards} small />
+      <div className="flex gap-[0.5rem]">
+        <CardFace card={holeCards?.[0]} hidden={hideCards} />
+        <CardFace card={holeCards?.[1]} hidden={hideCards} />
       </div>
 
-      <div className="flex items-center gap-[0.375rem]">
-        {isWinner && <Crown className="h-3.5 w-3.5" style={{ color: 'var(--primary)' }} />}
-        <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+      <div className="flex items-center gap-[0.5rem]">
+        {isWinner && <Crown className="h-5 w-5" style={{ color: 'var(--primary)' }} />}
+        <span className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>
           {player.name}{isMe ? ' (you)' : ''}
         </span>
       </div>
 
-      <span className="flex items-center gap-[0.25rem] text-xs font-bold" style={{ color: 'var(--muted)' }}>
-        <Coins className="h-3 w-3" /><AnimatedChips value={player.chips} />
+      <span className="flex items-center gap-[0.375rem] text-sm font-bold" style={{ color: 'var(--muted)' }}>
+        <Coins className="h-4 w-4" /><AnimatedChips value={player.chips} />
         {committed > 0 && <span style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>&nbsp;(+{committed})</span>}
       </span>
 
       {handLabelText && (
-        <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--primary)' }}>
+        <span className="text-xs font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--primary)' }}>
           {handLabelText}
         </span>
       )}
 
       {busted ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Out</span>
       ) : isFolded ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'] }}>Folded</span>
       ) : isAllIn ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: ALLIN_COLOR[theme] ?? ALLIN_COLOR['theme-champagne'] }}>All In</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: ALLIN_COLOR[theme] ?? ALLIN_COLOR['theme-champagne'] }}>All In</span>
       ) : isCurrentActor ? (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>Their Turn</span>
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: ACTIVE_COLOR[theme] ?? ACTIVE_COLOR['theme-champagne'] }}>Their Turn</span>
       ) : (
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
+        <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted)' }} />
       )}
     </motion.div>
   );
@@ -240,10 +241,10 @@ const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onE
     : `Hand ${Math.min((room?.hands_played ?? 0) + (isShowdown || isFinished ? 0 : 1), room?.hand_cap ?? 8)} of ${room?.hand_cap ?? 8}`;
 
   return (
-    <div className="mx-auto max-w-[68rem] px-[1rem] pb-[3rem]" style={{ color: 'var(--foreground)' }}>
+    <div className="mx-auto flex max-w-[84rem] flex-col px-[1rem] pb-[2rem]" style={{ color: 'var(--foreground)', minHeight: 'calc(100vh - 6rem)' }}>
       <TableStatusBar code={room?.code} onLeave={onLeave} showLeave={!isFinished} />
 
-      <div className="mb-[1.25rem] flex flex-col items-center gap-[0.375rem]">
+      <div className="mb-[0.5rem] flex flex-col items-center gap-[0.375rem]">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--primary)' }}>
           Hold'em · {handModeLabel} · {STREET_LABEL[phase] ?? 'Waiting'}
         </p>
@@ -262,9 +263,18 @@ const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onE
         </div>
       </div>
 
-      {/* Community cards */}
-      <div className="mb-[1.75rem] flex flex-col items-center gap-[0.5rem]">
-        <motion.div className="flex gap-[0.4rem]" variants={communityVariants} initial="hidden" animate="show">
+      {/* Community cards float in the remaining vertical space above the
+          seats — this flex-1 block is what pushes the seats/betting
+          controls down toward the bottom third on tall viewports, instead
+          of everything stacking tight under the header. */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-[0.5rem]" style={{ minHeight: '9rem' }}>
+        <motion.div
+          className="flex flex-wrap justify-center"
+          style={{ gap: 'clamp(0.3rem, 1.5vw, 0.625rem)', maxWidth: '100%' }}
+          variants={communityVariants}
+          initial="hidden"
+          animate="show"
+        >
           {Array.from({ length: 5 }).map((_, i) => (
             <motion.div key={`${phase}-${i}`} variants={cardPop}>
               <CardFace card={shownCommunity[i]} hidden={!shownCommunity[i]} faceDown={!shownCommunity[i]} />
@@ -274,7 +284,8 @@ const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onE
       </div>
 
       <motion.div
-        className="grid grid-cols-2 gap-[1rem] sm:grid-cols-3 md:grid-cols-4"
+        className="grid"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(15rem, 1fr))', gap: '1.5rem' }}
         variants={tableGridVariants}
         initial="hidden"
         animate="show"
