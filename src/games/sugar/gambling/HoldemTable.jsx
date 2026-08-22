@@ -45,8 +45,12 @@ const COMMUNITY_COUNT = { idle: 0, preflop: 0, flop: 3, turn: 4, river: 5, showd
 // A real 3D flip, same precedent as Indian Poker's CardFace — the reveal is
 // the point, so back->face is a proper rotateY turn, not a hard swap. Faces
 // are real vector card art (see cardArt.js) instead of a hand-drawn box.
+// `vw`-only sizing grows cards purely off viewport WIDTH, which on a wide
+// but not-that-tall screen made cards tall enough (locked to the card aspect
+// ratio) to eat the flex spacer's slack and visually collide with the seats
+// below. `min(vw, vh)` caps growth by whichever dimension is tighter.
 const CardFace = ({ card, hidden, small, faceDown }) => {
-  const width = small ? 'clamp(3rem, 8vw, 5.5rem)' : 'clamp(3.25rem, 11vw, 8.5rem)';
+  const width = small ? 'clamp(3rem, min(8vw, 9vh), 5.5rem)' : 'clamp(3.25rem, min(11vw, 12vh), 8.5rem)';
 
   return (
     <div style={{ perspective: '600px', width, aspectRatio: '169.075 / 244.64' }}>
@@ -267,7 +271,7 @@ const HoldemTable = ({ room, playerId, onBetAction, onDealNextHand, onLeave, onE
           seats — this flex-1 block is what pushes the seats/betting
           controls down toward the bottom third on tall viewports, instead
           of everything stacking tight under the header. */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-[0.5rem]" style={{ minHeight: '9rem' }}>
+      <div className="flex flex-1 flex-col items-center justify-center gap-[0.5rem]" style={{ minHeight: '9rem', paddingBottom: '1.5rem' }}>
         <motion.div
           className="flex flex-wrap justify-center"
           style={{ gap: 'clamp(0.3rem, 1.5vw, 0.625rem)', maxWidth: '100%' }}

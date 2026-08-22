@@ -109,12 +109,19 @@ const PlayerSeat = ({
   const hideDice = dice === undefined ? true : (!isMe && !revealDice);
   const hand = revealDice && dice ? evaluateHand(dice) : null;
 
+  // Below ~860px (roughly "half a laptop screen"), the seat grid collapses
+  // to one column — reorder so the OPPONENT'S seat lands first/on top and
+  // your own drops below it, since reading the opponent is the higher-value
+  // glance at that size. Your own dice stay fully present and tappable
+  // (reroll needs to see + tap them), just visually secondary.
+  const smallScreenOrder = isMe ? 'max-[860px]:order-2' : 'max-[860px]:order-1';
+
   return (
     <motion.div
       variants={seatVariants}
       data-player-seat={player.id}
       data-player-name={player.name}
-      className="relative flex flex-col items-center justify-center gap-[1rem] border px-[1.5rem] py-[2rem]"
+      className={`relative flex flex-col items-center justify-center gap-[1rem] border px-[1.5rem] py-[2rem] ${smallScreenOrder}`}
       style={{
         borderRadius: 'var(--radius)',
         borderColor: isMe ? 'var(--primary)' : 'var(--divider)',
@@ -141,17 +148,25 @@ const PlayerSeat = ({
         />
       )}
 
-      <div className="flex gap-[0.5rem]">
+      {/* Below ~480px, five dice at a legible size no longer fit in a row —
+          rather than keep shrinking them into unreadable/untappable specks,
+          the row becomes a smooth, snap-scrollable strip so every die stays
+          a real size. */}
+      <div
+        className="flex w-full justify-center gap-[0.5rem] max-[480px]:snap-x max-[480px]:snap-mandatory max-[480px]:justify-start max-[480px]:overflow-x-auto max-[480px]:scroll-smooth max-[480px]:pb-[0.375rem]"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {(dice ?? [undefined, undefined, undefined, undefined, undefined]).map((v, i) => (
-          <DieFace
-            key={i}
-            index={i}
-            value={v}
-            hidden={hideDice}
-            size="xl"
-            kept={canPickReroll ? keepMask?.[i] : undefined}
-            onToggle={canPickReroll ? () => onToggleKeep(i) : undefined}
-          />
+          <div key={i} className="shrink-0 max-[480px]:snap-start">
+            <DieFace
+              index={i}
+              value={v}
+              hidden={hideDice}
+              size="xl"
+              kept={canPickReroll ? keepMask?.[i] : undefined}
+              onToggle={canPickReroll ? () => onToggleKeep(i) : undefined}
+            />
+          </div>
         ))}
       </div>
 
@@ -271,8 +286,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
       </div>
 
       <motion.div
-        className="grid"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: '1.5rem' }}
+        className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-[1.5rem] max-[860px]:grid-cols-1"
         variants={tableGridVariants}
         initial="hidden"
         animate="show"
