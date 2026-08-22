@@ -14,7 +14,7 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 - **Quick-Maths Duel** (`/quick-maths`) ✅ shipped 2026-07-02
 - **Word Race** (`/word-race`) ✅ shipped 2026-07-04
 - **Category Blitz** (`/category-blitz`) ✅ shipped 2026-07-05
-- **Gambling Corner — Indian Poker + Dice Poker + Hold'em** (`/gambling-corner`) ✅ Part 1 (Indian Poker) shipped 2026-07-05, Part 2 (Dice Poker) shipped 2026-07-06, Part 3 (Hold'em) shipped 2026-07-25
+- **Gambling Corner — Indian Poker + Dice Poker + Hold'em** (`/gambling-corner`) ✅ Part 1 (Indian Poker) shipped 2026-07-05, Part 2 (Dice Poker) shipped 2026-07-06, Part 3 (Hold'em) shipped 2026-07-25 — **shipped, minor bugfixes remaining** (see `README.md` Todolist: Dice Poker small-screen layout needs another pass, Hold'em status-bar exit icon/room code display bug)
 
 Their homepage cards stay.
 
@@ -80,12 +80,12 @@ Their homepage cards stay.
 > room row fetched directly from the Supabase REST API (not DOM state) as the
 > turn-order oracle to avoid realtime-propagation-lag false positives.
 
-All three Gambling Corner variants are now shipped. Gambling Corner is complete.
+All three Gambling Corner variants are now shipped (minor bugfixes remaining —
+see the callout in the Survivors list above and `README.md`'s Todolist).
 6. **Verbal Memory (competitive)** ← **NEW** (user, 2026-07-05; build AFTER Gambling Corner) — a memory game with a competitive head-to-head twist. Concept from a playtester; design details TBD with the user before building. See the `verbal-memory-game` memory.
-7. **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a dial to guess.
-8. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
+7. **Codenames Duet** — Co-op word association; give clues to find shared agents before turns run out.
 > **Removed:** Tug-of-War (cut), Spot-the-Difference (cut), Speed Trivia Buzz (cut).
-> **Parked:** Gerbil Ball — pulled out of the web build order, see "Parked ideas" at the bottom.
+> **Parked:** Gerbil Ball, Same Wavelength — pulled out of the web build order, see "Parked ideas" at the bottom.
 
 All leftover placeholder cards (`Battleship`, `Guess Who?`, `Checkers` in
 `newGames`) have now been replaced by shipped games; `newGames` is empty. Future
@@ -189,11 +189,7 @@ You are building these games one at a time, top of the list down. For EACH game:
      ranking. The betting-round state machine is the fiddly part but standard.
 
    All are no-voice bluff games; hidden state maps cleanly to the room row.
-6. **Same Wavelength** — Spectrum pairs come from a vendored public Wavelength
-   list (see sourcing). The dial UI is the fiddly part; the clue-giver sees the
-   hidden target, the guesser only sees the dial. Swap roles each round, score by
-   closeness.
-7. **Codenames Duet** — Co-op variant: shared 5×5 grid, alternating clues, shared
+6. **Codenames Duet** — Co-op variant: shared 5×5 grid, alternating clues, shared
    win/lose, limited turns + assassin. Put grid/turn logic in a pure `*Rules.js`
    with tests. Needs the noun word bank above.
 
@@ -202,6 +198,14 @@ Work top-down, check in after each game, and keep everything theme-native.
 ---
 
 ## Parked ideas (NOT in the web build order)
+
+- **Same Wavelength** — One clues a hidden point on a spectrum; partner turns a
+  dial to guess. **Parked 2026-08-18:** pulled out of the build order to keep
+  the queue focused after Gambling Corner shipped. If it gets picked back up:
+  spectrum pairs come from a vendored public Wavelength list (see the "Data /
+  asset sourcing" section above), the dial UI is the fiddly part, the
+  clue-giver sees the hidden target while the guesser only sees the dial, and
+  roles swap each round with scoring by closeness.
 
 - **Gerbil Ball** — a 3D Super-Monkey-Ball-style co-op tilt roller. Novel mechanic:
   local 2-player co-op where both players input full direction and their **tilts

@@ -261,3 +261,7 @@ FOR ALL GAMES - LET WHO STARTS BE RANDOMISED, NOT JUST WHO CREATES THE GAME ROOM
 	      - all games' room code should have a copy button to allow for the ease of copying.
 
 ON the website home page, can we add a direct room code, so that we dont need to enter the game to type the code?
+
+Gambling Corner (all 3 parts shipped, minor bugfixes remaining):
+- Dice Poker: the responsive/small-screen layout (opponent-priority stacking + scrollable dice row) is in, but doesn't fully match my vision yet — revisit and refine.
+- Hold'em: small bug — the exit icon and room code chip in the table status bar have a display/positioning issue, needs a fix.
