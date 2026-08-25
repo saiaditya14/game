@@ -205,7 +205,7 @@ The economy migration revokes direct client inserts/updates/deletes on `monopoly
 
 Todolist:
 Extract GameExitScreen from QuickMathsDuel into a shared component; retrofit Tic-Tac-Toe + future games.
-Need an overhaul of button UI in draw off.
+[DONE 2026-08-26] Overhaul of button UI in draw off - COMPLETE, every mode/screen: hub, single-player, co-op (lobby, role select, canvas, status bar, victory) and BYOK (landing + in-game). All on the site's token/clamp pattern; canvas backing-store/DPR bug fixed in all three canvases.
 Overhaul in connect 4?
 Play test system prompt for draw off a little but seems fine and fun to babie.
 Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement.
@@ -215,7 +215,7 @@ NAVBAR needs an overhaul bro
 Take babie feedback on the scenes, most likely faster falling of flowers and more bubbles in champagne but yea otherwise UI overhaul done!
 Babie feedback:
 Visiting rule for monopoly
-Thinner brushes (better UI for the same otherwise done)
+[DONE 2026-08-26] Thinner brushes - 5 presets (hairline/fine/medium/bold/marker) in single-player, BYOK AND co-op. Co-op broadcasts the chosen width so the guesser sees the same line.
 Number of rounds could be togglable
 
 ### Sugaropoly Later Visual Polish

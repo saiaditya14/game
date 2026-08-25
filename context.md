@@ -74,7 +74,11 @@ Sugaropoly deferred visual polish:
 - Draw Off has single-player and co-op modes.
 - Single-player uses browser-side CLIP/Transformers.js today; avoid switching classifiers casually because prior options were brittle.
 - Future AI improvements should prefer worker-based inference, cheap canvas completeness checks, and less distracting normal-play debug output.
-- Draw Off UI still needs lighter brush options and button polish.
+- Draw Off UI pass done 2026-08-26: hub, single-player, co-op canvas, co-op lobby, co-op victory screen and BYOK landing rebuilt on the shared token/`clamp()` pattern; single-player got 5 brush presets (hairline->marker).
+- Draw Off canvas gotcha: the canvas sits inside an `AnimatePresence mode="wait"` branch, so it is not mounted when an `isGameActive` effect fires. Initialise it from a **ref callback** (`attachCanvas`), never an effect, or the backing store silently stays at the browser default 300x150 and strokes render stretched and offset from the cursor. Backing store = CSS size x `min(devicePixelRatio, 2)` with a matching `ctx.setTransform`.
+- Draw Off UI is COMPLETE as of 2026-08-26 - every mode and screen converted, no known open UI items. Note BYOK gates `draw()` on `userApiKey` by design - seed `localStorage['drawOffGeminiKey']` to test drawing there, or strokes are silently ignored.
+- Co-op stroke broadcast payload is `{x0,y0,x1,y1,w}` - normalized 0-1 coords plus brush width; `w` is optional on read so older clients still render.
+- `--pink` is not defined in any theme, but was referenced in Draw Off co-op - it renders transparent. Use `--primary`/`--accent`.
 
 ## Quick-Maths Duel
 

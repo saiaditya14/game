@@ -140,6 +140,54 @@ const getInitialInkBounds = () => ({
   maxY: Number.NEGATIVE_INFINITY,
 });
 
+// Tailwind's preflight reset is not active in this project, so `box-sizing` is
+// content-box everywhere, and the spacing scale generates no CSS at all. Any box
+// combining padding with a size constraint needs border-box + real values.
+const BYOK_BORDER_BOX = { boxSizing: 'border-box' };
+
+const BYOK_PANEL = {
+  ...BYOK_BORDER_BOX,
+  border: '1px solid var(--divider)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--surface-strong)',
+};
+
+const byokTileLabelStyle = {
+  fontSize: '0.6rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.2em',
+  color: 'var(--primary)',
+};
+
+// Brush presets, thinnest first - matches the single-player tray.
+const BYOK_BRUSH_SIZES = [
+  { size: 1, label: 'Hairline' },
+  { size: 3, label: 'Fine' },
+  { size: 5, label: 'Medium' },
+  { size: 9, label: 'Bold' },
+  { size: 16, label: 'Marker' },
+];
+
+const byokActionClass =
+  'inline-flex items-center justify-center font-extrabold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-55';
+
+const byokPrimaryActionStyle = {
+  ...BYOK_BORDER_BOX,
+  width: '100%',
+  minHeight: '3.25rem',
+  gap: '0.55rem',
+  paddingInline: '1.25rem',
+  paddingBlock: '0.8rem',
+  fontSize: 'clamp(0.85rem, 0.8rem + 0.2vw, 1rem)',
+  borderWidth: '2px',
+  borderStyle: 'solid',
+  borderColor: 'var(--primary)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--primary)',
+  color: 'var(--surface)',
+};
+
 const actionButtonBase = 'inline-flex min-h-14 w-full items-center justify-center gap-2 border-2 px-5 py-3 text-base font-extrabold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-55';
 const primaryActionClass = `${actionButtonBase} border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)] shadow-sm hover:brightness-95`;
 const secondaryActionClass = `${actionButtonBase} border-[color:var(--ring)] bg-[color:var(--surface-strong)] text-foreground hover:bg-[color:var(--surface)]`;
@@ -159,6 +207,7 @@ const getCanvasBase64Image = (canvas) => {
 
 const DrawOffBYOK = () => {
   const canvasRef = useRef(null);
+  const resizeObserverRef = useRef(null);
   const debounceTimer = useRef(null);
   const judgeRequestRef = useRef(0);
   const isDrawingRef = useRef(false);
@@ -214,42 +263,83 @@ const DrawOffBYOK = () => {
   const getDisplaySize = useCallback((canvas) => {
     const rect = canvas.getBoundingClientRect();
     return {
-      width: Math.max(1, Math.round(canvas.offsetWidth || rect.width || 720)),
-      height: Math.max(1, Math.round(canvas.offsetHeight || rect.height || 460)),
+      width: Math.max(1, Math.round(rect.width || canvas.offsetWidth || 720)),
+      height: Math.max(1, Math.round(rect.height || canvas.offsetHeight || 460)),
     };
   }, []);
+
+  // Backing store is sized in device pixels so strokes stay crisp on HiDPI
+  // screens; capped at 2 so a 3x phone doesn't quadruple the judge payload.
+  const getBackingSize = useCallback((canvas) => {
+    const { width, height } = getDisplaySize(canvas);
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    return { width, height, ratio, backingWidth: Math.round(width * ratio), backingHeight: Math.round(height * ratio) };
+  }, [getDisplaySize]);
 
   const prepareCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const { width, height } = getDisplaySize(canvas);
+    const { width, height, ratio, backingWidth, backingHeight } = getBackingSize(canvas);
 
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = backingWidth;
+    canvas.height = backingHeight;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Scale the context by the same ratio so every drawing handler below keeps
+    // working in CSS pixels and pointer coordinates land under the cursor.
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.fillStyle = getCanvasBackground(canvas);
     ctx.fillRect(0, 0, width, height);
-    
-    // We intentionally don't set strokeStyle/lineWidth here 
+
+    // We intentionally don't set strokeStyle/lineWidth here
     // because `draw()` sets them dynamically every stroke using brushColor/brushSize.
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-  }, [getCanvasBackground, getDisplaySize]);
+  }, [getBackingSize, getCanvasBackground]);
 
   const ensureCanvasReady = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const { width, height } = getDisplaySize(canvas);
-    if (canvas.width !== width || canvas.height !== height) {
+    const { backingWidth, backingHeight } = getBackingSize(canvas);
+    if (canvas.width !== backingWidth || canvas.height !== backingHeight) {
       prepareCanvas();
     }
-  }, [getDisplaySize, prepareCanvas]);
+  }, [getBackingSize, prepareCanvas]);
+
+  // The canvas lives inside an AnimatePresence branch, so it is NOT in the DOM
+  // when the isGameActive effect fires - the outgoing screen is still animating
+  // out. Initialising from an effect therefore hit a null ref and silently left
+  // the backing store at the browser default of 300x150, which is why strokes
+  // rendered stretched and offset from the cursor. Attaching via a ref callback
+  // instead guarantees setup runs exactly when the element mounts.
+  const attachCanvas = useCallback((node) => {
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+
+    canvasRef.current = node;
+    if (!node) return;
+
+    prepareCanvas();
+
+    // Observe the canvas box rather than the window: its height is derived from
+    // the viewport, so it can change without a window resize event.
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(() => {
+      // Never wipe work in progress; only resize while the canvas is still empty.
+      if (!hasInkRef.current) {
+        prepareCanvas();
+      }
+    });
+    observer.observe(node);
+    resizeObserverRef.current = observer;
+  }, [prepareCanvas]);
 
   useEffect(() => {
     if (!isGameActive || !startTime) return undefined;
@@ -261,18 +351,7 @@ const DrawOffBYOK = () => {
     return () => window.clearInterval(intervalId);
   }, [isGameActive, startTime]);
 
-  useEffect(() => {
-    if (!isGameActive) return undefined;
-
-    const handleResize = () => {
-      if (!hasInkRef.current) {
-        prepareCanvas();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isGameActive, prepareCanvas]);
+  // Resizing is handled by the ResizeObserver wired up in attachCanvas above.
 
   const getCanvasPoint = (event) => {
     const canvas = canvasRef.current;
@@ -558,74 +637,233 @@ const DrawOffBYOK = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-2 py-10 text-foreground sm:px-4">
-      <header className="mb-8 text-center">
-        <p className="text-[0.68rem] font-bold uppercase tracking-[0.24em] text-primary">single player sprint</p>
-        <h1 className="mt-2 font-serif text-4xl font-medium sm:text-5xl">Draw Off</h1>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
-          Bring Your Own Key (BYOK) Mode: Draw the prompt, submit when it is ready, and race the AI to three correct guesses using your own Gemini Key.
+    <div
+      style={{
+        ...BYOK_BORDER_BOX,
+        marginInline: 'auto',
+        width: '100%',
+        maxWidth: 'min(72rem, 100%)',
+        paddingInline: 'clamp(1rem, 3vw, 2rem)',
+        paddingBlock: 'clamp(1.5rem, 4vh, 2.5rem)',
+        color: 'var(--foreground)',
+      }}
+    >
+      {/* The full header is for the lobby. During play it collapses to a single
+          compact line so the drawing stage and its controls fit one screen. */}
+      <header
+        style={{
+          textAlign: 'center',
+          marginBottom: isGameActive ? '0.85rem' : 'clamp(1.25rem, 3vh, 2rem)',
+        }}
+      >
+        <p
+          className="font-bold uppercase"
+          style={{ fontSize: '0.62rem', letterSpacing: '0.24em', color: 'var(--primary)' }}
+        >
+          byok testing mode
         </p>
+        <h1
+          className="font-serif font-bold"
+          style={{
+            marginTop: isGameActive ? '0.15rem' : '0.5rem',
+            fontSize: isGameActive ? 'clamp(1.1rem, 1rem + 0.5vw, 1.4rem)' : 'clamp(2rem, 1.5rem + 2vw, 3rem)',
+            lineHeight: 1.15,
+            color: 'var(--foreground)',
+          }}
+        >
+          Draw Off
+        </h1>
+        {!isGameActive && (
+          <p
+            style={{
+              marginTop: '0.6rem',
+              marginInline: 'auto',
+              maxWidth: '38rem',
+              fontSize: 'clamp(0.82rem, 0.78rem + 0.2vw, 0.98rem)',
+              lineHeight: 1.6,
+              color: 'var(--muted)',
+            }}
+          >
+            Bring Your Own Key: draw the prompt, submit when it is ready, and race the AI to three
+            correct guesses using your own Gemini key.
+          </p>
+        )}
       </header>
-      
-      {/* API Key Input Section */}
-      <div className="mx-auto max-w-xl mb-8">
-        <div className="border border-border/70 bg-[color:var(--surface-strong)] p-5 shadow-sm" style={{ borderRadius: 'var(--radius)' }}>
-          <label className="text-[0.8rem] font-bold uppercase tracking-[0.1em] text-[color:var(--muted)] mb-3 flex items-center gap-2">
+
+      {/* API key - hidden during play so it does not compete with the canvas */}
+      {!isGameActive && (
+        <div
+          style={{
+            ...BYOK_PANEL,
+            marginInline: 'auto',
+            width: '100%',
+            maxWidth: '32rem',
+            marginBottom: 'clamp(1rem, 3vh, 1.5rem)',
+            padding: 'clamp(1rem, 3vw, 1.4rem)',
+          }}
+        >
+          <label
+            className="font-bold uppercase"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.8rem',
+              fontSize: '0.6rem',
+              letterSpacing: '0.2em',
+              color: 'var(--muted)',
+            }}
+            htmlFor="byokKey"
+          >
             <KeyRound className="h-4 w-4" /> Gemini API Key
           </label>
+
           {userApiKey ? (
-             <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-[color:var(--primary)] flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> Key Saved
-                </span>
-                <button 
-                  onClick={clearKey}
-                  className="text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] hover:text-red-500 transition-colors flex items-center gap-1"
-                >
-                  <X className="h-4 w-4" /> Clear Key
-                </button>
-             </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <span
+                className="font-bold"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--primary)' }}
+              >
+                <CheckCircle2 className="h-4 w-4" /> Key saved
+              </span>
+              <motion.button
+                onClick={clearKey}
+                className="font-bold uppercase transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                style={{
+                  ...BYOK_BORDER_BOX,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  paddingInline: '0.8rem',
+                  paddingBlock: '0.5rem',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.14em',
+                  border: '1px solid var(--divider)',
+                  borderRadius: 'var(--radius)',
+                  background: 'transparent',
+                  color: 'var(--muted)',
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <X className="h-3.5 w-3.5" /> Clear
+              </motion.button>
+            </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input 
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 12rem), 1fr))',
+                gap: '0.6rem',
+              }}
+            >
+              <input
+                id="byokKey"
                 type="password"
-                placeholder="Enter Gemini API Key..."
+                placeholder="Enter Gemini API key..."
                 value={keyInput}
                 onChange={(e) => setKeyInput(e.target.value)}
-                className="flex-1 rounded border border-border/70 bg-[color:var(--surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                className="outline-none transition placeholder:text-[color:var(--muted)] focus:ring-2 focus:ring-[color:var(--ring)]"
+                style={{
+                  ...BYOK_BORDER_BOX,
+                  gridColumn: '1 / -1',
+                  minHeight: '2.85rem',
+                  paddingInline: '0.9rem',
+                  fontSize: '0.88rem',
+                  border: '1px solid var(--divider)',
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--surface)',
+                  color: 'var(--foreground)',
+                }}
               />
-              <button 
+              <motion.button
                 onClick={saveKey}
                 disabled={!keyInput.trim()}
-                className="rounded bg-[color:var(--primary)] px-4 py-2 text-sm font-bold text-[color:var(--surface)] hover:opacity-90 disabled:opacity-50"
+                className="font-bold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  ...BYOK_BORDER_BOX,
+                  gridColumn: '1 / -1',
+                  minHeight: '2.85rem',
+                  paddingInline: '1.25rem',
+                  fontSize: '0.85rem',
+                  border: '1px solid var(--primary)',
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--primary)',
+                  color: 'var(--surface)',
+                }}
+                whileHover={keyInput.trim() ? { y: -2 } : undefined}
+                whileTap={keyInput.trim() ? { scale: 0.98 } : undefined}
               >
-                Save
-              </button>
+                Save key
+              </motion.button>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       <AnimatePresence mode="wait">
         {!isGameActive && !isComplete && (
           <motion.div
             key="start"
-            className="mx-auto max-w-xl shadow-[var(--shadow)]"
-            initial={{ opacity: 0, y: 8 }}
+            style={{ marginInline: 'auto', width: '100%', maxWidth: '32rem' }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="border border-border/70 bg-[color:var(--surface)] p-8 text-center" style={{ borderRadius: 'var(--radius) var(--radius) 0 0' }}>
-              <Sparkles className="mx-auto h-9 w-9 text-primary" />
-              <h2 className="mt-4 font-serif text-3xl font-medium">Ready to sprint?</h2>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+            <div
+              style={{
+                ...BYOK_BORDER_BOX,
+                padding: 'clamp(1.75rem, 4vw, 2.5rem)',
+                textAlign: 'center',
+                border: '1px solid var(--ring)',
+                borderRadius: 'var(--radius) var(--radius) 0 0',
+                background: 'var(--surface)',
+                boxShadow: 'var(--shadow)',
+              }}
+            >
+              <div
+                style={{
+                  ...BYOK_BORDER_BOX,
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: '3.5rem',
+                  height: '3.5rem',
+                  marginInline: 'auto',
+                  marginBottom: '1.1rem',
+                  border: '1px solid var(--primary)',
+                  borderRadius: 'calc(var(--radius) + 0.35rem)',
+                  background: 'var(--surface-strong)',
+                  color: 'var(--primary)',
+                }}
+              >
+                <Sparkles className="h-6 w-6" />
+              </div>
+
+              <h2
+                className="font-serif font-bold"
+                style={{ fontSize: 'clamp(1.4rem, 1.2rem + 0.7vw, 1.9rem)', lineHeight: 1.2, color: 'var(--foreground)' }}
+              >
+                Ready to sprint?
+              </h2>
+
+              <p
+                style={{
+                  marginTop: '0.7rem',
+                  marginBottom: '1.6rem',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.6,
+                  color: 'var(--muted)',
+                }}
+              >
                 Get {targetScore} target words past the sketch judge as fast as you can.
               </p>
+
               <motion.button
                 type="button"
                 onClick={startSprint}
-                className={`mx-auto mt-6 max-w-56 ${primaryActionClass}`}
-                style={{ borderRadius: 'var(--radius)' }}
+                className={byokActionClass}
+                style={{ ...byokPrimaryActionStyle, marginInline: 'auto', maxWidth: '16rem' }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -633,34 +871,61 @@ const DrawOffBYOK = () => {
                 Start Sprint
               </motion.button>
             </div>
-            
-            <div className="border border-t-0 border-border/70 bg-[color:var(--surface-strong)] p-5" style={{ borderRadius: '0 0 var(--radius) var(--radius)' }}>
-              <label className="text-[0.8rem] font-bold uppercase tracking-[0.1em] text-[color:var(--muted)] mb-3 flex items-center justify-center gap-2">
-                Difficulty
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setDifficulty('easy')}
-                  className={`flex-1 rounded border py-2 text-sm font-bold transition-colors ${
-                    difficulty === 'easy' 
-                      ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)]' 
-                      : 'border-border/70 bg-[color:var(--surface)] text-[color:var(--muted)] hover:border-[color:var(--primary)]'
-                  }`}
-                >
-                  Easy Mode
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDifficulty('hard')}
-                  className={`flex-1 rounded border py-2 text-sm font-bold transition-colors ${
-                    difficulty === 'hard' 
-                      ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--surface)]' 
-                      : 'border-border/70 bg-[color:var(--surface)] text-[color:var(--muted)] hover:border-[color:var(--primary)]'
-                  }`}
-                >
-                  Hard Mode
-                </button>
+
+            <div
+              style={{
+                ...BYOK_BORDER_BOX,
+                padding: 'clamp(1.1rem, 3vw, 1.5rem)',
+                border: '1px solid var(--divider)',
+                borderTop: 'none',
+                borderRadius: '0 0 var(--radius) var(--radius)',
+                background: 'var(--surface-strong)',
+              }}
+            >
+              <p
+                className="font-bold uppercase"
+                style={{
+                  marginBottom: '0.75rem',
+                  textAlign: 'center',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.2em',
+                  color: 'var(--muted)',
+                }}
+              >
+                difficulty
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                {[
+                  { id: 'easy', label: 'Easy Mode' },
+                  { id: 'hard', label: 'Hard Mode' },
+                ].map((option) => {
+                  const active = difficulty === option.id;
+                  return (
+                    <motion.button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setDifficulty(option.id)}
+                      className="font-bold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                      style={{
+                        ...BYOK_BORDER_BOX,
+                        paddingBlock: '0.7rem',
+                        paddingInline: '0.75rem',
+                        fontSize: '0.82rem',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderRadius: 'var(--radius)',
+                        borderColor: active ? 'var(--primary)' : 'var(--divider)',
+                        background: active ? 'var(--primary)' : 'var(--surface)',
+                        color: active ? 'var(--surface)' : 'var(--muted)',
+                      }}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {option.label}
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
@@ -696,62 +961,157 @@ const DrawOffBYOK = () => {
         {isGameActive && (
           <motion.section
             key="active"
-            className="relative border bg-[color:var(--surface)] p-4 shadow-[var(--shadow)]"
             style={{
-              borderColor: 'var(--ring)',
-              borderRadius: 'var(--radius)',
+              ...BYOK_BORDER_BOX,
+              position: 'relative',
               marginInline: 'auto',
-              maxWidth: '52rem',
-              width: 'min(100%, 52rem)',
+              width: '100%',
+              padding: 'clamp(0.85rem, 2vw, 1.35rem)',
+              border: '1px solid var(--ring)',
+              borderRadius: 'var(--radius)',
+              background: 'var(--surface)',
+              boxShadow: 'var(--shadow)',
             }}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="mb-4 grid gap-3 md:grid-cols-[1fr_auto_1.35fr]">
-              <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-                <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">target word</p>
-                <p className="mt-1 font-serif text-3xl font-medium capitalize">{targetWord}</p>
+            {/* Status tiles - auto-fit so they sit in a row on desktop and wrap on narrow screens */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 15rem), 1fr))',
+                gap: 'clamp(0.6rem, 1.5vw, 1rem)',
+                marginBottom: 'clamp(0.85rem, 2vw, 1.25rem)',
+              }}
+            >
+              <div style={{ ...BYOK_PANEL, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+                <p style={byokTileLabelStyle}>target word</p>
+                <p
+                  className="font-serif font-medium"
+                  style={{
+                    marginTop: '0.3rem',
+                    fontSize: 'clamp(1.15rem, 1rem + 0.6vw, 1.6rem)',
+                    lineHeight: 1.2,
+                    textTransform: 'capitalize',
+                    color: 'var(--foreground)',
+                  }}
+                >
+                  {targetWord}
+                </p>
               </div>
-              <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-                <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">score</p>
-                <p className="mt-1 font-serif text-3xl font-medium">{score} / {targetScore}</p>
+
+              <div style={{ ...BYOK_PANEL, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+                <p style={byokTileLabelStyle}>score</p>
+                <p
+                  className="font-serif font-medium"
+                  style={{
+                    marginTop: '0.3rem',
+                    fontSize: 'clamp(1.15rem, 1rem + 0.6vw, 1.6rem)',
+                    lineHeight: 1.2,
+                    color: 'var(--foreground)',
+                  }}
+                >
+                  {score} / {targetScore}
+                </p>
               </div>
-              <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">judge</p>
-                  {isJudging && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+
+              <div style={{ ...BYOK_PANEL, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                  <p style={byokTileLabelStyle}>judge</p>
+                  {isJudging && <Loader2 className="h-4 w-4 animate-spin" style={{ color: 'var(--primary)' }} />}
                 </div>
-                <p className="mt-1 font-serif text-2xl font-medium">
+                <p
+                  style={{
+                    marginTop: '0.3rem',
+                    fontSize: 'clamp(0.85rem, 0.8rem + 0.3vw, 1.05rem)',
+                    lineHeight: 1.45,
+                    color: 'var(--foreground)',
+                  }}
+                >
                   {isJudging ? 'AI is squinting at your drawing...' : aiFeedback}
                 </p>
               </div>
             </div>
 
-            <div className="relative overflow-hidden border border-border/70 bg-[color:var(--surface-strong)] p-3" style={{ borderRadius: 'var(--radius)' }}>
+            {/* Drawing stage - height tracks the viewport so a big screen gets a big canvas,
+                capped so a wide-but-short window can't push the toolbar off-screen. */}
+            <div style={{ ...BYOK_PANEL, position: 'relative', padding: 'clamp(0.4rem, 1vw, 0.75rem)' }}>
               {!userApiKey && (
-                  <div className="absolute inset-0 z-10 grid place-items-center bg-[color:var(--surface)]/80 backdrop-blur-[1px]">
-                    <div className="inline-flex items-center gap-2 border border-border/70 bg-[color:var(--surface-strong)] px-4 py-3 text-sm font-semibold text-primary" style={{ borderRadius: 'var(--radius)' }}>
-                      <KeyRound className="h-4 w-4" /> Please enter your API key to draw
-                    </div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 10,
+                    display: 'grid',
+                    placeItems: 'center',
+                    borderRadius: 'var(--radius)',
+                    background: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+                  }}
+                >
+                  <div
+                    className="font-bold"
+                    style={{
+                      ...BYOK_PANEL,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.55rem',
+                      paddingInline: '1.1rem',
+                      paddingBlock: '0.75rem',
+                      fontSize: '0.85rem',
+                      color: 'var(--primary)',
+                    }}
+                  >
+                    <KeyRound className="h-4 w-4" /> Enter your API key above to draw
                   </div>
+                </div>
               )}
+
               <div
-                className="relative overflow-hidden border border-border/70 bg-[color:var(--surface)]"
-                style={{ borderRadius: 'var(--radius)', height: 'clamp(18rem, 58vh, 23rem)' }}
+                style={{
+                  ...BYOK_BORDER_BOX,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  height: 'clamp(16rem, calc(100vh - 38.5rem), 34rem)',
+                  border: '1px solid var(--divider)',
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--surface)',
+                }}
               >
                 <canvas
-                  ref={canvasRef}
+                  ref={attachCanvas}
                   aria-label="Draw Off sprint canvas"
                   className={`h-full w-full touch-none transition-opacity ${isJudging ? 'cursor-wait opacity-45' : 'cursor-crosshair opacity-100'}`}
+                  style={{ display: 'block' }}
                   onPointerDown={startDrawing}
                   onPointerMove={draw}
                   onPointerUp={stopDrawing}
                   onPointerCancel={stopDrawing}
                 />
                 {isJudging && (
-                  <div className="absolute inset-0 grid place-items-center bg-[color:var(--surface)]/70">
-                    <div className="inline-flex items-center gap-2 border border-border/70 bg-[color:var(--surface-strong)] px-4 py-3 text-sm font-semibold text-primary" style={{ borderRadius: 'var(--radius)' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: 'color-mix(in srgb, var(--surface) 72%, transparent)',
+                    }}
+                  >
+                    <div
+                      className="font-bold"
+                      style={{
+                        ...BYOK_PANEL,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.55rem',
+                        paddingInline: '1.1rem',
+                        paddingBlock: '0.75rem',
+                        fontSize: '0.85rem',
+                        color: 'var(--primary)',
+                      }}
+                    >
                       <Loader2 className="h-4 w-4 animate-spin" />
                       AI is squinting at your drawing...
                     </div>
@@ -760,50 +1120,125 @@ const DrawOffBYOK = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-6 rounded border border-border/70 bg-[color:var(--surface-strong)] p-4 shadow-sm" style={{ borderRadius: 'var(--radius)' }}>
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-[color:var(--muted)]" htmlFor="brushColor">Ink Color</label>
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-[color:var(--ring)] shadow-sm transition-transform hover:scale-105">
+            {/* Brush tray */}
+            <div
+              style={{
+                ...BYOK_PANEL,
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: 'clamp(0.75rem, 2vw, 1.5rem)',
+                marginTop: 'clamp(0.85rem, 2vw, 1.25rem)',
+                padding: 'clamp(0.75rem, 1.8vw, 1.1rem)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <label
+                  className="font-bold uppercase"
+                  style={{ fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)' }}
+                  htmlFor="brushColor"
+                >
+                  Ink
+                </label>
+                <div
+                  style={{
+                    ...BYOK_BORDER_BOX,
+                    position: 'relative',
+                    width: '2rem',
+                    height: '2rem',
+                    overflow: 'hidden',
+                    borderRadius: '999px',
+                    border: '2px solid var(--ring)',
+                  }}
+                >
                   <input
                     id="brushColor"
                     type="color"
                     value={brushColor}
                     onChange={(e) => setBrushColor(e.target.value)}
-                    className="absolute -inset-2 h-12 w-12 cursor-pointer border-0 bg-transparent p-0"
+                    className="cursor-pointer"
+                    style={{ position: 'absolute', inset: '-0.5rem', width: '3rem', height: '3rem', border: 0, background: 'transparent', padding: 0 }}
                   />
                 </div>
               </div>
-              
-              <div className="h-6 w-px bg-border/40 hidden sm:block"></div>
 
-              <div className="flex flex-1 items-center gap-3">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-[color:var(--muted)]" htmlFor="brushSize">Thickness</label>
-                <div className="flex flex-1 items-center gap-3 rounded-full bg-[color:var(--surface)] px-3 py-1 border border-border/60">
-                  <input
-                    id="brushSize"
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={brushSize}
-                    onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                    className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-border/50 accent-[color:var(--primary)]"
-                  />
-                  <div className="flex w-6 justify-center">
-                    <div 
-                      className="rounded-full bg-[color:var(--foreground)]" 
-                      style={{ width: `${brushSize}px`, height: `${brushSize}px`, backgroundColor: brushColor }} 
-                    />
-                  </div>
+              <div aria-hidden="true" style={{ width: '1px', alignSelf: 'stretch', background: 'var(--divider)' }} />
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                <span
+                  className="font-bold uppercase"
+                  style={{ fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)' }}
+                >
+                  Brush
+                </span>
+                <div role="group" aria-label="Brush size" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {BYOK_BRUSH_SIZES.map((brush) => {
+                    const active = brushSize === brush.size;
+                    return (
+                      <motion.button
+                        key={brush.size}
+                        type="button"
+                        onClick={() => setBrushSize(brush.size)}
+                        title={`${brush.label} (${brush.size}px)`}
+                        aria-label={`${brush.label} brush, ${brush.size} pixels`}
+                        aria-pressed={active}
+                        className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                        style={{
+                          ...BYOK_BORDER_BOX,
+                          display: 'grid',
+                          placeItems: 'center',
+                          width: '2.25rem',
+                          height: '2.25rem',
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          borderRadius: 'var(--radius)',
+                          borderColor: active ? 'var(--primary)' : 'var(--divider)',
+                          background: active ? 'color-mix(in srgb, var(--primary) 18%, var(--surface))' : 'var(--surface)',
+                        }}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.94 }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            display: 'block',
+                            width: `${brush.size}px`,
+                            height: `${brush.size}px`,
+                            minWidth: '2px',
+                            minHeight: '2px',
+                            borderRadius: '999px',
+                            background: brushColor,
+                          }}
+                        />
+                      </motion.button>
+                    );
+                  })}
                 </div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--muted)', minWidth: '4.5rem' }}>
+                  {BYOK_BRUSH_SIZES.find((b) => b.size === brushSize)?.label ?? `${brushSize}px`}
+                </span>
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                marginTop: 'clamp(0.85rem, 2vw, 1.25rem)',
+              }}
+            >
               <motion.button
                 type="button"
                 onClick={() => clearCanvas()}
-                className={`${secondaryActionClass} sm:w-1/3`}
-                style={{ borderRadius: 'var(--radius)' }}
+                className={byokActionClass}
+                style={{
+                  ...byokPrimaryActionStyle,
+                  flex: '1 1 12rem',
+                  borderColor: 'var(--ring)',
+                  background: 'var(--surface-strong)',
+                  color: 'var(--foreground)',
+                }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.99 }}
               >
@@ -815,8 +1250,8 @@ const DrawOffBYOK = () => {
                 type="button"
                 onClick={handleDrawingSubmit}
                 disabled={isJudging || !userApiKey}
-                className={`${primaryActionClass} sm:w-2/3`}
-                style={{ borderRadius: 'var(--radius)' }}
+                className={byokActionClass}
+                style={{ ...byokPrimaryActionStyle, flex: '2 1 18rem' }}
                 whileHover={isJudging || !userApiKey ? undefined : { y: -2 }}
                 whileTap={isJudging || !userApiKey ? undefined : { scale: 0.99 }}
               >
@@ -826,7 +1261,16 @@ const DrawOffBYOK = () => {
             </div>
 
             {judgeError && (
-              <p className="mt-4 border border-border/70 bg-[color:var(--surface-strong)] p-4 text-sm text-[color:var(--muted)]" style={{ borderRadius: 'var(--radius)' }}>
+              <p
+                style={{
+                  ...BYOK_PANEL,
+                  marginTop: '1rem',
+                  padding: '0.9rem 1.1rem',
+                  fontSize: '0.82rem',
+                  lineHeight: 1.6,
+                  color: 'var(--muted)',
+                }}
+              >
                 {judgeError}
               </p>
             )}
@@ -836,5 +1280,6 @@ const DrawOffBYOK = () => {
     </div>
   );
 };
+
 
 export default DrawOffBYOK;

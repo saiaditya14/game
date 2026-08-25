@@ -7,7 +7,7 @@ Realtime + room codes. Scales from 1v1 couple play to multiple pairs where noted
 
 ## Survivors — already built, DO NOT rebuild or touch their logic
 
-- **Draw Off** (`/draw-off`)
+- **Draw Off** (`/draw-off`) — ✅ UI overhaul COMPLETE 2026-08-26: every mode and screen (hub, single-player, co-op lobby/role-select/canvas/status-bar/victory, BYOK landing + in-game). Brush presets in all three drawing modes. No known open UI items.
 - **Connect Four** (`/connect-four`)
 - **Sugaropoly** (`/monopoly`)
 - **Tic-Tac-Toe** (`/tic-tac-toe`) ✅ shipped 2026-07-02

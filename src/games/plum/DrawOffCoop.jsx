@@ -209,26 +209,111 @@ const DrawOffCoop = () => {
 
   if (room.status === 'won') {
     return (
-      <main className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl flex-col items-center justify-center px-4 py-10">
+      <main
+        style={{
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 5rem)',
+          marginInline: 'auto',
+          width: '100%',
+          maxWidth: 'min(56rem, 100%)',
+          paddingInline: 'clamp(1rem, 4vw, 2.5rem)',
+          paddingBlock: 'clamp(1.5rem, 4vh, 2.5rem)',
+        }}
+      >
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="flex flex-col items-center rounded-2xl border border-[color:var(--ring)] bg-[color:var(--surface)] p-12 text-center shadow-[var(--shadow)]"
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '34rem',
+            padding: 'clamp(1.75rem, 4vw, 3rem)',
+            textAlign: 'center',
+            border: '1px solid var(--ring)',
+            borderRadius: 'var(--radius)',
+            background: 'var(--surface)',
+            boxShadow: 'var(--shadow)',
+          }}
         >
-          <div className="mb-6 grid h-20 w-20 place-items-center rounded-full bg-yellow-400 text-yellow-900">
-            <Trophy className="h-10 w-10" />
+          <div
+            style={{
+              boxSizing: 'border-box',
+              display: 'grid',
+              placeItems: 'center',
+              width: '4.5rem',
+              height: '4.5rem',
+              marginBottom: '1.5rem',
+              border: '1px solid var(--accent)',
+              borderRadius: 'calc(var(--radius) + 0.5rem)',
+              background: 'var(--surface-strong)',
+              color: 'var(--accent)',
+            }}
+          >
+            <Trophy className="h-9 w-9" />
           </div>
-          <h1 className="font-serif text-5xl font-bold text-foreground">You Won!</h1>
-          <p className="mt-4 text-lg text-[color:var(--muted)]">Your team successfully guessed 3 words.</p>
-          
-          <div className="mt-8 flex items-center justify-center gap-3 rounded-full bg-[color:var(--surface-strong)] px-6 py-3 border border-[color:var(--divider)]">
-            <Clock className="h-5 w-5 text-[color:var(--pink)]" />
-            <span className="text-xl font-bold font-mono text-foreground">{room.time_elapsed} Seconds</span>
+
+          <h1
+            className="font-serif font-bold"
+            style={{
+              fontSize: 'clamp(2rem, 1.6rem + 1.8vw, 3rem)',
+              lineHeight: 1.15,
+              color: 'var(--foreground)',
+            }}
+          >
+            You Won!
+          </h1>
+
+          <p style={{ marginTop: '0.85rem', fontSize: '1rem', lineHeight: 1.6, color: 'var(--muted)' }}>
+            Your team successfully guessed 3 words.
+          </p>
+
+          <div
+            style={{
+              boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.65rem',
+              marginTop: '1.75rem',
+              paddingInline: '1.4rem',
+              paddingBlock: '0.75rem',
+              border: '1px solid var(--divider)',
+              borderRadius: 'calc(var(--radius) + 1rem)',
+              background: 'var(--surface-strong)',
+            }}
+          >
+            <Clock className="h-5 w-5" style={{ color: 'var(--primary)' }} />
+            <span className="font-mono font-bold" style={{ fontSize: '1.15rem', color: 'var(--foreground)' }}>
+              {room.time_elapsed} seconds
+            </span>
           </div>
 
           <Link
             to="/draw-off"
-            className="mt-10 inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 font-bold text-[color:var(--surface)] transition hover:-translate-y-1 hover:shadow-lg"
+            className="font-bold transition hover:brightness-95"
+            style={{
+              boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.55rem',
+              marginTop: '2rem',
+              minHeight: '3.25rem',
+              paddingInline: '2rem',
+              fontSize: '0.9rem',
+              textDecoration: 'none',
+              border: '2px solid var(--primary)',
+              borderRadius: 'var(--radius)',
+              background: 'var(--primary)',
+              color: 'var(--surface)',
+            }}
           >
             <Home className="h-5 w-5" />
             Back to Hub
@@ -241,8 +326,32 @@ const DrawOffCoop = () => {
   return (
     <div className="flex flex-col">
       {room.status === 'playing' && (
-        <div className="w-full bg-[color:var(--surface-strong)] py-2 text-center text-sm font-bold tracking-widest text-[color:var(--muted)] border-b border-[color:var(--divider)]">
-          TIME: <span className="text-foreground">{elapsed}s</span> | ROOM: <span className="text-primary">{room.code}</span>
+        <div
+          className="font-bold"
+          style={{
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1.25rem',
+            width: '100%',
+            paddingBlock: '0.65rem',
+            paddingInline: '1rem',
+            fontSize: '0.72rem',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            borderBottom: '1px solid var(--divider)',
+            background: 'var(--surface-strong)',
+            color: 'var(--muted)',
+          }}
+        >
+          <span>
+            Time <span style={{ color: 'var(--foreground)' }}>{elapsed}s</span>
+          </span>
+          <span aria-hidden="true" style={{ width: '1px', height: '0.9rem', background: 'var(--divider)' }} />
+          <span>
+            Room <span style={{ color: 'var(--primary)' }}>{room.code}</span>
+          </span>
         </div>
       )}
       <DrawOffCoopCanvas 

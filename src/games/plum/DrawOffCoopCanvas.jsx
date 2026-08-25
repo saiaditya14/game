@@ -24,12 +24,25 @@ const tileLabelStyle = {
   color: 'var(--primary)',
 };
 
+// Brush presets, thinnest first - matches the single-player tray. The chosen
+// width rides along in the stroke broadcast so the guesser sees the same line.
+const BRUSH_SIZES = [
+  { size: 1, label: 'Hairline' },
+  { size: 3, label: 'Fine' },
+  { size: 5, label: 'Medium' },
+  { size: 9, label: 'Bold' },
+  { size: 16, label: 'Marker' },
+];
+
+const DEFAULT_BRUSH_SIZE = 4;
+
 const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const canvasRef = useRef(null);
   const resizeObserverRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [guessInput, setGuessInput] = useState('');
   const [feedbackText, setFeedbackText] = useState('Waiting for your guess...');
+  const [brushSize, setBrushSize] = useState(DEFAULT_BRUSH_SIZE);
 
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
@@ -141,7 +154,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   // Payload stays normalized 0-1 (unchanged wire format), but it is now mapped
   // to CSS pixels rather than backing-store pixels, because the context is
   // pre-scaled by the device pixel ratio.
-  const drawRemoteStroke = ({ x0, y0, x1, y1 }) => {
+  const drawRemoteStroke = ({ x0, y0, x1, y1, w }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -151,7 +164,8 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     ctx.moveTo(x0 * rect.width, y0 * rect.height);
     ctx.lineTo(x1 * rect.width, y1 * rect.height);
     ctx.strokeStyle = getCanvasColors(canvas).stroke;
-    ctx.lineWidth = 4;
+    // `w` is optional so strokes from an older client still render.
+    ctx.lineWidth = w || DEFAULT_BRUSH_SIZE;
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.closePath();
@@ -196,7 +210,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     ctx.moveTo(currentPos.current.x, currentPos.current.y);
     ctx.lineTo(x, y);
     ctx.strokeStyle = getCanvasColors(canvas).stroke;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.closePath();
@@ -211,6 +225,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
           y0: currentPos.current.y / rect.height,
           x1: x / rect.width,
           y1: y / rect.height,
+          w: brushSize,
         }
       });
     }
@@ -385,6 +400,76 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
           )}
         </div>
       </div>
+
+      {/* Brush tray - drawer only; the guesser has no reason to see it */}
+      {isDrawer && (
+        <div
+          style={{
+            ...panelStyle,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 'clamp(0.75rem, 2vw, 1.25rem)',
+            marginTop: 'clamp(0.85rem, 2vw, 1.25rem)',
+            padding: 'clamp(0.75rem, 1.8vw, 1.1rem)',
+          }}
+        >
+          <span
+            className="font-bold uppercase"
+            style={{ fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)' }}
+          >
+            Brush
+          </span>
+
+          <div role="group" aria-label="Brush size" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            {BRUSH_SIZES.map((brush) => {
+              const active = brushSize === brush.size;
+              return (
+                <motion.button
+                  key={brush.size}
+                  type="button"
+                  onClick={() => setBrushSize(brush.size)}
+                  title={`${brush.label} (${brush.size}px)`}
+                  aria-label={`${brush.label} brush, ${brush.size} pixels`}
+                  aria-pressed={active}
+                  className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                  style={{
+                    ...BORDER_BOX,
+                    display: 'grid',
+                    placeItems: 'center',
+                    width: '2.25rem',
+                    height: '2.25rem',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderRadius: 'var(--radius)',
+                    borderColor: active ? 'var(--primary)' : 'var(--divider)',
+                    background: active ? 'color-mix(in srgb, var(--primary) 18%, var(--surface))' : 'var(--surface)',
+                  }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.94 }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: 'block',
+                      width: `${brush.size}px`,
+                      height: `${brush.size}px`,
+                      minWidth: '2px',
+                      minHeight: '2px',
+                      borderRadius: '999px',
+                      background: 'var(--stroke-color, var(--foreground))',
+                    }}
+                  />
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <span style={{ fontSize: '0.68rem', color: 'var(--muted)', minWidth: '4.5rem' }}>
+            {BRUSH_SIZES.find((b) => b.size === brushSize)?.label ?? `${brushSize}px`}
+          </span>
+        </div>
+      )}
 
       {!isDrawer && (
         <form onSubmit={handleGuessSubmit} style={{ marginTop: 'clamp(0.85rem, 2vw, 1.25rem)' }}>
