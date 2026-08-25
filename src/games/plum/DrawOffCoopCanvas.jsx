@@ -1,14 +1,117 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import { Eraser } from 'lucide-react';
+import { useTheme } from '../../components/ThemeProvider';
+
+// Tailwind's preflight reset is not active in this project, so `box-sizing` is
+// content-box everywhere. Any box that combines padding with a width/height
+// constraint has to opt into border-box explicitly or it overflows its parent.
+const BORDER_BOX = { boxSizing: 'border-box' };
+
+const panelStyle = {
+  ...BORDER_BOX,
+  border: '1px solid var(--divider)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--surface-strong)',
+};
+
+const tileLabelStyle = {
+  fontSize: '0.6rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.2em',
+  color: 'var(--primary)',
+};
 
 const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const canvasRef = useRef(null);
+  const resizeObserverRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [guessInput, setGuessInput] = useState('');
   const [feedbackText, setFeedbackText] = useState('Waiting for your guess...');
-  
+
+  const { theme } = useTheme();
+  const isArcade = theme === 'theme-arcade';
+
   const broadcastChannel = useRef(null);
+
+  // Read the themed canvas/ink colours off the element so the sketchpad matches
+  // the active theme instead of always being black ink on a white rectangle.
+  const getCanvasColors = useCallback((canvas) => {
+    const styles = getComputedStyle(canvas);
+    return {
+      background: styles.getPropertyValue('--canvas-bg').trim() || '#ffffff',
+      stroke: styles.getPropertyValue('--stroke-color').trim() || '#000000',
+    };
+  }, []);
+
+  // Canvas size in CSS pixels, plus the device-pixel backing size. The context
+  // is scaled by the same ratio so all drawing below stays in CSS pixels.
+  const getBackingSize = useCallback((canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width || canvas.offsetWidth || 800));
+    const height = Math.max(1, Math.round(rect.height || canvas.offsetHeight || 600));
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    return { width, height, ratio, backingWidth: Math.round(width * ratio), backingHeight: Math.round(height * ratio) };
+  }, []);
+
+  // `preserve` keeps the current drawing across a resize by rescaling a snapshot
+  // onto the new backing store. Resizing a canvas always clears it, and there is
+  // no stroke history here to replay, so without this a window resize would wipe
+  // the drawer's work mid-round.
+  const prepareCanvas = useCallback((preserve = false) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const { width, height, ratio, backingWidth, backingHeight } = getBackingSize(canvas);
+
+    if (preserve && canvas.width === backingWidth && canvas.height === backingHeight) return;
+
+    let snapshot = null;
+    if (preserve && canvas.width > 0 && canvas.height > 0) {
+      snapshot = document.createElement('canvas');
+      snapshot.width = canvas.width;
+      snapshot.height = canvas.height;
+      snapshot.getContext('2d').drawImage(canvas, 0, 0);
+    }
+
+    canvas.width = backingWidth;
+    canvas.height = backingHeight;
+
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.fillStyle = getCanvasColors(canvas).background;
+    ctx.fillRect(0, 0, width, height);
+    if (snapshot) ctx.drawImage(snapshot, 0, 0, width, height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }, [getBackingSize, getCanvasColors]);
+
+  const clearCanvasLocal = useCallback(() => {
+    prepareCanvas(false);
+  }, [prepareCanvas]);
+
+  // Attach via a ref callback so setup runs exactly when the element mounts.
+  // An effect would fire before the canvas is in the DOM and silently leave the
+  // backing store at the browser default of 300x150.
+  const attachCanvas = useCallback((node) => {
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+
+    canvasRef.current = node;
+    if (!node) return;
+
+    prepareCanvas();
+
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(() => prepareCanvas(true));
+    observer.observe(node);
+    resizeObserverRef.current = observer;
+  }, [prepareCanvas]);
 
   useEffect(() => {
     if (!supabase || !room?.id) return;
@@ -35,21 +138,19 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     };
   }, [room?.id, role]);
 
-  const drawRemoteStroke = ({ x0, y0, x1, y1, width, height }) => {
+  // Payload stays normalized 0-1 (unchanged wire format), but it is now mapped
+  // to CSS pixels rather than backing-store pixels, because the context is
+  // pre-scaled by the device pixel ratio.
+  const drawRemoteStroke = ({ x0, y0, x1, y1 }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
-    // Scale from normalized 0-1 coordinates
-    const scaledX0 = x0 * canvas.width;
-    const scaledY0 = y0 * canvas.height;
-    const scaledX1 = x1 * canvas.width;
-    const scaledY1 = y1 * canvas.height;
+    const rect = canvas.getBoundingClientRect();
 
     ctx.beginPath();
-    ctx.moveTo(scaledX0, scaledY0);
-    ctx.lineTo(scaledX1, scaledY1);
-    ctx.strokeStyle = 'black'; // could map to var(--foreground) but drawing usually black or theme specified
+    ctx.moveTo(x0 * rect.width, y0 * rect.height);
+    ctx.lineTo(x1 * rect.width, y1 * rect.height);
+    ctx.strokeStyle = getCanvasColors(canvas).stroke;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -59,18 +160,16 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
 
     if (e.touches && e.touches.length > 0) {
       return {
-        x: (e.touches[0].clientX - rect.left) * scaleX,
-        y: (e.touches[0].clientY - rect.top) * scaleY,
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
       };
     }
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
   };
 
@@ -87,15 +186,16 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const draw = (e) => {
     if (!isDrawing || role !== 'drawer') return;
     e.preventDefault();
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
     const { x, y } = getCoordinates(e);
 
     ctx.beginPath();
     ctx.moveTo(currentPos.current.x, currentPos.current.y);
     ctx.lineTo(x, y);
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = getCanvasColors(canvas).stroke;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -107,10 +207,10 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
         type: 'broadcast',
         event: 'stroke',
         payload: {
-          x0: currentPos.current.x / canvas.width,
-          y0: currentPos.current.y / canvas.height,
-          x1: x / canvas.width,
-          y1: y / canvas.height,
+          x0: currentPos.current.x / rect.width,
+          y0: currentPos.current.y / rect.height,
+          x1: x / rect.width,
+          y1: y / rect.height,
         }
       });
     }
@@ -120,15 +220,6 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
 
   const stopDrawing = () => {
     setIsDrawing(false);
-  };
-
-  const clearCanvasLocal = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
   };
 
   const clearCanvas = () => {
@@ -143,11 +234,6 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     }
   };
 
-  // Initialize white background
-  useEffect(() => {
-    clearCanvasLocal();
-  }, []);
-
   // When word changes, clear canvas automatically
   useEffect(() => {
     clearCanvasLocal();
@@ -158,7 +244,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const handleGuessSubmit = (e) => {
     e.preventDefault();
     if (role !== 'guesser') return;
-    
+
     // Prevent empty guess submission
     if (!guessInput.trim()) return;
 
@@ -171,70 +257,153 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     }
   };
 
+  const isDrawer = role === 'drawer';
+
   return (
-    <div className="mx-auto w-full max-w-[52rem] px-4 py-10">
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
-        <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">Role</p>
-          <p className="mt-1 font-serif text-3xl font-medium capitalize">{role}</p>
+    <div
+      style={{
+        ...BORDER_BOX,
+        marginInline: 'auto',
+        width: '100%',
+        maxWidth: 'min(72rem, 100%)',
+        paddingInline: 'clamp(1rem, 3vw, 2rem)',
+        paddingBlock: 'clamp(1.5rem, 4vh, 2.5rem)',
+        color: 'var(--foreground)',
+      }}
+    >
+      {/* Status tiles - auto-fit so they sit in a row on desktop and wrap on narrow screens */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 15rem), 1fr))',
+          gap: 'clamp(0.6rem, 1.5vw, 1rem)',
+          marginBottom: 'clamp(0.85rem, 2vw, 1.25rem)',
+        }}
+      >
+        <div style={{ ...panelStyle, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+          <p style={tileLabelStyle}>role</p>
+          <p
+            className="font-serif font-medium"
+            style={{
+              marginTop: '0.3rem',
+              fontSize: 'clamp(1.15rem, 1rem + 0.6vw, 1.6rem)',
+              lineHeight: 1.2,
+              textTransform: 'capitalize',
+              color: 'var(--foreground)',
+            }}
+          >
+            {role}
+          </p>
         </div>
-        
-        <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">Score</p>
-          <p className="mt-1 font-serif text-3xl font-medium">
+
+        <div style={{ ...panelStyle, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+          <p style={tileLabelStyle}>score</p>
+          <p
+            className="font-serif font-medium"
+            style={{
+              marginTop: '0.3rem',
+              fontSize: 'clamp(1.15rem, 1rem + 0.6vw, 1.6rem)',
+              lineHeight: 1.2,
+              color: 'var(--foreground)',
+            }}
+          >
             {room.words_guessed} / {room.target_words}
           </p>
         </div>
 
-        <div className="border border-border/70 bg-[color:var(--surface-strong)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">Status</p>
-          <p className="mt-1 font-serif text-2xl font-medium">
-            {role === 'drawer' ? (
-              <span className="uppercase tracking-widest text-[color:var(--pink)]">{currentWord}</span>
-            ) : (
-              <span>{feedbackText}</span>
-            )}
+        <div style={{ ...panelStyle, padding: 'clamp(0.65rem, 1.4vw, 0.9rem)' }}>
+          <p style={tileLabelStyle}>{isDrawer ? 'your word' : 'status'}</p>
+          <p
+            className="font-serif font-medium"
+            style={{
+              marginTop: '0.3rem',
+              fontSize: isDrawer ? 'clamp(1.15rem, 1rem + 0.6vw, 1.6rem)' : 'clamp(0.9rem, 0.85rem + 0.3vw, 1.1rem)',
+              lineHeight: 1.35,
+              letterSpacing: isDrawer ? '0.12em' : undefined,
+              textTransform: isDrawer ? 'uppercase' : undefined,
+              color: isDrawer ? 'var(--primary)' : 'var(--foreground)',
+              filter: isDrawer && isArcade ? 'drop-shadow(0 0 8px var(--primary))' : 'none',
+            }}
+          >
+            {isDrawer ? currentWord : feedbackText}
           </p>
         </div>
       </div>
 
-      <div 
-        className="relative overflow-hidden rounded-xl border border-[color:var(--ring)] bg-white shadow-[var(--shadow)]"
-        style={{ height: 'clamp(18rem, 58vh, 23rem)' }}
-      >
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          className={`h-full w-full touch-none bg-white ${role === 'drawer' ? 'cursor-crosshair' : 'cursor-default'}`}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-        />
+      {/* Sketchpad - height tracks the viewport so a big screen gets a big canvas,
+          capped so a wide-but-short window can't push the guess box off-screen. */}
+      <div style={{ ...panelStyle, padding: 'clamp(0.4rem, 1vw, 0.75rem)' }}>
+        <div
+          style={{
+            ...BORDER_BOX,
+            position: 'relative',
+            overflow: 'hidden',
+            height: 'clamp(16rem, calc(100vh - 30rem), 34rem)',
+            border: '1px solid var(--divider)',
+            borderRadius: 'var(--radius)',
+            background: 'var(--surface)',
+          }}
+        >
+          <canvas
+            ref={attachCanvas}
+            aria-label={isDrawer ? 'Draw Off co-op sketchpad' : "Your partner's drawing"}
+            className={`h-full w-full touch-none ${isDrawer ? 'cursor-crosshair' : 'cursor-default'}`}
+            style={{ display: 'block' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+          />
 
-        {role === 'drawer' && (
-          <button
-            onClick={clearCanvas}
-            className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--surface-strong)] text-foreground border border-[color:var(--divider)] shadow-sm transition-transform hover:scale-105 active:scale-95"
-            aria-label="Clear Canvas"
-          >
-            <Eraser className="h-5 w-5" />
-          </button>
-        )}
+          {isDrawer && (
+            <motion.button
+              onClick={clearCanvas}
+              className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+              style={{
+                ...BORDER_BOX,
+                position: 'absolute',
+                bottom: '0.85rem',
+                right: '0.85rem',
+                display: 'grid',
+                placeItems: 'center',
+                width: '2.75rem',
+                height: '2.75rem',
+                border: '1px solid var(--divider)',
+                borderRadius: 'var(--radius)',
+                background: 'var(--surface-strong)',
+                color: 'var(--foreground)',
+              }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.94 }}
+              aria-label="Clear canvas"
+            >
+              <Eraser className="h-5 w-5" />
+            </motion.button>
+          )}
+        </div>
       </div>
 
-      {role === 'guesser' && (
-        <form onSubmit={handleGuessSubmit} className="mt-6">
+      {!isDrawer && (
+        <form onSubmit={handleGuessSubmit} style={{ marginTop: 'clamp(0.85rem, 2vw, 1.25rem)' }}>
           <input
             type="text"
             value={guessInput}
             onChange={(e) => setGuessInput(e.target.value)}
             placeholder="Type your guess here..."
-            className="w-full rounded-xl border border-[color:var(--divider)] bg-[color:var(--surface)] px-6 py-4 text-center text-xl font-medium outline-none transition focus:border-[color:var(--pink)] focus:ring-1 focus:ring-[color:var(--pink)]"
+            className="w-full text-center font-medium outline-none transition focus:border-[color:var(--primary)] focus:ring-1 focus:ring-[color:var(--primary)]"
+            style={{
+              ...BORDER_BOX,
+              paddingInline: 'clamp(1rem, 3vw, 1.5rem)',
+              paddingBlock: '0.9rem',
+              fontSize: 'clamp(1rem, 0.9rem + 0.4vw, 1.25rem)',
+              border: '1px solid var(--divider)',
+              borderRadius: 'var(--radius)',
+              background: 'var(--surface)',
+              color: 'var(--foreground)',
+            }}
           />
         </form>
       )}
