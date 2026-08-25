@@ -34,7 +34,12 @@ const BRUSH_SIZES = [
   { size: 16, label: 'Marker' },
 ];
 
-const DEFAULT_BRUSH_SIZE = 4;
+// Must be one of BRUSH_SIZES above, or no chip renders as active and the label
+// falls back to a raw px value. Matches single-player's default (Medium).
+const DEFAULT_BRUSH_SIZE = 5;
+
+// Width used for strokes from a client that predates the `w` field in the payload.
+const LEGACY_STROKE_WIDTH = 4;
 
 const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const canvasRef = useRef(null);
@@ -46,6 +51,12 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
 
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
+  // Same default ink as single-player so the two modes look like the same game.
+  const [brushColor, setBrushColor] = useState(isArcade ? '#39ff14' : '#0f172a');
+
+  useEffect(() => {
+    setBrushColor(theme === 'theme-arcade' ? '#39ff14' : '#0f172a');
+  }, [theme]);
 
   const broadcastChannel = useRef(null);
 
@@ -154,7 +165,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   // Payload stays normalized 0-1 (unchanged wire format), but it is now mapped
   // to CSS pixels rather than backing-store pixels, because the context is
   // pre-scaled by the device pixel ratio.
-  const drawRemoteStroke = ({ x0, y0, x1, y1, w }) => {
+  const drawRemoteStroke = ({ x0, y0, x1, y1, w, c }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -163,9 +174,9 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     ctx.beginPath();
     ctx.moveTo(x0 * rect.width, y0 * rect.height);
     ctx.lineTo(x1 * rect.width, y1 * rect.height);
-    ctx.strokeStyle = getCanvasColors(canvas).stroke;
-    // `w` is optional so strokes from an older client still render.
-    ctx.lineWidth = w || DEFAULT_BRUSH_SIZE;
+    // `c` and `w` are optional so strokes from an older client still render.
+    ctx.strokeStyle = c || getCanvasColors(canvas).stroke;
+    ctx.lineWidth = w || LEGACY_STROKE_WIDTH;
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.closePath();
@@ -209,7 +220,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     ctx.beginPath();
     ctx.moveTo(currentPos.current.x, currentPos.current.y);
     ctx.lineTo(x, y);
-    ctx.strokeStyle = getCanvasColors(canvas).stroke;
+    ctx.strokeStyle = brushColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -226,6 +237,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
           x1: x / rect.width,
           y1: y / rect.height,
           w: brushSize,
+          c: brushColor,
         }
       });
     }
@@ -286,6 +298,21 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
         color: 'var(--foreground)',
       }}
     >
+      {/* Framed card, matching the single-player active section exactly - same
+          --ring border, radius, surface and shadow, so both modes read as one game. */}
+      <section
+        style={{
+          ...BORDER_BOX,
+          position: 'relative',
+          marginInline: 'auto',
+          width: '100%',
+          padding: 'clamp(0.85rem, 2vw, 1.35rem)',
+          border: '1px solid var(--ring)',
+          borderRadius: 'var(--radius)',
+          background: 'var(--surface)',
+          boxShadow: 'var(--shadow)',
+        }}
+      >
       {/* Status tiles - auto-fit so they sit in a row on desktop and wrap on narrow screens */}
       <div
         style={{
@@ -414,6 +441,38 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
             padding: 'clamp(0.75rem, 1.8vw, 1.1rem)',
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <label
+              className="font-bold uppercase"
+              style={{ fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)' }}
+              htmlFor="coopBrushColor"
+            >
+              Ink
+            </label>
+            <div
+              style={{
+                ...BORDER_BOX,
+                position: 'relative',
+                width: '2rem',
+                height: '2rem',
+                overflow: 'hidden',
+                borderRadius: '999px',
+                border: '2px solid var(--ring)',
+              }}
+            >
+              <input
+                id="coopBrushColor"
+                type="color"
+                value={brushColor}
+                onChange={(e) => setBrushColor(e.target.value)}
+                className="cursor-pointer"
+                style={{ position: 'absolute', inset: '-0.5rem', width: '3rem', height: '3rem', border: 0, background: 'transparent', padding: 0 }}
+              />
+            </div>
+          </div>
+
+          <div aria-hidden="true" style={{ width: '1px', alignSelf: 'stretch', background: 'var(--divider)' }} />
+
           <span
             className="font-bold uppercase"
             style={{ fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)' }}
@@ -457,7 +516,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
                       minWidth: '2px',
                       minHeight: '2px',
                       borderRadius: '999px',
-                      background: 'var(--stroke-color, var(--foreground))',
+                      background: brushColor,
                     }}
                   />
                 </motion.button>
@@ -492,6 +551,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
           />
         </form>
       )}
+      </section>
     </div>
   );
 };
