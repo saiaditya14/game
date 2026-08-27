@@ -13,6 +13,7 @@ import PastelMonopoly from './games/sugar/monopoly/PastelMonopoly';
 import TicTacToe from './games/sugar/TicTacToe';
 import QuickMathsDuel from './games/sugar/QuickMathsDuel';
 import WordRace from './games/sugar/WordRace';
+import VerbalMemoryDuel from './games/sugar/VerbalMemoryDuel';
 import CategoryBlitz from './games/sugar/CategoryBlitz';
 import GamblingCorner from './games/sugar/gambling/GamblingCorner';
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="/tic-tac-toe" element={<TicTacToe />} />
             <Route path="/quick-maths" element={<QuickMathsDuel />} />
             <Route path="/word-race" element={<WordRace />} />
+            <Route path="/verbal-memory" element={<VerbalMemoryDuel />} />
             <Route path="/category-blitz" element={<CategoryBlitz />} />
             <Route path="/gambling-corner" element={<GamblingCorner />} />
             <Route path="/monopoly" element={<PastelMonopoly />} />

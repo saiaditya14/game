@@ -462,6 +462,17 @@ const HomePage = () => {
               </Link>
             </motion.div>
             <motion.div variants={cardItemVariants}>
+              <Link to="/verbal-memory" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
+                <GameCard
+                  title="Verbal Memory Duel"
+                  description="Same stream of words for both of you — mark each one Seen or New. Scores stay hidden until the final reveal."
+                  badge="New"
+                  category="Word"
+                  meta="2 player live"
+                />
+              </Link>
+            </motion.div>
+            <motion.div variants={cardItemVariants}>
               <Link to="/category-blitz" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
                 <GameCard
                   title="Category Blitz"
