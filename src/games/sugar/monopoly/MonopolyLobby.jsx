@@ -56,7 +56,7 @@ export const MonopolyLobby = ({
                 whileTap={{ scale: 0.98 }}
               >
                 <Plus className="h-4 w-4" />
-                Create a Game
+                CREATE
               </motion.button>
 
               <motion.button
@@ -68,7 +68,7 @@ export const MonopolyLobby = ({
                 whileTap={{ scale: 0.98 }}
               >
                 <LogIn className="h-4 w-4" />
-                Join a Game
+                JOIN
               </motion.button>
             </div>
 

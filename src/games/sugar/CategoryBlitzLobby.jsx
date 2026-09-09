@@ -489,7 +489,7 @@ const CategoryBlitzLobby = ({
                     whileTap={{ scale: 0.95 }}
                   >
                     <Plus className="h-4 w-4" />
-                    {isArcade ? 'CREATE' : isPink ? 'create a game ♡' : 'Create a Game'}
+                    CREATE
                   </motion.button>
                 </MagneticButton>
 
@@ -510,7 +510,7 @@ const CategoryBlitzLobby = ({
                     whileTap={{ scale: 0.97 }}
                   >
                     <LogIn className="h-4 w-4" />
-                    {isArcade ? 'JOIN' : isPink ? 'join a game ♡' : 'Join a Game'}
+                    JOIN
                   </motion.button>
                 </MagneticButton>
               </motion.div>

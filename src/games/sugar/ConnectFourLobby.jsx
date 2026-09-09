@@ -217,7 +217,7 @@ const ConnectFourLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
               whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
             >
               <Plus className="h-4 w-4" />
-              {isArcade ? 'CREATE' : 'Create a Game'}
+              CREATE
             </motion.button>
           </MagneticButton>
 
@@ -238,7 +238,7 @@ const ConnectFourLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
               whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
             >
               <LogIn className="h-4 w-4" />
-              {isArcade ? 'JOIN' : 'Join a Game'}
+              JOIN
             </motion.button>
           </MagneticButton>
         </div>

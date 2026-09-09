@@ -423,7 +423,7 @@ const TicTacToeLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =
                 {...createHover}
               >
                 <Plus className="h-4 w-4" />
-                {isArcade ? 'CREATE' : isPink ? 'create a game ♡' : 'Create a Game'}
+                CREATE
               </motion.button>
             </MagneticButton>
 
@@ -444,7 +444,7 @@ const TicTacToeLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =
                 {...joinHover}
               >
                 <LogIn className="h-4 w-4" />
-                {isArcade ? 'JOIN' : isPink ? 'join a game ♡' : 'Join a Game'}
+                JOIN
               </motion.button>
             </MagneticButton>
           </motion.div>

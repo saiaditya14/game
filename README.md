@@ -267,4 +267,4 @@ Gambling Corner (all 3 parts shipped, minor bugfixes remaining):
 - Hold'em: small bug — the exit icon and room code chip in the table status bar have a display/positioning issue, needs a fix.
 
 
-- for all games, i want create a game and join a game to be change to CRREATE and JOIN
+[DONE 2026-09-09] for all games, i want create a game and join a game to be change to CRREATE and JOIN
