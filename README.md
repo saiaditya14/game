@@ -211,7 +211,7 @@ Play test system prompt for draw off a little but seems fine and fun to babie.
 Monopoly dice analysis is done in `monopoly_dice_sim.py`; use 2d8 for Sugaropoly movement.
 NAVBAR needs an overhaul bro
 - Improve reconnect behavior by letting a returning browser resume its existing player from localStorage more visibly.
-- Sugaropoly follow-up: test 4-8 player crowded tile coin readability and tune rail placement/overlap/effect scale if needed.
+- [DONE 2026-09-10] Sugaropoly follow-up: 4-8 player crowded tile coin readability tuned (softened overlap, stronger separator ring).
 Take babie feedback on the scenes, most likely faster falling of flowers and more bubbles in champagne but yea otherwise UI overhaul done!
 Babie feedback:
 Visiting rule for monopoly
@@ -220,21 +220,21 @@ Number of rounds could be togglable
 
 ### Sugaropoly Later Visual Polish
 
-- Color-code owned tiles or board-edge ownership rails with the owner's player color.
-- Show small house/hotel icons on developed spaces, inspired by Richup's at-a-glance readability without copying its design.
-- Add visible mortgage badges or muted tile treatment.
-- Show compact owner markers on portals, utilities, and crystals.
-- Add complete-group and build-eligible cues during the active owner's turn.
-- Improve auction, trade, debt, Time Out, and bankruptcy styling.
-- Create bespoke replaceable deed-card artwork.
-- Keep all ownership/development markers readable with 4-8 overlapping player coins.
-- Revamp board orders and outside of centre styling to be stronger
+- [DONE 2026-09-10] Color-code owned tiles with the owner's player color — implemented as a recolored tile border + one-time shimmer (not a separate rail, which ate into card space and overlapped the price text).
+- [DONE 2026-09-10] Show small house/hotel icons on developed spaces.
+- [DONE 2026-09-10] Add visible mortgage badges and muted tile treatment.
+- [DONE 2026-09-10] Show compact owner markers on portals, utilities, and crystals — covered by the same border-color treatment (applies to any owned space with a price, not just properties).
+- Add complete-group and build-eligible cues during the active owner's turn — dropped, not wanted (the build-completeness rule is already enforced server-side; no separate UI cue needed).
+- [DONE 2026-09-10] Improve auction, trade, debt, Time Out, and bankruptcy button styling (spring hover/press motion matching the rest of the site).
+- Create bespoke replaceable deed-card artwork — waiting on custom art assets.
+- [DONE 2026-09-10] Keep all ownership/development markers readable with 4-8 overlapping player coins.
+- [DONE] Revamp board orders and outside of centre styling to be stronger.
 
 FOR CONNECT FOUR
 i want sparkles when the game get over and the congrats box pops up.
 
 Future Future:
-Monopoly could eventually get a dedicated phone interaction pattern instead of trying to make the full 15x15 board readable at extremely tiny viewport sizes, but phone is not the intended base target right now.
+[CONFIRMED WORKING 2026-09-10] Monopoly's phone layout already stacks board-over-sidebar with page scroll at <=980px, verified no horizontal overflow at 390x844 — no dedicated phone redesign needed.
 
 
 Tic tac toe highlight bugfix
