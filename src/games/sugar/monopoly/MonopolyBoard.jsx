@@ -34,6 +34,7 @@ export const MonopolyBoard = ({
   players = [],
   diceRoll,
   movementRoll,
+  ownership = {},
   canRoll = false,
   isRolling = false,
   onRoll,
@@ -41,6 +42,7 @@ export const MonopolyBoard = ({
   overlay,
 }) => {
   const playerCount = Math.min(Math.max(players.length || 1, 1), 8);
+  const playersById = players.reduce((map, player) => { map[player.id] = player; return map; }, {});
   const [teleport, setTeleport] = useState(null);
   const activeTeleportRoll = teleport?.roll || null;
   const teleportPhase = teleport?.phase || null;
@@ -79,10 +81,13 @@ export const MonopolyBoard = ({
       <div className="monopoly-grid">
         {spaces.map((space) => {
           const spacePlayers = playersByPosition[space.id] || [];
+          const rawDeed = ownership[space.id] || null;
+          const deed = rawDeed?.ownerId ? rawDeed : null;
+          const ownerColor = deed ? playersById[deed.ownerId]?.color : null;
 
           return (
             <div className="monopoly-space-holder" key={space.id} style={{ gridArea: space.gridArea }}>
-              <BoardSpace {...space} onClick={() => onSpaceClick?.(space.id)} />
+              <BoardSpace {...space} deed={deed} ownerColor={ownerColor} onClick={() => onSpaceClick?.(space.id)} />
               {spacePlayers.length ? (
                 <div
                   className={`monopoly-token-cluster monopoly-token-cluster-${space.edge} monopoly-token-stack-${Math.min(spacePlayers.length, 8)}`}

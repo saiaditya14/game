@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, CloudSun, Earth, Gem, Gift, Heart, Landmark, Sparkles, Train, Umbrella, WandSparkles } from 'lucide-react';
+import { Car, CloudSun, Earth, Gem, Gift, Heart, Home, Landmark, Lock, Sparkles, Train, Umbrella, WandSparkles } from 'lucide-react';
 
 const COLOR_TILES = {
   darkOlive: '#c7d99a',
@@ -57,8 +57,14 @@ export const BoardSpace = ({
   edge = 'bottom',
   isCorner = false,
   corner,
+  deed,
+  ownerColor,
   onClick,
 }) => {
+  const isMortgaged = Boolean(deed?.mortgaged);
+  const buildings = Number(deed?.buildings) || 0;
+  const hasHotel = buildings >= 5;
+  const houseCount = hasHotel ? 0 : buildings;
   const Icon = isCorner ? ICONS[corner] || Sparkles : ICONS[kind] || Sparkles;
   const showIcon = name !== 'GO';
   const hasBand = Boolean(colorGroup);
@@ -68,6 +74,8 @@ export const BoardSpace = ({
     'monopoly-space',
     isCorner ? 'monopoly-corner' : 'monopoly-tile',
     isCorner && corner ? `monopoly-corner-${corner}` : '',
+    isMortgaged ? 'is-mortgaged' : '',
+    deed ? 'is-owned' : '',
   ].filter(Boolean).join(' ');
   const nameClassName = [
     'space-name',
@@ -96,7 +104,13 @@ export const BoardSpace = ({
     : name;
 
   return (
-    <button className={spaceClassName} type="button" onClick={onClick} aria-label={`Inspect ${name}`}>
+    <button
+      className={spaceClassName}
+      type="button"
+      onClick={onClick}
+      aria-label={`Inspect ${name}`}
+      style={deed ? { '--owner-color': ownerColor || '#be185d' } : undefined}
+    >
       {hasBand && (
         <div
           className={`property-band property-band-${bandSide}`}
@@ -111,6 +125,16 @@ export const BoardSpace = ({
         {showIcon ? <Icon className="space-icon" strokeWidth={2.4} /> : null}
         <div className={nameClassName}>{displayName}</div>
         {price ? <div className="space-price">${price}</div> : null}
+        {houseCount > 0 || hasHotel ? (
+          <div className="space-buildings" aria-hidden="true">
+            {hasHotel
+              ? <Home className="space-building-icon is-hotel" strokeWidth={2.6} />
+              : Array.from({ length: houseCount }, (_, index) => (
+                <Home key={index} className="space-building-icon" strokeWidth={2.6} />
+              ))}
+          </div>
+        ) : null}
+        {isMortgaged ? <Lock className="space-mortgage-icon" strokeWidth={2.6} aria-label="Mortgaged" /> : null}
       </div>
     </button>
   );

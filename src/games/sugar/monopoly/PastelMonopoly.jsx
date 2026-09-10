@@ -99,7 +99,11 @@ export const PastelMonopoly = () => {
       const savedRoomId = window.localStorage.getItem(ROOM_KEY);
       if (savedRoomId) {
         const { data } = await supabase.from('monopoly_rooms').select('*').eq('id', savedRoomId).maybeSingle();
-        if (data && active) applyRoom(data);
+        if (data?.status === 'finished') {
+          window.localStorage.removeItem(ROOM_KEY);
+        } else if (data && active) {
+          applyRoom(data);
+        }
       }
     })();
     return () => { active = false; };
@@ -225,6 +229,7 @@ export const PastelMonopoly = () => {
           <div className="sugaropoly-layout">
             <div className="sugaropoly-board-pane">
               <MonopolyBoard players={players.filter((p) => p.active)} diceRoll={localRoll} movementRoll={movementRoll}
+                ownership={ownership}
                 canRoll={canRoll} isRolling={busy && isLocalTurn && room.turn_phase === 'awaiting_roll'} onRoll={roll} onSpaceClick={setInspectedSpaceId}
                 overlay={selectedSpace ? <PropertyCard space={selectedSpace} deed={selectedDeed} owner={selectedOwner}
                   pending={authoritativeCard ? room.pending_action : null} authoritative={authoritativeCard} localPlayer={localPlayer}
