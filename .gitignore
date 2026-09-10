@@ -36,6 +36,11 @@ handoff.md
 # Dev notes (local scratch, not for source control)
 .claude/dev-notes.md
 
+# Screen recordings dropped in .claude for debugging (large binaries, not for source control)
+.claude/*.mp4
+.claude/*.mov
+.claude/*.webm
+
 # Claude Code local/personal settings (per-developer, not shared)
 .claude/settings.local.json
 .github/settings.local.json
