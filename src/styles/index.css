@@ -1894,7 +1894,9 @@
 
   .monopoly-dice-card {
     width: min(78%, 18rem);
+    min-height: 11.75rem;
     display: grid;
+    align-content: center;
     justify-items: center;
     gap: 0.65rem;
     padding: clamp(0.78rem, 2vw, 1.08rem);
@@ -2389,9 +2391,10 @@
   .monopoly-center-turn-action {
     position: absolute;
     z-index: 22;
-    left: 50%;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
     bottom: clamp(0.7rem, 4%, 2rem);
-    transform: translateX(-50%);
     width: min(82%, 20rem);
     display: grid;
     justify-items: center;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Dices, Sparkles } from 'lucide-react';
 
 const randomD8 = () => Math.floor(Math.random() * 8) + 1;
@@ -43,8 +43,7 @@ export const MonopolyDiceOverlay = ({ roll, canRoll, onRoll, isRolling }) => {
     };
   }, [roll]);
 
-  if (!canRoll && !isRolling && !roll) return null;
-
+  const isVisible = Boolean(canRoll || isRolling || roll);
   const dice = roll || isRolling ? displayDice : ['?', '?'];
   const total = roll?.total;
   const shouldShowRolling = roll ? isAnimating : isRolling;
@@ -61,49 +60,54 @@ export const MonopolyDiceOverlay = ({ roll, canRoll, onRoll, isRolling }) => {
         </div>
       ) : null}
 
-      <motion.div
-        className="monopoly-dice-card"
-        initial={{ opacity: 0, scale: 0.94, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 8 }}
-        transition={{ duration: 0.18 }}
-      >
-        <div className="monopoly-dice-kicker">
-          <Dices aria-hidden="true" />
-          <span>2d8 roll</span>
-        </div>
-
-        <div className={`monopoly-dice-pair ${isAnimating ? 'is-rolling' : ''}`}>
-          <span className="monopoly-die">{dice[0]}</span>
-          <span className="monopoly-die">{dice[1]}</span>
-        </div>
-
-        {roll || isRolling ? (
-          <div className="monopoly-dice-result">
-            {shouldShowRolling ? (
-              <span>Rolling...</span>
-            ) : (
-              <>
-                <strong>{total}</strong>
-                <span>{roll.playerName} moved {total} spaces</span>
-              </>
-            )}
-          </div>
-        ) : (
-          <motion.button
-            className="monopoly-roll-button"
-            type="button"
-            onClick={onRoll}
-            disabled={isRolling}
-            whileHover={{ scale: 1.06, y: -2 }}
-            whileTap={{ scale: 0.93 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+      <AnimatePresence>
+        {isVisible ? (
+          <motion.div
+            key="dice-card"
+            className="monopoly-dice-card"
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ duration: 0.18 }}
           >
-            <Sparkles aria-hidden="true" />
-            {isRolling ? 'Rolling...' : 'Roll Dice'}
-          </motion.button>
-        )}
-      </motion.div>
+            <div className="monopoly-dice-kicker">
+              <Dices aria-hidden="true" />
+              <span>2d8 roll</span>
+            </div>
+
+            <div className={`monopoly-dice-pair ${isAnimating ? 'is-rolling' : ''}`}>
+              <span className="monopoly-die">{dice[0]}</span>
+              <span className="monopoly-die">{dice[1]}</span>
+            </div>
+
+            {roll || isRolling ? (
+              <div className="monopoly-dice-result">
+                {shouldShowRolling ? (
+                  <span>Rolling...</span>
+                ) : (
+                  <>
+                    <strong>{total}</strong>
+                    <span>{roll.playerName} moved {total} spaces</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <motion.button
+                className="monopoly-roll-button"
+                type="button"
+                onClick={onRoll}
+                disabled={isRolling}
+                whileHover={{ scale: 1.06, y: -2 }}
+                whileTap={{ scale: 0.93 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+              >
+                <Sparkles aria-hidden="true" />
+                {isRolling ? 'Rolling...' : 'Roll Dice'}
+              </motion.button>
+            )}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 };

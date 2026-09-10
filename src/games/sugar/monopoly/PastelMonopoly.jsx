@@ -59,10 +59,16 @@ export const PastelMonopoly = () => {
   const applyRoom = useCallback((next, options) => {
     if (!next) return;
     const nextVisualRoll = rollVisualTrackerRef.current.observe(next, options);
-    if (nextVisualRoll) setMovementRoll(nextVisualRoll);
+    if (nextVisualRoll) {
+      setMovementRoll(nextVisualRoll);
+      if (nextVisualRoll.playerId === userId) {
+        setLocalRoll(nextVisualRoll);
+        setShowLandingCard(false);
+      }
+    }
     setRoom(next);
     window.localStorage.setItem(ROOM_KEY, next.id);
-  }, []);
+  }, [userId]);
 
   const rpc = useCallback(async (name, args = {}) => {
     if (!supabase) throw new Error('Supabase is not configured.');
@@ -109,8 +115,6 @@ export const PastelMonopoly = () => {
 
   useEffect(() => {
     if (!movementRoll?.id || movementRoll.playerId !== userId) return;
-    setLocalRoll(movementRoll);
-    setShowLandingCard(false);
     const diceTimer = window.setTimeout(() => setLocalRoll(null), 1500);
     const cardTimer = window.setTimeout(() => setShowLandingCard(true), 1480);
     return () => { window.clearTimeout(diceTimer); window.clearTimeout(cardTimer); };

@@ -31,7 +31,15 @@ export const PropertyCard = ({
   const amount = pending?.amount;
 
   return (
-    <div className="monopoly-card-overlay" role="dialog" aria-modal="true" aria-label={`${space.name} card`}>
+    <motion.div
+      className="monopoly-card-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${space.name} card`}
+      initial={{ opacity: 0, scale: 0.94, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className={`monopoly-deed-card monopoly-card-${space.type || space.kind}`}>
         <button className="monopoly-card-close" type="button" onClick={onClose} aria-label="Close card"><X /></button>
         <header style={{ '--deed-color': `var(--property-${space.colorGroup || 'special'}, #f9a8d4)` }}>
@@ -82,6 +90,6 @@ export const PropertyCard = ({
           </>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 };

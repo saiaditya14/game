@@ -3,7 +3,13 @@ import { motion } from 'framer-motion';
 import { RotateCw, Sparkles } from 'lucide-react';
 
 export const TurnAction = ({ isDouble, disabled, onClick }) => (
-  <div className="monopoly-center-turn-action" aria-live="polite">
+  <motion.div
+    className="monopoly-center-turn-action"
+    aria-live="polite"
+    initial={{ opacity: 0, scale: 0.94, y: 10 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+  >
     <span className="monopoly-center-turn-kicker">
       <Sparkles aria-hidden="true" />
       Landing resolved
@@ -21,5 +27,5 @@ export const TurnAction = ({ isDouble, disabled, onClick }) => (
       {isDouble ? <RotateCw aria-hidden="true" /> : <Sparkles aria-hidden="true" />}
       {isDouble ? 'Roll Again' : 'End Turn'}
     </motion.button>
-  </div>
+  </motion.div>
 );
