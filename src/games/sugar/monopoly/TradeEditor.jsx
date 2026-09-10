@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
 export const TradeEditor = ({ players, localPlayer, owned, ownership, onClose, onSubmit }) => {
@@ -22,7 +23,15 @@ export const TradeEditor = ({ players, localPlayer, owned, ownership, onClose, o
         <fieldset><legend>Your properties</legend>{mine.map((a) => <label key={a.id}><input type="checkbox" checked={giveProperties.includes(a.id)} onChange={() => toggle(a.id, giveProperties, setGiveProperties)} /> {a.name}</label>)}</fieldset>
         <fieldset><legend>Their properties</legend>{recipientOwned.map((a) => <label key={a.id}><input type="checkbox" checked={takeProperties.includes(a.id)} onChange={() => toggle(a.id, takeProperties, setTakeProperties)} /> {a.name}</label>)}</fieldset>
         <p className="sugaropoly-lobby-note">Developed properties cannot be traded.</p>
-        <button type="submit" disabled={!recipientId}>Send Offer</button>
+        <motion.button
+          type="submit"
+          disabled={!recipientId}
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+        >
+          Send Offer
+        </motion.button>
       </form>
     </div>
   );

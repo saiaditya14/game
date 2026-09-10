@@ -1,6 +1,13 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Crown, Home, RotateCcw, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const victoryButtonMotion = {
+  whileHover: { scale: 1.05, y: -2 },
+  whileTap: { scale: 0.95 },
+  transition: { type: 'spring', stiffness: 360, damping: 18 },
+};
 
 export const VictoryOverlay = ({ winner, reason, isHost, busy, onPlayAgain }) => (
   <div className="monopoly-winner-overlay" role="dialog" aria-modal="true" aria-label="Quest complete">
@@ -20,14 +27,16 @@ export const VictoryOverlay = ({ winner, reason, isHost, busy, onPlayAgain }) =>
       </span>
       <div className="monopoly-victory-actions">
         {isHost ? (
-          <button type="button" onClick={onPlayAgain} disabled={busy}>
+          <motion.button type="button" onClick={onPlayAgain} disabled={busy} {...victoryButtonMotion}>
             <RotateCcw aria-hidden="true" />
             Play Again
-          </button>
+          </motion.button>
         ) : (
           <span className="monopoly-victory-waiting">Waiting for the host to begin another quest.</span>
         )}
-        <Link to="/"><Home aria-hidden="true" /> Lovelyland Home</Link>
+        <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: 'spring', stiffness: 360, damping: 18 }} style={{ display: 'inline-flex' }}>
+          <Link to="/"><Home aria-hidden="true" /> Lovelyland Home</Link>
+        </motion.div>
       </div>
     </div>
   </div>

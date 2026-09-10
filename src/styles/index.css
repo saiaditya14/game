@@ -254,10 +254,37 @@
     min-height: 100vh;
     padding: 0.75rem;
     position: relative;
-    background:
-      linear-gradient(135deg, rgba(255, 245, 250, 0.96), rgba(234, 250, 255, 0.96) 48%, rgba(255, 251, 224, 0.96)),
-      repeating-linear-gradient(45deg, rgba(244, 114, 182, 0.08) 0 1px, transparent 1px 18px);
+    background-color: #ffe1f0;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.4), transparent 32%),
+      linear-gradient(135deg, rgba(255, 207, 230, 0.5) 0%, rgba(255, 225, 240, 0.4) 26%, rgba(243, 227, 255, 0.4) 52%, rgba(223, 243, 255, 0.4) 76%, rgba(255, 243, 214, 0.5) 100%),
+      repeating-linear-gradient(45deg, rgba(190, 24, 93, 0.08) 0 1px, transparent 1px 18px),
+      url("../../images/Trial 1.jpg");
+    background-size: auto, auto, auto, cover;
+    background-position: center, center, center, center top;
+    background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+    background-attachment: scroll, scroll, scroll, fixed;
+    image-rendering: pixelated;
     color: #7a2046;
+  }
+
+  .sugaropoly-page button {
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, filter 180ms ease;
+  }
+
+  .sugaropoly-page button:not(:disabled):hover {
+    transform: translateY(-2px) scale(1.03);
+    filter: brightness(1.05);
+  }
+
+  .sugaropoly-page button:not(:disabled):active {
+    transform: translateY(0) scale(0.95);
+    filter: brightness(0.98);
+  }
+
+  .sugaropoly-page button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(216, 106, 154, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.9);
   }
 
   .sugaropoly-topbar {
@@ -463,19 +490,44 @@
   }
 
   .sugaropoly-lobby-card {
+    position: relative;
+    overflow: hidden;
     width: min(100%, 42rem);
-    border: 3px solid #f0a9c8;
-    border-radius: 0.5rem;
+    border: 1px solid rgba(240, 169, 200, 0.55);
+    border-radius: 1.4rem;
     padding: clamp(1.4rem, 3vw, 2rem);
     background:
-      radial-gradient(circle at 12% 14%, rgba(174, 233, 255, 0.55), transparent 26%),
-      radial-gradient(circle at 86% 18%, rgba(255, 230, 109, 0.38), transparent 24%),
-      linear-gradient(145deg, rgba(255, 252, 246, 0.96), rgba(255, 242, 248, 0.96) 55%, rgba(239, 252, 255, 0.94));
-    box-shadow: 0 24px 70px rgba(190, 24, 93, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+      radial-gradient(circle at 12% 14%, rgba(174, 233, 255, 0.4), transparent 26%),
+      radial-gradient(circle at 86% 18%, rgba(255, 230, 109, 0.28), transparent 24%),
+      linear-gradient(145deg, rgba(255, 252, 246, 0.72), rgba(255, 242, 248, 0.72) 55%, rgba(239, 252, 255, 0.68));
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 24px 70px rgba(190, 24, 93, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
     text-align: center;
   }
 
+  .sugaropoly-lobby-watermark {
+    position: absolute;
+    width: 7.5rem;
+    height: 7.5rem;
+    pointer-events: none;
+    color: #be185d;
+  }
+
+  .sugaropoly-lobby-watermark-crown {
+    bottom: -1.25rem;
+    left: -1.25rem;
+  }
+
+  .sugaropoly-lobby-watermark-sparkle {
+    top: -1.25rem;
+    right: -1.25rem;
+    color: #9c6dfa;
+  }
+
   .sugaropoly-lobby-mark {
+    position: relative;
+    z-index: 1;
     width: 3.8rem;
     height: 3.8rem;
     margin: 0 auto;
@@ -487,7 +539,7 @@
       radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.9), transparent 30%),
       linear-gradient(135deg, #fff7fb, #f9a8d4);
     color: #be185d;
-    box-shadow: 0 14px 30px rgba(190, 24, 93, 0.16);
+    box-shadow: 0 14px 30px rgba(190, 24, 93, 0.32), 0 0 0 6px rgba(249, 168, 212, 0.18);
   }
 
   .sugaropoly-lobby-mark svg {
@@ -528,28 +580,35 @@
   .sugaropoly-join-form {
     width: min(100%, 32rem);
     margin: 1.65rem auto 0;
-    display: grid;
     gap: 0.65rem;
   }
 
   .sugaropoly-lobby-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sugaropoly-join-form {
+    display: grid;
   }
 
   .sugaropoly-lobby-primary,
   .sugaropoly-lobby-secondary {
     border: 2px solid #f0a9c8;
-    border-radius: 0.5rem;
-    box-shadow: 0 14px 28px rgba(190, 24, 93, 0.15);
+    border-radius: 999px;
+    box-shadow: 0 12px 24px rgba(190, 24, 93, 0.24);
   }
 
   .sugaropoly-lobby-primary {
-    background: linear-gradient(135deg, #f9a8d4, #d8c4ff);
-    color: #68123a;
+    background: linear-gradient(135deg, #fb7fc0, #b98cff);
+    border-color: #e050a0;
+    color: #4a0e2c;
+    box-shadow: 0 12px 26px rgba(190, 24, 93, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   }
 
   .sugaropoly-lobby-secondary {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.85);
     color: #8a1f4d;
   }
 
@@ -583,13 +642,28 @@
   }
 
   .sugaropoly-room-code {
-    display: grid;
-    gap: 0.2rem;
-    justify-items: center;
-    padding: 0.8rem;
-    border: 2px solid rgba(216, 106, 154, 0.28);
-    border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.62);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 0.7rem 1.1rem;
+    border: 2px solid #f0a9c8;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.7), transparent 34%),
+      linear-gradient(135deg, #fff3f9, #f7e9ff);
+    box-shadow: 0 12px 24px rgba(190, 24, 93, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .sugaropoly-room-code-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
+  .sugaropoly-room-code-copy-button {
+    box-shadow: 0 8px 18px rgba(192, 132, 252, 0.3);
   }
 
   .sugaropoly-room-code span {
@@ -2125,7 +2199,7 @@
 
   .monopoly-card-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
   .monopoly-card-actions button, .monopoly-auction-panel button, .monopoly-timeout-actions button,
-  .monopoly-trade-editor button, .monopoly-begin-button {
+  .monopoly-trade-editor button, .monopoly-trade-actions button {
     min-height: 2.35rem;
     padding: 0.5rem 0.8rem;
     border: 2px solid #d86a9a;
@@ -2137,15 +2211,15 @@
 
   .monopoly-card-actions button:disabled { opacity: .5; cursor: not-allowed; }
 
-  .monopoly-rule-grid {
-    width: min(100%, 30rem);
-    margin: 1.2rem auto;
-    display: grid;
-    gap: 0.65rem;
-    text-align: left;
+  .monopoly-begin-button {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 1.75rem;
+    font-weight: 950;
+    margin-top: 0.9rem;
   }
 
-  .monopoly-rule-grid label, .monopoly-trade-editor label {
+  .monopoly-trade-editor label {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2153,7 +2227,13 @@
     font-weight: 850;
   }
 
-  .monopoly-rule-grid input[type="number"], .monopoly-trade-editor input, .monopoly-trade-editor select {
+  .monopoly-trade-editor input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: #d8579c;
+  }
+
+  .monopoly-trade-editor input, .monopoly-trade-editor select {
     min-height: 2.3rem;
     max-width: 10rem;
     border: 2px solid #f0a9c8;
@@ -2161,6 +2241,112 @@
     padding: .35rem .55rem;
     background: #fffafd;
     color: #7a2046;
+  }
+
+  .monopoly-rule-section {
+    width: min(100%, 30rem);
+    margin: 1.35rem auto 0;
+    text-align: left;
+  }
+
+  .monopoly-rule-kicker {
+    margin: 0 0 0.6rem;
+    color: #be185d;
+    font-size: 0.62rem;
+    font-weight: 950;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .monopoly-rule-field input[type="number"] {
+    width: 100%;
+    min-height: 2.5rem;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.6rem;
+    padding: 0.4rem 0.75rem;
+    background: #fffafd;
+    color: #7a2046;
+    font-weight: 850;
+  }
+
+  .monopoly-rule-field-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-top: 0.75rem;
+    font-weight: 850;
+    color: #7a2046;
+  }
+
+  .monopoly-rule-field-inline input[type="number"] {
+    max-width: 10rem;
+  }
+
+  .monopoly-rule-checklist {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .monopoly-rule-check-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+  }
+
+  .monopoly-rule-check-row input[type="checkbox"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .monopoly-rule-check-box {
+    width: 1.55rem;
+    height: 1.55rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 2px solid #f0a9c8;
+    border-radius: 0.55rem;
+    background: #fffafd;
+    color: transparent;
+    transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  .monopoly-rule-check-box svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    stroke-width: 3;
+  }
+
+  .monopoly-rule-check-label {
+    font-weight: 850;
+    color: #7a2046;
+  }
+
+  .monopoly-rule-check-row input:checked ~ .monopoly-rule-check-box {
+    background: linear-gradient(135deg, #f9a8d4, #d8c4ff);
+    border-color: #be185d;
+    color: #4a0e2c;
+    transform: scale(1.06);
+  }
+
+  .monopoly-rule-check-row:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .monopoly-rule-check-row:not(:has(input:disabled)):hover .monopoly-rule-check-box {
+    border-color: #d8579c;
+    transform: scale(1.04);
+  }
+
+  .monopoly-rule-check-row input:focus-visible ~ .monopoly-rule-check-box {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(216, 106, 154, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.9);
   }
 
   .monopoly-auction-panel, .monopoly-timeout-actions {
@@ -2199,7 +2385,7 @@
   .monopoly-trade-editor h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; }
   .monopoly-trade-editor fieldset { display: grid; gap: .3rem; border: 2px solid #f3bfd5; border-radius: .5rem; }
   .monopoly-trade-actions { display: flex; gap: .25rem; }
-  .monopoly-trade-actions button { font-size: .65rem; }
+  .monopoly-trade-actions button { min-height: 1.7rem; padding: .3rem .55rem; font-size: .65rem; }
   .monopoly-center-turn-action {
     position: absolute;
     z-index: 22;
@@ -2252,6 +2438,15 @@
 
   .monopoly-center-turn-action button svg { width: 1rem; height: 1rem; }
   .monopoly-center-turn-action button:disabled { opacity: 0.55; cursor: wait; }
+
+  .monopoly-center-turn-action button.is-double {
+    animation: monopoly-double-glow 1.4s ease-in-out infinite;
+  }
+
+  @keyframes monopoly-double-glow {
+    0%, 100% { box-shadow: 0 10px 22px rgba(122, 32, 70, 0.18); }
+    50% { box-shadow: 0 10px 26px rgba(122, 32, 70, 0.18), 0 0 0 6px rgba(192, 132, 252, 0.28); }
+  }
 
   .monopoly-winner-overlay {
     position: fixed;
@@ -2432,7 +2627,6 @@
       max-width: 11rem;
     }
 
-    .sugaropoly-lobby-actions,
     .sugaropoly-join-form {
       grid-template-columns: 1fr;
     }

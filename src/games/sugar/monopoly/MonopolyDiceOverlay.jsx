@@ -90,15 +90,18 @@ export const MonopolyDiceOverlay = ({ roll, canRoll, onRoll, isRolling }) => {
             )}
           </div>
         ) : (
-          <button
+          <motion.button
             className="monopoly-roll-button"
             type="button"
             onClick={onRoll}
             disabled={isRolling}
+            whileHover={{ scale: 1.06, y: -2 }}
+            whileTap={{ scale: 0.93 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 18 }}
           >
             <Sparkles aria-hidden="true" />
             {isRolling ? 'Rolling...' : 'Roll Dice'}
-          </button>
+          </motion.button>
         )}
       </motion.div>
     </div>

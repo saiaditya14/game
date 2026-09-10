@@ -1,5 +1,12 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
+
+const primaryButtonMotion = {
+  whileHover: { scale: 1.04, y: -2 },
+  whileTap: { scale: 0.95 },
+  transition: { type: 'spring', stiffness: 380, damping: 18 },
+};
 
 const money = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
 
@@ -63,15 +70,15 @@ export const PropertyCard = ({
       <div className="monopoly-card-actions">
         {authoritative && actionType === 'purchase' ? (
           <>
-            <button type="button" onClick={onBuy} disabled={busy || Number(localPlayer?.money) < space.price}>Buy {money(space.price)}</button>
-            <button type="button" onClick={onDecline} disabled={busy}>Ignore / Auction</button>
+            <motion.button type="button" onClick={onBuy} disabled={busy || Number(localPlayer?.money) < space.price} {...primaryButtonMotion}>Buy {money(space.price)}</motion.button>
+            <motion.button type="button" onClick={onDecline} disabled={busy} {...primaryButtonMotion}>Ignore / Auction</motion.button>
           </>
         ) : null}
         {canManage && deed?.ownerId === localPlayer?.id ? (
           <>
-            {!deed.mortgaged && isProperty ? <button type="button" onClick={() => onPropertyAction('build')} disabled={busy}>Build</button> : null}
-            {Number(deed.buildings) > 0 ? <button type="button" onClick={() => onPropertyAction('sell')} disabled={busy}>Sell Building</button> : null}
-            {!deed.mortgaged ? <button type="button" onClick={() => onPropertyAction('mortgage')} disabled={busy}>Mortgage</button> : <button type="button" onClick={() => onPropertyAction('unmortgage')} disabled={busy}>Unmortgage</button>}
+            {!deed.mortgaged && isProperty ? <motion.button type="button" onClick={() => onPropertyAction('build')} disabled={busy} {...primaryButtonMotion}>Build</motion.button> : null}
+            {Number(deed.buildings) > 0 ? <motion.button type="button" onClick={() => onPropertyAction('sell')} disabled={busy} {...primaryButtonMotion}>Sell Building</motion.button> : null}
+            {!deed.mortgaged ? <motion.button type="button" onClick={() => onPropertyAction('mortgage')} disabled={busy} {...primaryButtonMotion}>Mortgage</motion.button> : <motion.button type="button" onClick={() => onPropertyAction('unmortgage')} disabled={busy} {...primaryButtonMotion}>Unmortgage</motion.button>}
           </>
         ) : null}
       </div>

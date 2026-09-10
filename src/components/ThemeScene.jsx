@@ -1,9 +1,15 @@
 import React, { useRef, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from './ThemeProvider';
 import pinkWallpaper from '../../images/Trial 1.jpg';
+
+// Sugaropoly hosts its own fixed-identity Pink scene (see PastelMonopoly.jsx)
+// independent of the site-wide theme selector, so skip the global one there
+// to avoid mounting two WebGL canvases at once.
+const ROUTES_WITH_OWN_SCENE = ['/monopoly'];
 
 // ─── Shared geometry shapes (created once at module load) ──────────────────────
 
@@ -151,7 +157,7 @@ function CherryBlossom({ color }) {
   );
 }
 
-function PinkScene() {
+export function PinkScene() {
   const flowers = useMemo(
     () => Array.from({ length: 24 }, (_, i) => ({ id: i, color: FLOWER_COLORS[i % FLOWER_COLORS.length] })),
     []
@@ -587,9 +593,11 @@ const canvasStyle = {
 
 export default function ThemeScene() {
   const { theme } = useTheme();
+  const location = useLocation();
   const Scene = SCENE_MAP[theme];
   const isPink = theme === 'theme-pink';
 
+  if (ROUTES_WITH_OWN_SCENE.some((route) => location.pathname.startsWith(route))) return null;
   if (!Scene && !isPink) return null;
 
   return (

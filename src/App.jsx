@@ -22,10 +22,10 @@ const ThemeScene = lazy(() => import('./components/ThemeScene'));
 function App() {
   return (
     <ThemeProvider>
-      <Suspense fallback={null}>
-        <ThemeScene />
-      </Suspense>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <Suspense fallback={null}>
+          <ThemeScene />
+        </Suspense>
         <div className="relative min-h-screen transition-colors duration-300" style={{ zIndex: 10 }}>
           <NavBar />
           <Routes>

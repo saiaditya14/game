@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Gamepad2, Home, LogOut, Maximize2, Minimize2, Palette, Sparkles } from 'lucide-react';
-import { useTheme } from '../../../components/ThemeProvider';
+import { Gamepad2, Home, LogOut, Maximize2, Minimize2, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { MonopolyBoard } from './MonopolyBoard';
 import { MonopolyLobby } from './MonopolyLobby';
@@ -14,13 +14,15 @@ import { VictoryOverlay } from './VictoryOverlay';
 import { ASSET_BY_ID, DEFAULT_RULES, spaces } from './monopolyData';
 import { createRollVisualTracker } from './rollVisuals';
 
+const SugaropolyBackdrop = lazy(() => import('./SugaropolyBackdrop'));
+
 const ROOM_KEY = 'lovelyland-monopoly-room-id';
 const generateRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const playersOf = (room) => Array.isArray(room?.players) ? room.players : [];
 const LANDING_CARD_TYPES = new Set(['purchase', 'landed', 'rent', 'tax', 'free_park', 'time_out', 'time_out_failed']);
+const auctionButtonSpring = { type: 'spring', stiffness: 380, damping: 18 };
 
 export const PastelMonopoly = () => {
-  const { theme, setTheme } = useTheme();
   const pageRef = useRef(null);
   const rollVisualTrackerRef = useRef(createRollVisualTracker());
   const [userId, setUserId] = useState('');
@@ -33,7 +35,6 @@ export const PastelMonopoly = () => {
   const [showLandingCard, setShowLandingCard] = useState(false);
   const [tradeOpen, setTradeOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const themes = [{ id: 'theme-vanilla', label: 'Vanilla' }, { id: 'theme-pink', label: 'Pink' }, { id: 'theme-arcade', label: 'Arcade' }, { id: 'theme-cozy', label: 'Cozy' }];
 
   const players = playersOf(room);
   const currentPlayer = room?.status === 'playing' ? players[room.current_player_index] : null;
@@ -188,6 +189,10 @@ export const PastelMonopoly = () => {
 
   return (
     <div className="sugaropoly-page" ref={pageRef}>
+      <Suspense fallback={null}>
+        <SugaropolyBackdrop />
+      </Suspense>
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <nav className="sugaropoly-topbar">
         <Link className="sugaropoly-brand-link" to="/"><span className="sugaropoly-brand-mark"><Gamepad2 /></span><span className="sugaropoly-brand-copy"><span>Lovelyland</span><small>minigame hub</small></span></Link>
         <div className="sugaropoly-title-lockup"><Sparkles /><span>Faerie Kingdom Quest</span></div>
@@ -196,7 +201,6 @@ export const PastelMonopoly = () => {
           {currentPlayer ? <span className={`sugaropoly-turn-pill ${isLocalTurn ? 'is-yours' : ''}`}>{isLocalTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}</span> : null}
           {room ? <button className="sugaropoly-nav-icon-button" type="button" onClick={leaveRoom}><LogOut /></button> : null}
           <Link className="sugaropoly-nav-icon-button" to="/"><Home /></Link>
-          <label className="sugaropoly-theme-control"><Palette /><select value={theme} onChange={(e) => setTheme(e.target.value)}>{themes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
           <button className="sugaropoly-nav-icon-button" type="button" onClick={() => document.fullscreenElement ? document.exitFullscreen() : pageRef.current?.requestFullscreen()}>{isFullscreen ? <Minimize2 /> : <Maximize2 />}</button>
         </div>
       </nav>
@@ -226,7 +230,7 @@ export const PastelMonopoly = () => {
                   onPropertyAction={(action) => rpc('monopoly_property_action', { p_room_id: room.id, p_action: action, p_space: selectedSpace.id })} />
                   : showCenterTurnAction ? <TurnAction isDouble={room.consecutive_doubles > 0} disabled={busy} onClick={endTurn} />
                   : null} />
-              {auction ? <div className="monopoly-auction-panel"><h2>Auction: {auctionSpace?.name}</h2><p>Current bid: ${auction.bid || 0}</p><p>{auctionBidder?.id === userId ? 'Your bid' : `Waiting for ${players.find((p) => p.id === auctionBidder?.id)?.name || 'bidder'}`}</p>{auctionBidder?.id === userId ? <><button type="button" onClick={() => { const bid = Number(window.prompt('Your bid', Number(auction.bid || 0) + 1)); if (bid) resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: bid }); }}>Bid</button><button type="button" onClick={() => resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: null })}>Pass</button></> : null}</div> : null}
+              {auction ? <div className="monopoly-auction-panel"><h2>Auction: {auctionSpace?.name}</h2><p>Current bid: ${auction.bid || 0}</p><p>{auctionBidder?.id === userId ? 'Your bid' : `Waiting for ${players.find((p) => p.id === auctionBidder?.id)?.name || 'bidder'}`}</p>{auctionBidder?.id === userId ? <><motion.button type="button" whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={auctionButtonSpring} onClick={() => { const bid = Number(window.prompt('Your bid', Number(auction.bid || 0) + 1)); if (bid) resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: bid }); }}>Bid</motion.button><motion.button type="button" whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={auctionButtonSpring} onClick={() => resolveLandingAction('monopoly_auction', { p_room_id: room.id, p_bid: null })}>Pass</motion.button></> : null}</div> : null}
             </div>
             <div className="sugaropoly-sidebar-pane">
               <MonopolySidebar players={players} trades={trades} properties={myProperties} events={room.event_log || []}
@@ -236,12 +240,13 @@ export const PastelMonopoly = () => {
               />
             </div>
           </div>
-          {localPlayer?.inTimeOut && isLocalTurn && room.turn_phase === 'awaiting_roll' ? <div className="monopoly-timeout-actions"><strong>Time Out</strong><button type="button" onClick={() => rpc('monopoly_time_out', { p_room_id: room.id, p_action: 'pay' })} disabled={localPlayer.money < 50}>Pay $50</button><span>or roll for doubles</span></div> : null}
+          {localPlayer?.inTimeOut && isLocalTurn && room.turn_phase === 'awaiting_roll' ? <div className="monopoly-timeout-actions"><strong>Time Out</strong><motion.button type="button" whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={auctionButtonSpring} onClick={() => rpc('monopoly_time_out', { p_room_id: room.id, p_action: 'pay' })} disabled={localPlayer.money < 50}>Pay $50</motion.button><span>or roll for doubles</span></div> : null}
           {tradeOpen ? <TradeEditor players={players} localPlayer={localPlayer} owned={tradeAssets} ownership={ownership} onClose={() => setTradeOpen(false)}
             onSubmit={(trade) => rpc('monopoly_trade', { p_room_id: room.id, p_action: 'create', p_trade: trade }).then(() => setTradeOpen(false))} /> : null}
           {room.status === 'finished' ? <VictoryOverlay winner={winner} reason={room.end_reason} isHost={isHost} busy={busy} onPlayAgain={() => rpc('monopoly_play_again', { p_room_id: room.id })} /> : null}
         </>
       )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { RotateCw, Sparkles } from 'lucide-react';
 
 export const TurnAction = ({ isDouble, disabled, onClick }) => (
@@ -8,9 +9,17 @@ export const TurnAction = ({ isDouble, disabled, onClick }) => (
       Landing resolved
     </span>
     <strong>{isDouble ? 'The dice favor you again' : 'Your move is complete'}</strong>
-    <button type="button" disabled={disabled} onClick={onClick}>
+    <motion.button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={isDouble ? 'is-double' : undefined}
+      whileHover={disabled ? undefined : { scale: 1.05, y: -2 }}
+      whileTap={disabled ? undefined : { scale: 0.94 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+    >
       {isDouble ? <RotateCw aria-hidden="true" /> : <Sparkles aria-hidden="true" />}
       {isDouble ? 'Roll Again' : 'End Turn'}
-    </button>
+    </motion.button>
   </div>
 );
