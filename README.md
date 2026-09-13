@@ -206,26 +206,27 @@ The economy migration revokes direct client inserts/updates/deletes on `monopoly
 ### NEXT UP (2026-09-12) — do these ASAP, rest of the todolist below can wait
 
 **Cross-game / infrastructure**
-- Extract `GameExitScreen` from Quick Maths into a shared component, retrofit Tic-Tac-Toe + future games.
-- Randomize who starts each game, not just the room creator — Tic-Tac-Toe also needs X/O randomized.
+- [DONE 2026-09-13] `GameExitScreen` shared component now used by Tic-Tac-Toe too (abort mid-game shows the shared "Game Aborted / Returning home…" screen and auto-redirects, instead of the win/draw play-again overlay).
+- [DONE 2026-09-13] Tic-Tac-Toe and Connect Four: starting player is now randomized each game (room creation + play-again), not always the room creator. Tic-Tac-Toe also randomizes X/O (new `x_player` column, migrated locally); X still moves first per the classic rule, so randomizing X also randomizes who starts. Verified with Playwright across multiple games (badge labels, turn order, and win overlay all track the randomized assignment correctly). Other games (Quick Maths, Word Race, Verbal Memory, Category Blitz, Gambling Corner) don't have a single hardcoded "player 1 always starts" turn order, so no change needed there.
 - [DONE 2026-09-13] Room code copy button on all games — in-game copy icons added (TicTacToe/QuickMaths/ConnectFour/WordRace/VerbalMemory/CategoryBlitz/DrawOff/Sugaropoly). Also unified CREATE/JOIN to go through a dedicated page + back arrow everywhere (matching Poker/Category Blitz/Quick Maths), and fixed TicTacToe/ConnectFour/WordRace so the creator lands on the proper big waiting-room screen instead of the cramped in-board text until the opponent joins. Verbal Memory Duel now auto-starts on join instead of requiring a manual host Start click.
 - Reconnect behavior: let a returning browser resume its existing player from localStorage more visibly. (Nice-to-have, not required.)
 
 **Tic-Tac-Toe**
-- Make it a 4x4 board instead of the current "too easy" 3x3.
+- [DONE 2026-09-13] Board is now 4x4, still 3-in-a-row (confirmed with user). Verified with a real two-player Playwright test — 16 cells, win-line overlay aligns to the actual winning line, draw detection works on a full 16-cell board.
 
 **Gambling Corner**
-- Dice Poker: small-screen layout is in but doesn't fully match the vision yet — revisit.
-- Hold'em: exit icon + room code chip overlap in the table status bar — fix.
+- [DONE 2026-09-13] Dice Poker: small-screen betting controls compacted (smaller buttons/slider, tighter gaps, icons hidden on mobile). Note: on a 390px-tall phone the controls still sit below the fold because the two player-seat panels alone (18rem min-height each) exceed the viewport — that's the seats' own sizing, confirmed out of scope for this pass (user picked "compact the controls" over "pin to bottom").
+- [DONE 2026-09-13] Hold'em: exit icon + room code chip overlap fixed. Root cause was stale scroll position carrying over from the taller Hub screen (all internal-state screens, no route change to reset scroll) — added a `window.scrollTo(0,0)` on mode/room transitions in `GamblingCorner.jsx`. Fixes all three tables (shared `TableStatusBar`). Verified with two-context Playwright at 390×844.
 
 **Card art**
 - Replace Sugaropoly's placeholder card art (deed/property cards, Chance/Chest) with the user's custom card art — needs the asset files.
 
 **Pink theme button copy**
-- Remove hearts (♡) and tildes (~) from pink-theme button/copy text across the site — reads as over-the-top. Confirmed present in 13 files (CategoryBlitz, QuickMaths, TicTacToe, VerbalMemory, WordRace, Gambling Corner, HomePage) — this is a real cross-cutting cleanup, not a one-line fix.
+- [DONE 2026-09-13] Removed hearts (♡) and tildes (~) from pink-theme button/copy text across 14 files (TicTacToe, QuickMaths, CategoryBlitz, WordRace, VerbalMemoryDuelLobby, GameExitScreen, HomePage, Gambling Corner). Left theme-cozy's own `~` copy, CSS sibling selectors, code comments, and one shared "~10-20 min" approximation string untouched (not pink-specific).
 
 **Home page "Your Turn" section**
-- The "Your Turn" section (`src/pages/HomePage.jsx`, renders `turnGames`) is usually empty/placeholder-looking when nothing's pending. Add two extra cards there: one "randomly pick a game" (Explore/surprise-me action), one "suggest something" card.
+- [DONE 2026-09-13] Removed — `turnGames` was hardcoded fake data (always showed "1 move waiting" on Tic-Tac-Toe / Wordle Race regardless of real state, never wired to Supabase). Replaced with an "Explore" section that picks 2 random games from the real game list (`gamesList` in `HomePage.jsx`) on each visit and links straight to them. "Start a New Game" now maps over the same `gamesList` instead of a duplicated hardcoded block.
+- [DONE 2026-09-13] Home page game cards: added a small themed lucide icon (Disc/Hash/Calculator/Type/Brain/ListChecks/Coins) to cards without a real image, and rewrote every description to a single plain-language line instead of the longer AI-boilerplate-sounding copy. Along the way fixed a real bug in `GameCard.jsx` — its icon placeholder used named Tailwind spacing (`h-28 w-28`, `h-12 w-12`), which per this project's known Tailwind setup issue compiles to no CSS, so the icon/photo placeholder was invisible; switched to arbitrary values (`h-[7rem]`, `h-[3rem]`).
 
 **Hide two Draw Off modes + Sugaropoly from the home page (temporarily)**
 - Hide Sugaropoly's home page card.
@@ -290,9 +291,9 @@ QUICK MATHS - instead of 5 rounds -> change it to first to 5 wins OR keep only o
 TIC-TAK-TOE - change the players colors to match that of connect 4.
 	    - change the end game box to match that of other games.
 
-FOR ALL GAMES - LET WHO STARTS BE RANDOMISED, NOT JUST WHO CREATES THE GAME ROOM
+[DONE 2026-09-13] FOR ALL GAMES - LET WHO STARTS BE RANDOMISED, NOT JUST WHO CREATES THE GAME ROOM
 (similarly for tic-tac-toe - let who be x and who be o also be randomized at the start of each game.)
-	      - all games' room code should have a copy button to allow for the ease of copying.
+[DONE] all games' room code should have a copy button to allow for the ease of copying.
 
 ON the website home page, can we add a direct room code, so that we dont need to enter the game to type the code?
 

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Disc, Hash, Calculator, Type, Brain, ListChecks, Coins } from 'lucide-react';
 import { animate } from 'animejs';
 import { GameCard } from '../components/GameCard';
 import { useTheme } from '../components/ThemeProvider';
@@ -15,27 +16,101 @@ import coupleCorner      from '../../images/couplehehe.png';
 import arcadeVideo       from '../../images/video_eb9d7e6a96d3.mp4';
 import blackHoleImg      from '../../images/black-hole-spin.png';
 
-const turnGames = [
+const newGames = [];
+
+// ─── Explore pool — two of these are picked at random each visit ──────────────
+
+const gamesList = [
   {
-    title: 'Tic-Tac-Toe',
-    description: 'They played top-right. Your move to block the line and keep the match alive.',
-    badge: 'Action Required',
-    category: 'Classic',
-    meta: '1 move waiting',
+    path: '/draw-off',
+    title: 'Draw Off',
+    description: 'Sketch fast, guess faster — solo or as a team.',
+    badge: 'AI Racing',
+    category: 'AI Racing',
+    meta: 'multiple modes',
+    imageKey: 'drawOff',
   },
   {
-    title: 'Wordle Race',
-    description: 'They guessed in 4 tries. Take your shot and see if you can beat their score.',
-    badge: 'Action Required',
+    path: '/connect-four',
+    title: 'Connect Four',
+    description: 'Drop discs, get four in a row first.',
+    badge: 'New',
+    category: 'Classic',
+    meta: '2 player game',
+    icon: Disc,
+  },
+  {
+    path: '/monopoly',
+    title: 'Sugaropoly',
+    description: 'Pastel Monopoly with bakeries instead of hotels.',
+    badge: 'Cutesy',
+    category: 'Board Game',
+    meta: 'multiplayer',
+    imageKey: 'sugaropoly',
+  },
+  {
+    path: '/tic-tac-toe',
+    title: 'Tic-Tac-Toe',
+    description: 'Bigger board, still first to three in a row.',
+    badge: 'New',
+    category: 'Classic',
+    meta: '2 player live',
+    icon: Hash,
+  },
+  {
+    path: '/quick-maths',
+    title: 'Quick-Maths Duel',
+    description: 'Fast math, first right answer wins the round.',
+    badge: 'New',
+    category: 'Puzzle',
+    meta: '2 player live',
+    icon: Calculator,
+  },
+  {
+    path: '/word-race',
+    title: 'Word Race',
+    description: 'Same word, six guesses, race to solve it.',
+    badge: 'New',
     category: 'Word',
-    meta: '1 round waiting',
+    meta: '2 player live',
+    icon: Type,
+  },
+  {
+    path: '/verbal-memory',
+    title: 'Verbal Memory Duel',
+    description: 'Call Seen or New — three wrong and you\'re out.',
+    badge: 'New',
+    category: 'Word',
+    meta: '2 player live',
+    icon: Brain,
+  },
+  {
+    path: '/category-blitz',
+    title: 'Category Blitz',
+    description: 'One letter, a page of categories, beat the clock.',
+    badge: 'New',
+    category: 'Party',
+    meta: '2-8 players',
+    icon: ListChecks,
+  },
+  {
+    path: '/gambling-corner',
+    title: 'Gambling Corner',
+    description: 'Three bluffing games, one shared bankroll.',
+    badge: 'New',
+    category: 'Bluff',
+    meta: '2-8 players',
+    icon: Coins,
   },
 ];
 
-const newGames = [];
+const pickRandomTwo = (pool) => {
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 2);
+};
 
 const heroSubtitleByTheme = {
-  'theme-pink':      'hii ♡ your person is waiting for you~',
+  'theme-pink':      'hii, your person is waiting for you',
   'theme-champagne': 'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
   'theme-arcade':    'Welcome back! Keep track of your ongoing matches, challenge your partner to new games, and see who takes the crown.',
   'theme-cozy':      'Settle in. The kettle\'s on. Your games are waiting.',
@@ -199,6 +274,9 @@ const HomePage = () => {
 
   const cardItemVariants = cardItemVariantsByTheme[theme] || cardItemVariantsByTheme['theme-cozy'];
 
+  const imageByKey = { drawOff: drawOffImage, sugaropoly: drawOffPinkImage };
+  const exploreGames = useMemo(() => pickRandomTwo(gamesList), []);
+
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 180], [1, 0]);
   const heroY       = useTransform(scrollY, [0, 180], [0, -28]);
@@ -361,7 +439,7 @@ const HomePage = () => {
         transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="game-section-shell">
-          <SectionHeader title="Your Turn" eyebrow="games waiting" />
+          <SectionHeader title="Explore" eyebrow="try something new" />
           <motion.div
             className="game-grid hide-scrollbar"
             variants={gridVariants}
@@ -369,9 +447,19 @@ const HomePage = () => {
             whileInView="show"
             viewport={{ once: true, margin: '-60px' }}
           >
-            {turnGames.map((game) => (
-              <motion.div key={game.title} variants={cardItemVariants}>
-                <GameCard {...game} />
+            {exploreGames.map((game) => (
+              <motion.div key={game.path} variants={cardItemVariants}>
+                <Link to={game.path} className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
+                  <GameCard
+                    title={game.title}
+                    description={game.description}
+                    badge={game.badge}
+                    category={game.category}
+                    meta={game.meta}
+                    icon={game.icon}
+                    imageSrc={game.imageKey ? imageByKey[game.imageKey] : undefined}
+                  />
+                </Link>
               </motion.div>
             ))}
           </motion.div>
@@ -393,107 +481,21 @@ const HomePage = () => {
             whileInView="show"
             viewport={{ once: true, margin: '-60px' }}
           >
-            <motion.div variants={cardItemVariants}>
-              <Link to="/draw-off" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Draw Off"
-                  description="Sketch against the clock, play with a friend, or experiment in testing modes."
-                  badge="AI RACING"
-                  category="AI Racing"
-                  meta="multiple modes"
-                  imageSrc={drawOffImage}
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/connect-four" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Connect Four"
-                  description="A classic game of strategy. Drop your pieces and race to connect four in a row."
-                  badge="New"
-                  category="Classic"
-                  meta="2 player game"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/monopoly" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Sugaropoly"
-                  description="A super cutesy, pastel property trading game. Buy properties, build bakeries, and collect pastry rent!"
-                  badge="Cutesy"
-                  category="Board Game"
-                  meta="multiplayer"
-                  imageSrc={drawOffPinkImage}
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/tic-tac-toe" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Tic-Tac-Toe"
-                  description="Classic 3×3 showdown. Take turns, mark your spot, and be the first to line up three in a row."
-                  badge="New"
-                  category="Classic"
-                  meta="2 player live"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/quick-maths" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Quick-Maths Duel"
-                  description="Ten rapid-fire arithmetic rounds. Race your partner — first correct answer steals the point."
-                  badge="New"
-                  category="Puzzle"
-                  meta="2 player live"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/word-race" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Word Race"
-                  description="Same secret word, six guesses each. Watch their tiles light up as you race to solve it first."
-                  badge="New"
-                  category="Word"
-                  meta="2 player live"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/verbal-memory" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Verbal Memory Duel"
-                  description="Same stream of words for both of you — mark each one Seen or New. Scores stay hidden until the final reveal."
-                  badge="New"
-                  category="Word"
-                  meta="2 player live"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/category-blitz" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Category Blitz"
-                  description="One random letter, a page of categories. Race the timer, then vote on everyone's best answers."
-                  badge="New"
-                  category="Party"
-                  meta="2-8 players"
-                />
-              </Link>
-            </motion.div>
-            <motion.div variants={cardItemVariants}>
-              <Link to="/gambling-corner" className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
-                <GameCard
-                  title="Gambling Corner"
-                  description="A hub of bluff games sharing one chip bankroll. Start with Indian Poker — see their card, never your own."
-                  badge="New"
-                  category="Bluff"
-                  meta="2-8 players"
-                />
-              </Link>
-            </motion.div>
+            {gamesList.map((game) => (
+              <motion.div key={game.path} variants={cardItemVariants}>
+                <Link to={game.path} className="game-card-link block text-inherit no-underline focus:outline-none" style={{ borderRadius: 'var(--radius)' }}>
+                  <GameCard
+                    title={game.title}
+                    description={game.description}
+                    badge={game.badge}
+                    category={game.category}
+                    meta={game.meta}
+                    icon={game.icon}
+                    imageSrc={game.imageKey ? imageByKey[game.imageKey] : undefined}
+                  />
+                </Link>
+              </motion.div>
+            ))}
             {newGames.map((game) => (
               <motion.div key={game.title} variants={cardItemVariants}>
                 <GameCard {...game} />

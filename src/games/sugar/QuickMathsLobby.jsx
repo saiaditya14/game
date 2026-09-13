@@ -9,14 +9,14 @@ import BlurText from '../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'Race to answer first and steal the point — pick your settings and let\'s go~',
+  'theme-pink':      'Race to answer first and steal the point — pick your settings and let\'s go.',
   'theme-arcade':    'RAPID FIRE MATH. FIRST CORRECT ANSWER SCORES. CUSTOM DIFFICULTY.',
   'theme-cozy':      'Quick sums, quiet competition. Set your own challenge.',
   'theme-champagne': 'Arithmetic duel — fastest correct answer scores each round.',
@@ -473,7 +473,7 @@ const QuickMathsLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) 
                     whileTap={{ scale: 0.97 }}
                   >
                     <Plus className="h-4 w-4" />
-                    {isArcade ? 'CREATE ROOM' : isPink ? 'create room ♡' : 'Create Room'}
+                    {isArcade ? 'CREATE ROOM' : isPink ? 'create room' : 'Create Room'}
                   </motion.button>
                 </div>
 
@@ -542,7 +542,7 @@ const QuickMathsLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) 
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                   >
-                    {isArcade ? 'JOIN' : isPink ? 'join ♡' : 'Join'}
+                    {isArcade ? 'JOIN' : isPink ? 'join' : 'Join'}
                   </motion.button>
                 </form>
 
@@ -550,7 +550,7 @@ const QuickMathsLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) 
                   {isArcade
                     ? 'SETTINGS ARE CHOSEN BY THE ROOM CREATOR.'
                     : isPink
-                    ? 'all settings are chosen by whoever creates the room ♡'
+                    ? 'all settings are chosen by whoever creates the room'
                     : 'Settings are chosen by the room creator.'}
                 </p>
               </motion.div>

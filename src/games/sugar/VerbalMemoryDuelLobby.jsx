@@ -9,14 +9,14 @@ import BlurText from '../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'Same stream of words for both of you — mark each one Seen or New. Your scores stay hidden until the very end~',
+  'theme-pink':      'Same stream of words for both of you — mark each one Seen or New. Your scores stay hidden until the very end.',
   'theme-arcade':    'SAME WORD STREAM. MARK EACH ONE SEEN OR NEW. SCORES STAY HIDDEN UNTIL THE FINAL REVEAL.',
   'theme-cozy':      'The same quiet stream of words for both of you — mark each one Seen or New, and find out who remembered more once it’s over.',
   'theme-champagne': 'Watch a shared stream of words and mark each one Seen or New. Scores stay hidden until the final reveal.',
@@ -434,7 +434,7 @@ const VerbalMemoryDuelLobby = ({
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                   >
-                    {isArcade ? 'JOIN' : isPink ? 'join ♡' : 'Join'}
+                    {isArcade ? 'JOIN' : isPink ? 'join' : 'Join'}
                   </motion.button>
                 </form>
               </motion.div>

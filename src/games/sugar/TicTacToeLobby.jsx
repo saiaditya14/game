@@ -9,14 +9,14 @@ import BlurText from '../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'Claim your squares and be the first to connect three~',
+  'theme-pink':      'Claim your squares and be the first to connect three',
   'theme-arcade':    'CLAIM YOUR SQUARES. CONNECT THREE.',
   'theme-cozy':      'A cozy little grid battle. Three in a row wins.',
   'theme-champagne': 'A bigger 4×4 board. Line up three to win.',

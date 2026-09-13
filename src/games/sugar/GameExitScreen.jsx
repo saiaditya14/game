@@ -8,13 +8,13 @@ import { useTheme } from '../../components/ThemeProvider';
 
 const exitCopy = {
   aborted: {
-    'theme-pink':      { title: 'game stopped~',  sub: 'heading home ♡' },
+    'theme-pink':      { title: 'game stopped',   sub: 'heading home' },
     'theme-arcade':    { title: 'GAME ABORTED',    sub: 'RETURNING HOME…' },
     'theme-cozy':      { title: 'game ended',      sub: 'heading home…' },
     'theme-champagne': { title: 'Game Aborted',    sub: 'Returning home…' },
   },
   closed: {
-    'theme-pink':      { title: 'game over~ ♡',   sub: 'heading home ♡' },
+    'theme-pink':      { title: 'game over',      sub: 'heading home' },
     'theme-arcade':    { title: 'GAME OVER',       sub: 'HEADING HOME…' },
     'theme-cozy':      { title: "that's a wrap",   sub: 'heading home…' },
     'theme-champagne': { title: 'Game Over',       sub: 'Heading home…' },

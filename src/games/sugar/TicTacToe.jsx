@@ -34,6 +34,8 @@ const getPlayerId = () => {
 
 const generateRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
+const randomPlayer = () => (Math.random() < 0.5 ? 1 : 2);
+
 const getPlayerNumber = (room, playerId) => {
   if (room?.player_one === playerId) return 1;
   if (room?.player_two === playerId) return 2;
@@ -82,12 +84,14 @@ const TicTacToe = () => {
     if (!supabase) { setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.'); return; }
     setIsBusy(true);
     const code = generateRoomCode();
+    const xPlayer = randomPlayer();
     const { data, error: e } = await supabase
       .from('tic_tac_toe_rooms')
       .insert({
         code,
         board: Array(16).fill(null),
-        current_player: 1,
+        current_player: xPlayer,
+        x_player: xPlayer,
         status: 'waiting',
         winner: null,
         winning_line: null,
@@ -155,11 +159,13 @@ const TicTacToe = () => {
 
   const playAgain = async () => {
     if (!supabase || !room) return;
+    const xPlayer = randomPlayer();
     const { error: e } = await supabase
       .from('tic_tac_toe_rooms')
       .update({
         board: Array(16).fill(null),
-        current_player: 1,
+        current_player: xPlayer,
+        x_player: xPlayer,
         status: 'playing',
         winner: null,
         winning_line: null,

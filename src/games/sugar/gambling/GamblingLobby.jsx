@@ -11,19 +11,19 @@ const MODE_ICON = { indian_poker: Eye, dice_poker: Dices, holdem: Spade };
 
 const descByThemeByMode = {
   indian_poker: {
-    'theme-pink':      'See your opponents\' cards, never your own — stay or fold on the bluff~',
+    'theme-pink':      'See your opponents\' cards, never your own — stay or fold on the bluff.',
     'theme-arcade':    'SEE YOUR OPPONENTS\' CARDS, NEVER YOUR OWN. STAY OR FOLD ON THE BLUFF.',
     'theme-cozy':      'See your opponents\' cards, never your own — stay or fold on the bluff.',
     'theme-champagne': 'See your opponents\' cards, never your own — stay or fold on the bluff.',
   },
   dice_poker: {
-    'theme-pink':      'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot~',
+    'theme-pink':      'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot.',
     'theme-arcade':    'ROLL 5 DICE, BET, REROLL ONCE, BET AGAIN. BEST POKER HAND TAKES THE POT.',
     'theme-cozy':      'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot.',
     'theme-champagne': 'Roll 5 dice, bet, reroll once, bet again — best poker hand takes the pot.',
   },
   holdem: {
-    'theme-pink':      'Two hole cards, five shared cards, blinds and real betting — the classic~',
+    'theme-pink':      'Two hole cards, five shared cards, blinds and real betting — the classic.',
     'theme-arcade':    'TWO HOLE CARDS, FIVE SHARED CARDS, BLINDS AND REAL BETTING. THE CLASSIC.',
     'theme-cozy':      'Two hole cards, five shared cards, blinds and real betting — the classic.',
     'theme-champagne': 'Two hole cards, five shared cards, blinds and real betting — the classic.',
@@ -361,7 +361,7 @@ const GamblingLobby = ({
                       whileTap={{ scale: 0.95 }}
                     >
                       <Plus className="h-4 w-4" />
-                      {isArcade ? 'CREATE' : isPink ? 'create a table ♡' : 'Create a Table'}
+                      {isArcade ? 'CREATE' : isPink ? 'create a table' : 'Create a Table'}
                     </motion.button>
                   </MagneticButton>
 
@@ -376,7 +376,7 @@ const GamblingLobby = ({
                       whileTap={{ scale: 0.97 }}
                     >
                       <LogIn className="h-4 w-4" />
-                      {isArcade ? 'JOIN' : isPink ? 'join a table ♡' : 'Join a Table'}
+                      {isArcade ? 'JOIN' : isPink ? 'join a table' : 'Join a Table'}
                     </motion.button>
                   </MagneticButton>
                 </motion.div>
@@ -467,7 +467,7 @@ const GamblingLobby = ({
                       whileTap={{ scale: 0.97 }}
                     >
                       <Plus className="h-4 w-4" />
-                      {isArcade ? 'CREATE TABLE' : isPink ? 'create table ♡' : 'Create Table'}
+                      {isArcade ? 'CREATE TABLE' : isPink ? 'create table' : 'Create Table'}
                     </motion.button>
                   </div>
                 </motion.div>
@@ -500,7 +500,7 @@ const GamblingLobby = ({
                       whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.96 }}
                     >
-                      {isArcade ? 'JOIN' : isPink ? 'join ♡' : 'Join'}
+                      {isArcade ? 'JOIN' : isPink ? 'join' : 'Join'}
                     </motion.button>
                   </form>
                 </motion.div>

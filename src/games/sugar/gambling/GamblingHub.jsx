@@ -9,21 +9,21 @@ import BlurText from '../../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'One shared chip bankroll, three bluff games. Pick your table~',
+  'theme-pink':      'One shared chip bankroll, three bluff games. Pick your table.',
   'theme-arcade':    'ONE CHIP BANKROLL. THREE BLUFF GAMES. PICK YOUR TABLE.',
   'theme-cozy':      'One shared chip bankroll, three bluff games. Pick a table to sit at.',
   'theme-champagne': 'One shared chip bankroll, three bluff games — pick a table to sit at.',
 };
 
 const comingSoonByTheme = {
-  'theme-pink':      'coming soon~',
+  'theme-pink':      'coming soon',
   'theme-arcade':    'COMING SOON',
   'theme-cozy':      'coming soon',
   'theme-champagne': 'Coming Soon',

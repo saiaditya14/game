@@ -24,6 +24,8 @@ const getPlayerId = () => {
 
 const generateRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
+const randomPlayer = () => (Math.random() < 0.5 ? 1 : 2);
+
 const getPlayerNumber = (room, playerId) => {
   if (room?.player_one === playerId) return 1;
   if (room?.player_two === playerId) return 2;
@@ -126,7 +128,7 @@ const ConnectFour = () => {
       .insert({
         code,
         board: EMPTY_BOARD,
-        current_player: 1,
+        current_player: randomPlayer(),
         status: 'waiting',
         winner: null,
         player_one: playerId,
@@ -262,7 +264,7 @@ const ConnectFour = () => {
       .from('connect_four_rooms')
       .update({
         board: EMPTY_BOARD,
-        current_player: 1,
+        current_player: randomPlayer(),
         status: 'playing',
         winner: null,
         last_move: null,

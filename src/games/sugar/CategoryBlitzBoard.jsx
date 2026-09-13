@@ -8,11 +8,11 @@ import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 const copyByTheme = {
   'theme-pink': {
-    submitted:  "you're locked in ♡",
-    submit:     'lock in answers ♡',
+    submitted:  "you're locked in",
+    submit:     'lock in answers',
     forfeit:    'forfeit round',
     letter:     'the letter is',
-    lockedIn:   (n, total) => `${n} / ${total} locked in ♡`,
+    lockedIn:   (n, total) => `${n} / ${total} locked in`,
   },
   'theme-arcade': {
     submitted:  'LOCKED IN',

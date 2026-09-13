@@ -52,6 +52,7 @@ export const GameCard = ({
   badge,
   category = 'Classic',
   imageSrc,
+  icon: Icon,
   meta = '15 minigames',
 }) => {
   const { theme } = useTheme();
@@ -90,8 +91,8 @@ export const GameCard = ({
               className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="grid h-28 w-28 place-items-center rounded-full border border-white/60 bg-[color:var(--surface)]/45 text-primary shadow-sm backdrop-blur-sm transition duration-300 group-hover:scale-105">
-              <ImageIcon className="h-12 w-12" strokeWidth={1.5} />
+            <div className="grid h-[7rem] w-[7rem] place-items-center rounded-full border border-white/60 bg-[color:var(--surface)]/45 text-primary shadow-sm backdrop-blur-sm transition duration-300 group-hover:scale-105">
+              {Icon ? <Icon className="h-[3rem] w-[3rem]" strokeWidth={1.5} /> : <ImageIcon className="h-[3rem] w-[3rem]" strokeWidth={1.5} />}
             </div>
           )}
         </div>

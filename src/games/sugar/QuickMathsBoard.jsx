@@ -8,14 +8,14 @@ import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 const copyByTheme = {
   'theme-pink': {
-    waiting:     'waiting for them~ ♡',
-    youWin:      'you won!! ♡',
+    waiting:     'waiting for them',
+    youWin:      'you won!!',
     theyWin:     'they won this time :(',
-    draw:        'it\'s a tie~',
-    playAgain:   'play again ♡',
+    draw:        'it\'s a tie',
+    playAgain:   'play again',
     exit:        'exit game',
     roundLabel:  (r, t) => `round ${r} of ${t}`,
-    placeholder: 'type your answer~',
+    placeholder: 'type your answer',
   },
   'theme-arcade': {
     waiting:     'P2 JOINING…',

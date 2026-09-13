@@ -48,6 +48,16 @@ const GamblingCorner = () => {
   const myPlayer = players.find((p) => p.id === playerId) ?? null;
   const isHost   = Boolean(room) && room.host_id === playerId;
 
+  // ── Reset scroll on screen transitions ──────────────────────────────────────
+  // Hub/Lobby/Table are all one route (internal state, not a URL change), so the
+  // browser never auto-resets scroll between them. A tall hub card can leave the
+  // page scrolled down, which then carries into the table and hides the sticky
+  // status bar behind the site header. Force it back to the top on every switch.
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [mode, room?.id, room?.status]);
+
   // ── Realtime subscription ──────────────────────────────────────────────────
 
   useEffect(() => {

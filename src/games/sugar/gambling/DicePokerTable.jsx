@@ -209,7 +209,7 @@ const tableGridVariants = {
 };
 
 const btnBase =
-  'inline-flex min-h-[2.75rem] items-center justify-center gap-[0.5rem] px-[1.5rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex min-h-[2.75rem] items-center justify-center gap-[0.5rem] px-[1.5rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 max-[480px]:min-h-[2.25rem] max-[480px]:gap-[0.375rem] max-[480px]:px-[1rem] max-[480px]:text-xs';
 
 const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNextHand, onLeave, onExit }) => {
   const { theme } = useTheme();
@@ -314,7 +314,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
 
       <AnimatePresence mode="wait">
         {isBetting && !isFinished && (
-          <motion.div key="betting" className="mt-[2rem] flex flex-col items-center gap-[0.75rem]" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+          <motion.div key="betting" className="mt-[1.25rem] flex flex-col items-center gap-[0.5rem] max-[480px]:mt-[0.75rem]" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
             {!iAmDealtIn ? (
               <p className="text-sm" style={{ color: 'var(--muted)' }}>You're sitting out this hand.</p>
             ) : iAmFolded ? (
@@ -326,7 +326,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
                 Waiting for {players.find((p) => p.id === betting.currentActor)?.name ?? 'the next player'}…
               </motion.p>
             ) : (
-              <div className="flex flex-wrap items-center justify-center gap-[0.625rem]">
+              <div className="flex flex-wrap items-center justify-center gap-[0.5rem] max-[480px]:gap-[0.375rem]">
                 {needToCall <= 0 ? (
                   <motion.button type="button" onClick={() => onBetAction('check')} className={`${btnBase} border`} style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: 'var(--foreground)', background: 'transparent' }} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
                     Check
@@ -337,19 +337,18 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
                   </motion.button>
                 )}
 
-                <div className="flex items-center gap-[0.375rem] border px-[0.75rem] py-[0.375rem]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)' }}>
+                <div className="flex items-center gap-[0.375rem] border px-[0.75rem] py-[0.375rem] max-[480px]:px-[0.5rem] max-[480px]:py-[0.25rem]" style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)' }}>
                   <input
                     type="range"
-                    className="dice-poker-slider"
+                    className="dice-poker-slider w-[6rem] max-[480px]:w-[4rem]"
                     min={betting.minRaise ?? room?.ante ?? 20}
                     max={Math.max(myChips - Math.max(needToCall, 0), betting.minRaise ?? 20)}
                     step={5}
                     value={Math.min(raiseAmount, Math.max(myChips - Math.max(needToCall, 0), 1))}
                     onChange={(e) => setRaiseAmount(Number(e.target.value))}
-                    style={{ width: '6rem' }}
                     disabled={myChips - Math.max(needToCall, 0) <= 0}
                   />
-                  <span className="w-[2.5rem] text-center text-sm font-bold" style={{ color: 'var(--foreground)' }}>{raiseAmount}</span>
+                  <span className="w-[2.5rem] text-center text-sm font-bold max-[480px]:w-[2rem] max-[480px]:text-xs" style={{ color: 'var(--foreground)' }}>{raiseAmount}</span>
                 </div>
 
                 <motion.button
@@ -361,7 +360,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.96 }}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4 max-[480px]:hidden" />
                   {toCall > 0 ? 'Raise' : 'Bet'}
                 </motion.button>
 
@@ -370,7 +369,7 @@ const DicePokerTable = ({ room, playerId, onBetAction, onRerollCommit, onDealNex
                 </motion.button>
 
                 <motion.button type="button" onClick={() => onBetAction('fold')} className={`${btnBase} border`} style={{ borderRadius: 'var(--radius)', borderColor: 'var(--divider)', color: FOLD_COLOR[theme] ?? FOLD_COLOR['theme-champagne'], background: 'transparent' }} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
-                  <ThumbsDown className="h-4 w-4" />
+                  <ThumbsDown className="h-4 w-4 max-[480px]:hidden" />
                   Fold
                 </motion.button>
               </div>

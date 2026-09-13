@@ -8,16 +8,16 @@ import { computeScores, resolveWinner } from './CategoryBlitzRules';
 
 const copyByTheme = {
   'theme-pink': {
-    reviewTitle: 'cast your votes~ ♡',
+    reviewTitle: 'cast your votes',
     reviewHint:  'pick the best answer in each category, or abstain',
     abstain:     'abstain',
     noAnswers:   '(no one else answered — skipped)',
-    confirm:     'confirm my votes ♡',
+    confirm:     'confirm my votes',
     waitingOthers: (n) => `waiting for ${n} more…`,
-    youWin:      'you won!! ♡',
+    youWin:      'you won!!',
     otherWins:   (name) => `${name} won this one!`,
-    draw:        "it's a tie~",
-    playAgain:   'play again ♡',
+    draw:        "it's a tie",
+    playAgain:   'play again',
     exit:        'exit game',
     results:     'results',
     votes:       'votes',

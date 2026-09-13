@@ -9,19 +9,19 @@ import { WORD_LENGTH, MAX_GUESSES, isValidWord } from './WordRaceRules';
 
 const copyByTheme = {
   'theme-pink': {
-    waiting:    'waiting for them~ ♡',
-    youWin:     'you won!! ♡',
+    waiting:    'waiting for them',
+    youWin:     'you won!!',
     theyWin:    'they got it first :(',
-    draw:       "it's a tie~",
-    playAgain:  'play again ♡',
+    draw:       "it's a tie",
+    playAgain:  'play again',
     exit:       'exit game',
     giveUp:     'give up',
     leave:      'leave game',
-    yourBoard:  'your guesses~',
-    theirBoard: 'their tiles ♡',
-    invalid:    "that's not a word~",
+    yourBoard:  'your guesses',
+    theirBoard: 'their tiles',
+    invalid:    "that's not a word",
     gaveUp:     'you gave up :(',
-    theyGaveUp: 'they gave up ♡',
+    theyGaveUp: 'they gave up',
   },
   'theme-arcade': {
     waiting:    'P2 JOINING…',

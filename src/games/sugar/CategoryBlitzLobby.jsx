@@ -9,14 +9,14 @@ import BlurText from '../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'One random letter, a page of categories — race the clock, then judge each other\'s answers~',
+  'theme-pink':      'One random letter, a page of categories — race the clock, then judge each other\'s answers.',
   'theme-arcade':    'ONE RANDOM LETTER. FILL EVERY CATEGORY BEFORE TIME RUNS OUT. THEN JUDGE EACH OTHER.',
   'theme-cozy':      'One letter, a list of categories, and a ticking clock. Fill them in, then compare notes.',
   'theme-champagne': 'One random letter and a shared list of categories — race the timer, then approve each other\'s answers.',
@@ -152,10 +152,10 @@ const RoomCodeDisplay = ({ roomCode, isArcade }) => {
 
 const waitingCopyByTheme = {
   'theme-pink': {
-    joined:    (n) => `${n}/8 players joined ♡`,
+    joined:    (n) => `${n}/8 players joined`,
     host:      'host',
-    start:     'start game ♡',
-    needMore:  'need at least 2 players to start~',
+    start:     'start game',
+    needMore:  'need at least 2 players to start',
     waitHost:  'waiting for the host to start…',
     leave:     'leave room',
   },
@@ -578,7 +578,7 @@ const CategoryBlitzLobby = ({
                     whileTap={{ scale: 0.97 }}
                   >
                     <Plus className="h-4 w-4" />
-                    {isArcade ? 'CREATE ROOM' : isPink ? 'create room ♡' : 'Create Room'}
+                    {isArcade ? 'CREATE ROOM' : isPink ? 'create room' : 'Create Room'}
                   </motion.button>
                 </div>
               </motion.div>
@@ -643,7 +643,7 @@ const CategoryBlitzLobby = ({
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                   >
-                    {isArcade ? 'JOIN' : isPink ? 'join ♡' : 'Join'}
+                    {isArcade ? 'JOIN' : isPink ? 'join' : 'Join'}
                   </motion.button>
                 </form>
 
@@ -651,7 +651,7 @@ const CategoryBlitzLobby = ({
                   {isArcade
                     ? 'SETTINGS ARE CHOSEN BY THE ROOM CREATOR.'
                     : isPink
-                    ? 'all settings are chosen by whoever creates the room ♡'
+                    ? 'all settings are chosen by whoever creates the room'
                     : 'Settings are chosen by the room creator.'}
                 </p>
               </motion.div>

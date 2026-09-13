@@ -115,7 +115,7 @@ const discStyle = {
   },
 };
 
-const PlayerBadge = ({ playerNumber, label, isActive, isArcade }) => (
+const PlayerBadge = ({ symbol, label, isActive, isArcade }) => (
   <motion.div
     className="flex min-w-0 items-center gap-[0.75rem] border px-[0.75rem] py-[0.5rem]"
     style={{
@@ -137,9 +137,9 @@ const PlayerBadge = ({ playerNumber, label, isActive, isArcade }) => (
   >
     <div
       className="grid h-[2.5rem] w-[2.5rem] shrink-0 place-items-center rounded-full text-sm font-black"
-      style={{ ...discStyle[playerNumber], color: 'var(--surface)' }}
+      style={{ ...discStyle[symbol === 'X' ? 1 : 2], color: 'var(--surface)' }}
     >
-      {playerNumber === 1 ? 'X' : 'O'}
+      {symbol}
     </div>
     <p className="truncate text-sm font-bold" style={{ color: 'var(--foreground)' }}>{label}</p>
   </motion.div>
@@ -149,10 +149,10 @@ const PlayerBadge = ({ playerNumber, label, isActive, isArcade }) => (
 
 const copyByTheme = {
   'theme-pink': {
-    youWin: 'you win!! ♡', opponentWins: 'they got it :(',  draw: "it's a tie~",
-    aborted: 'game stopped', waiting: 'invite them ♡',
-    yourTurn: 'your turn ♡', theirTurn: 'their turn...',
-    playAgain: 'play again ♡', exit: 'exit game',
+    youWin: 'you win!!', opponentWins: 'they got it :(',  draw: "it's a tie",
+    aborted: 'game stopped', waiting: 'invite them',
+    yourTurn: 'your turn', theirTurn: 'their turn...',
+    playAgain: 'play again', exit: 'exit game',
   },
   'theme-arcade': {
     youWin: 'YOU WIN!', opponentWins: 'GAME OVER', draw: 'DRAW!',
@@ -194,6 +194,8 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
   const copy = copyByTheme[theme] ?? copyByTheme['theme-champagne'];
 
   const board       = room?.board ?? Array(16).fill(null);
+  const xPlayer     = room?.x_player ?? 1;
+  const symbolFor   = (num) => (num === xPlayer ? 'X' : 'O');
   const winningLine = room?.winning_line ?? null;
   const winningSet  = useMemo(() => new Set(winningLine ?? []), [winningLine]);
   const hasOpponent = Boolean(room?.player_two);
@@ -222,8 +224,8 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
       {/* Header */}
       <header className="grid gap-[0.75rem] sm:grid-cols-[1fr_auto_1fr] sm:items-center">
         <PlayerBadge
-          playerNumber={1}
-          label="Player 1 (X)"
+          symbol={symbolFor(1)}
+          label={`Player 1 (${symbolFor(1)})`}
           isActive={room?.current_player === 1 && room?.status === 'playing'}
           isArcade={isArcade}
         />
@@ -285,8 +287,8 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
 
         <div className="sm:justify-self-end">
           <PlayerBadge
-            playerNumber={2}
-            label={hasOpponent ? 'Player 2 (O)' : 'Waiting…'}
+            symbol={symbolFor(2)}
+            label={hasOpponent ? `Player 2 (${symbolFor(2)})` : 'Waiting…'}
             isActive={room?.current_player === 2 && room?.status === 'playing'}
             isArcade={isArcade}
           />
@@ -363,10 +365,10 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                   variants={cellVariants}
                   whileHover={canPlay ? { scale: 1.06 } : undefined}
                   whileTap={canPlay   ? { scale: 0.94 } : undefined}
-                  aria-label={`Cell ${index + 1}${cell === 1 ? ', X' : cell === 2 ? ', O' : ''}`}
+                  aria-label={`Cell ${index + 1}${cell ? `, ${symbolFor(cell)}` : ''}`}
                 >
-                  {cell === 1 && <XSymbol key={`x-${index}`} isArcade={isArcade} />}
-                  {cell === 2 && <OSymbol key={`o-${index}`} isArcade={isArcade} />}
+                  {cell === xPlayer && <XSymbol key={`x-${index}`} isArcade={isArcade} />}
+                  {cell && cell !== xPlayer && <OSymbol key={`o-${index}`} isArcade={isArcade} />}
 
                   {/* Hover ghost — fixed: uses Framer Motion, not CSS hover */}
                   {canPlay && !cell && (
@@ -376,7 +378,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                       whileHover={{ opacity: 0.15 }}
                       transition={{ duration: 0.12 }}
                     >
-                      {playerNumber === 1 ? <GhostX /> : <GhostO />}
+                      {playerNumber === xPlayer ? <GhostX /> : <GhostO />}
                     </motion.span>
                   )}
                 </motion.button>
@@ -440,7 +442,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
                 >
-                  {room.winner === 1 ? (
+                  {room.winner === xPlayer ? (
                     <svg viewBox="0 0 100 100" className="h-full w-full" fill="none"
                       style={isArcade ? { filter: 'drop-shadow(0 0 8px var(--primary))' } : undefined}
                     >
@@ -497,7 +499,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                 style={{ color: 'var(--muted)' }}
               >
                 {room?.status === 'won'
-                  ? `Player ${room.winner} (${room.winner === 1 ? 'X' : 'O'}) wins.`
+                  ? `Player ${room.winner} (${symbolFor(room.winner)}) wins.`
                   : isDraw
                   ? 'The board is full — no winner this time.'
                   : 'The game was stopped.'}

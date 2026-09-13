@@ -9,14 +9,14 @@ import BlurText from '../../components/reactbits/BlurText';
 // ─── Per-theme copy ────────────────────────────────────────────────────────────
 
 const eyebrowByTheme = {
-  'theme-pink':      'sugar game ♡',
+  'theme-pink':      'sugar game',
   'theme-arcade':    'SUGAR GAME',
   'theme-cozy':      'sugar game',
   'theme-champagne': 'sugar game',
 };
 
 const descByTheme = {
-  'theme-pink':      'Same secret word, six guesses each. Watch their tiles light up as you race to solve it first~',
+  'theme-pink':      'Same secret word, six guesses each. Watch their tiles light up as you race to solve it first.',
   'theme-arcade':    'SAME SECRET WORD. SIX GUESSES. WATCH THEIR TILES LIGHT UP AS YOU RACE TO SOLVE IT FIRST.',
   'theme-cozy':      'The same hidden word, six tries each. Race to solve it, glancing at their progress as you go.',
   'theme-champagne': 'A shared secret word and six guesses each — race your partner to solve it first.',
@@ -378,7 +378,7 @@ const WordRaceLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =>
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                   >
-                    {isArcade ? 'JOIN' : isPink ? 'join ♡' : 'Join'}
+                    {isArcade ? 'JOIN' : isPink ? 'join' : 'Join'}
                   </motion.button>
                 </form>
               </motion.div>
