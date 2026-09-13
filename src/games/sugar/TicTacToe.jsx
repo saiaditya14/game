@@ -1,14 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import TicTacToeLobby from './TicTacToeLobby';
 import TicTacToeBoard from './TicTacToeBoard';
+import GameExitScreen from './GameExitScreen';
 
 const PLAYER_ID_KEY = 'lovelyland-tic-tac-toe-player-id';
 
+// 4x4 board, 3-in-a-row wins. Row-major indices 0-15.
 const WINNING_LINES = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8],
-  [0, 3, 6], [1, 4, 7], [2, 5, 8],
-  [0, 4, 8], [2, 4, 6],
+  // rows
+  [0, 1, 2], [1, 2, 3], [4, 5, 6], [5, 6, 7],
+  [8, 9, 10], [9, 10, 11], [12, 13, 14], [13, 14, 15],
+  // columns
+  [0, 4, 8], [4, 8, 12], [1, 5, 9], [5, 9, 13],
+  [2, 6, 10], [6, 10, 14], [3, 7, 11], [7, 11, 15],
+  // diagonals (top-left to bottom-right)
+  [0, 5, 10], [5, 10, 15], [1, 6, 11], [4, 9, 14],
+  // diagonals (top-right to bottom-left)
+  [2, 5, 8], [3, 6, 9], [6, 9, 12], [7, 10, 13],
 ];
 
 const createPlayerId = () =>
@@ -40,6 +50,7 @@ const checkWinner = (board) => {
 };
 
 const TicTacToe = () => {
+  const navigate = useNavigate();
   const playerId = useMemo(getPlayerId, []);
   const [room, setRoom] = useState(null);
   const [error, setError] = useState('');
@@ -60,6 +71,12 @@ const TicTacToe = () => {
     return () => { supabase.removeChannel(channel); };
   }, [room?.id]);
 
+  useEffect(() => {
+    if (room?.status !== 'aborted') return;
+    const t = setTimeout(() => navigate('/'), 1800);
+    return () => clearTimeout(t);
+  }, [room?.status, navigate]);
+
   const createRoom = async () => {
     setError('');
     if (!supabase) { setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to play online.'); return; }
@@ -69,7 +86,7 @@ const TicTacToe = () => {
       .from('tic_tac_toe_rooms')
       .insert({
         code,
-        board: Array(9).fill(null),
+        board: Array(16).fill(null),
         current_player: 1,
         status: 'waiting',
         winner: null,
@@ -141,7 +158,7 @@ const TicTacToe = () => {
     const { error: e } = await supabase
       .from('tic_tac_toe_rooms')
       .update({
-        board: Array(9).fill(null),
+        board: Array(16).fill(null),
         current_player: 1,
         status: 'playing',
         winner: null,
@@ -164,6 +181,8 @@ const TicTacToe = () => {
   if (!room || !playerNumber || !room.player_two) {
     return <TicTacToeLobby onCreateRoom={createRoom} onJoinRoom={joinRoom} isBusy={isBusy} error={error} roomCode={room?.code} />;
   }
+
+  if (room.status === 'aborted') return <GameExitScreen status="aborted" />;
 
   return (
     <TicTacToeBoard

@@ -19,7 +19,7 @@ const descByTheme = {
   'theme-pink':      'Claim your squares and be the first to connect three~',
   'theme-arcade':    'CLAIM YOUR SQUARES. CONNECT THREE.',
   'theme-cozy':      'A cozy little grid battle. Three in a row wins.',
-  'theme-champagne': 'Classic 3×3 strategy. Line up three to win.',
+  'theme-champagne': 'A bigger 4×4 board. Line up three to win.',
 };
 
 // ─── Per-theme card shell ──────────────────────────────────────────────────────

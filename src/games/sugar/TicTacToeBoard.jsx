@@ -4,12 +4,13 @@ import { XCircle, RotateCcw } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 import RoomCodeCopy from '../../components/RoomCodeCopy';
 
-// ─── Cell centers for the win-line SVG (viewBox 0 0 3 3) ─────────────────────
+// ─── Cell centers for the win-line SVG (viewBox 0 0 4 4) ─────────────────────
 
 const CELL_CENTERS = [
-  [0.5, 0.5], [1.5, 0.5], [2.5, 0.5],
-  [0.5, 1.5], [1.5, 1.5], [2.5, 1.5],
-  [0.5, 2.5], [1.5, 2.5], [2.5, 2.5],
+  [0.5, 0.5], [1.5, 0.5], [2.5, 0.5], [3.5, 0.5],
+  [0.5, 1.5], [1.5, 1.5], [2.5, 1.5], [3.5, 1.5],
+  [0.5, 2.5], [1.5, 2.5], [2.5, 2.5], [3.5, 2.5],
+  [0.5, 3.5], [1.5, 3.5], [2.5, 3.5], [3.5, 3.5],
 ];
 
 // ─── Per-theme board grid ─────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
   const isArcade = theme === 'theme-arcade';
   const copy = copyByTheme[theme] ?? copyByTheme['theme-champagne'];
 
-  const board       = room?.board ?? Array(9).fill(null);
+  const board       = room?.board ?? Array(16).fill(null);
   const winningLine = room?.winning_line ?? null;
   const winningSet  = useMemo(() => new Set(winningLine ?? []), [winningLine]);
   const hasOpponent = Boolean(room?.player_two);
@@ -298,8 +299,8 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
             style={{
               position: 'relative',
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gridTemplateRows: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateRows: 'repeat(4, 1fr)',
               overflow: 'hidden',
               width: '26rem',
               maxWidth: 'calc(100vw - 2rem)',
@@ -319,7 +320,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
             {/* Win-line overlay */}
             {winningLine && (
               <svg
-                viewBox="0 0 3 3"
+                viewBox="0 0 4 4"
                 style={{ pointerEvents: 'none', position: 'absolute', inset: 0, zIndex: 20 }}
                 preserveAspectRatio="none"
                 aria-hidden="true"

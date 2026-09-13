@@ -208,7 +208,7 @@ The economy migration revokes direct client inserts/updates/deletes on `monopoly
 **Cross-game / infrastructure**
 - Extract `GameExitScreen` from Quick Maths into a shared component, retrofit Tic-Tac-Toe + future games.
 - Randomize who starts each game, not just the room creator — Tic-Tac-Toe also needs X/O randomized.
-- [IN PROGRESS — see `.claude/handoff-room-code-copy.md`] Room code copy button on all games. Turns out bigger than "add a button": in TicTacToe/QuickMaths/ConnectFour/WordRace/CategoryBlitz the room code disappears entirely once the game starts (not passed to the Board at all), not just missing a copy button. Verbal Memory shows it in-game as plain text with no copy. Lobby screens already have a good copy pattern in most games — reuse that, don't redo it.
+- [DONE 2026-09-13] Room code copy button on all games — in-game copy icons added (TicTacToe/QuickMaths/ConnectFour/WordRace/VerbalMemory/CategoryBlitz/DrawOff/Sugaropoly). Also unified CREATE/JOIN to go through a dedicated page + back arrow everywhere (matching Poker/Category Blitz/Quick Maths), and fixed TicTacToe/ConnectFour/WordRace so the creator lands on the proper big waiting-room screen instead of the cramped in-board text until the opponent joins. Verbal Memory Duel now auto-starts on join instead of requiring a manual host Start click.
 - Reconnect behavior: let a returning browser resume its existing player from localStorage more visibly. (Nice-to-have, not required.)
 
 **Tic-Tac-Toe**
