@@ -233,6 +233,7 @@ const CategoryBlitzBoard = ({ room, playerId, onSubmitAnswers, onLeave }) => {
                   value={answers[i] ?? ''}
                   onChange={(e) => setAnswer(i, e.target.value)}
                   disabled={!isInteractive}
+                  maxLength={60}
                   placeholder={`${room?.round_letter}…`}
                   className="min-h-[2.5rem] border px-[0.875rem] text-sm font-semibold outline-none transition focus:ring-2 focus:ring-[color:var(--ring)] disabled:opacity-70"
                   style={{
