@@ -22,6 +22,7 @@ const PRIMARY_MODES = [
     path: '/draw-off-single',
     icon: Bot,
     accent: 'var(--primary)',
+    warning: 'AI LIMIT EXCEEDED',
   },
   {
     title: 'Co-op',
@@ -163,6 +164,26 @@ const DrawOffHub = () => {
                       opacity: isArcade ? 0.9 : 0.65,
                     }}
                   />
+
+                  {mode.warning && (
+                    <span
+                      className="font-bold uppercase"
+                      style={{
+                        position: 'absolute',
+                        top: '0.9rem',
+                        right: '0.9rem',
+                        fontSize: '0.56rem',
+                        letterSpacing: '0.12em',
+                        padding: '0.3rem 0.6rem',
+                        borderRadius: 'calc(var(--radius) * 0.5)',
+                        border: '1px solid #dc2626',
+                        color: '#dc2626',
+                        background: 'rgba(220,38,38,0.08)',
+                      }}
+                    >
+                      {mode.warning}
+                    </span>
+                  )}
 
                   <div
                     style={{

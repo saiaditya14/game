@@ -57,6 +57,7 @@ export const GameCard = ({
 }) => {
   const { theme } = useTheme();
   const isActionRequired = badge === 'Action Required';
+  const isWarning = badge === 'Not Done';
   const label = isActionRequired ? 'Your Turn' : badge || category;
 
   const hoverProps  = HOVER_PROPS[theme]      || DEFAULT_HOVER;
@@ -74,12 +75,15 @@ export const GameCard = ({
             <motion.span
               animate={badgePulse.animate}
               transition={badgePulse.transition}
-              className="game-card-badge absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm"
+              className="game-card-badge absolute left-[1.25rem] top-[1.25rem] z-10 rounded-full bg-[color:var(--surface)]/92 px-[0.875rem] py-[0.375rem] text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm"
             >
               {label}
             </motion.span>
           ) : (
-            <span className="game-card-badge absolute left-5 top-5 z-10 rounded-full bg-[color:var(--surface)]/92 px-3.5 py-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-primary shadow-sm">
+            <span
+              className={`game-card-badge absolute left-[1.25rem] top-[1.25rem] z-10 rounded-full bg-[color:var(--surface)]/92 px-[0.875rem] py-[0.375rem] text-[0.62rem] font-extrabold uppercase tracking-[0.3em] shadow-sm ${isWarning ? '' : 'text-primary'}`}
+              style={isWarning ? { color: '#dc2626' } : undefined}
+            >
               {label}
             </span>
           )}

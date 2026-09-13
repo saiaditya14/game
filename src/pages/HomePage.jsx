@@ -24,7 +24,7 @@ const gamesList = [
   {
     path: '/draw-off',
     title: 'Draw Off',
-    description: 'Sketch fast, guess faster — solo or as a team.',
+    description: 'Draw it, guess it, race the clock.',
     badge: 'AI Racing',
     category: 'AI Racing',
     meta: 'multiple modes',
@@ -33,7 +33,7 @@ const gamesList = [
   {
     path: '/connect-four',
     title: 'Connect Four',
-    description: 'Drop discs, get four in a row first.',
+    description: 'Classic four-in-a-row.',
     badge: 'New',
     category: 'Classic',
     meta: '2 player game',
@@ -42,8 +42,8 @@ const gamesList = [
   {
     path: '/monopoly',
     title: 'Sugaropoly',
-    description: 'Pastel Monopoly with bakeries instead of hotels.',
-    badge: 'Cutesy',
+    description: 'Monopoly, but cuter.',
+    badge: 'Not Done',
     category: 'Board Game',
     meta: 'multiplayer',
     imageKey: 'sugaropoly',
@@ -51,7 +51,7 @@ const gamesList = [
   {
     path: '/tic-tac-toe',
     title: 'Tic-Tac-Toe',
-    description: 'Bigger board, still first to three in a row.',
+    description: 'Bigger grid, same tic-tac-toe.',
     badge: 'New',
     category: 'Classic',
     meta: '2 player live',
@@ -60,7 +60,7 @@ const gamesList = [
   {
     path: '/quick-maths',
     title: 'Quick-Maths Duel',
-    description: 'Fast math, first right answer wins the round.',
+    description: 'Quick math, whoever\'s faster wins.',
     badge: 'New',
     category: 'Puzzle',
     meta: '2 player live',
@@ -69,7 +69,7 @@ const gamesList = [
   {
     path: '/word-race',
     title: 'Word Race',
-    description: 'Same word, six guesses, race to solve it.',
+    description: 'Wordle, but you\'re racing each other.',
     badge: 'New',
     category: 'Word',
     meta: '2 player live',
@@ -78,7 +78,7 @@ const gamesList = [
   {
     path: '/verbal-memory',
     title: 'Verbal Memory Duel',
-    description: 'Call Seen or New — three wrong and you\'re out.',
+    description: 'Seen it or new? Three misses and you\'re out.',
     badge: 'New',
     category: 'Word',
     meta: '2 player live',
@@ -87,7 +87,7 @@ const gamesList = [
   {
     path: '/category-blitz',
     title: 'Category Blitz',
-    description: 'One letter, a page of categories, beat the clock.',
+    description: 'Scattergories with a timer.',
     badge: 'New',
     category: 'Party',
     meta: '2-8 players',
@@ -96,7 +96,7 @@ const gamesList = [
   {
     path: '/gambling-corner',
     title: 'Gambling Corner',
-    description: 'Three bluffing games, one shared bankroll.',
+    description: 'Poker night, shared chips.',
     badge: 'New',
     category: 'Bluff',
     meta: '2-8 players',
