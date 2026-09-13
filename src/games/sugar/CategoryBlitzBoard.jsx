@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flag, Clock, Check, Users } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 // ─── Per-theme copy ───────────────────────────────────────────────────────────
 
@@ -134,6 +135,13 @@ const CategoryBlitzBoard = ({ room, playerId, onSubmitAnswers, onLeave }) => {
       className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-[46rem] flex-col px-[1rem] py-[1.5rem]"
       style={{ color: 'var(--foreground)' }}
     >
+      <p
+        className="text-center text-[0.62rem] font-bold uppercase tracking-[0.12em]"
+        style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}
+      >
+        {isArcade ? 'ROOM ' : 'room '}<RoomCodeCopy code={room?.code} idleColor="var(--primary)" />
+      </p>
+
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <header className="grid gap-[0.75rem] sm:grid-cols-[1fr_auto_1fr] sm:items-center">
         <div

@@ -409,11 +409,11 @@
   }
 
   .sugaropoly-room-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.32rem;
     min-width: 0;
-    max-width: 5.8rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: 7rem;
     padding: 0.45rem 0.58rem;
     border: 2px solid #f0a9c8;
     border-radius: 0.5rem;
@@ -423,6 +423,21 @@
     font-weight: 950;
     letter-spacing: 0.12em;
     box-shadow: 0 10px 22px rgba(190, 24, 93, 0.09);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+
+  .sugaropoly-room-pill-code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sugaropoly-room-pill svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: 0 0 auto;
   }
 
   .sugaropoly-turn-pill {
@@ -614,7 +629,8 @@
   }
 
   .sugaropoly-join-form {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
     padding: 0.45rem;
     border: 2px solid rgba(216, 106, 154, 0.26);
     border-radius: 0.5rem;

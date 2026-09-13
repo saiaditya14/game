@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { LogIn, Plus, Copy, Check } from 'lucide-react';
+import { LogIn, Plus, Copy, Check, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 import SplitText from '../../components/reactbits/SplitText';
 import DecryptedText from '../../components/reactbits/DecryptedText';
@@ -228,7 +228,7 @@ const btnBase =
 
 const TicTacToeLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) => {
   const { theme } = useTheme();
-  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [mode, setMode] = useState(null);
   const [joinCode, setJoinCode] = useState('');
 
   const isPink    = theme === 'theme-pink';
@@ -241,6 +241,7 @@ const TicTacToeLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =
   const iconStyle = iconStyleByTheme[theme] ?? iconStyleByTheme['theme-champagne'];
 
   const submitJoin = (e) => { e.preventDefault(); onJoinRoom(joinCode); };
+  const back = () => setMode(null);
 
   // per-theme create button hover
   const createHover = isArcade
@@ -400,99 +401,124 @@ const TicTacToeLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =
             {desc}
           </motion.p>
 
-          {/* Buttons */}
-          <motion.div
-            variants={childVariants}
-            className="mt-[2rem] flex flex-wrap items-center justify-center gap-[0.75rem]"
-          >
-            {/* Create */}
-            <MagneticButton disabled={isBusy}>
-              <motion.button
-                type="button"
-                onClick={onCreateRoom}
-                disabled={isBusy}
-                className={btnBase}
-                style={{
-                  borderRadius: 'var(--radius)',
-                  background: 'var(--primary)',
-                  color: isArcade ? '#000' : 'var(--surface)',
-                  boxShadow: isArcade
-                    ? '0 0 16px var(--primary), 0 0 32px rgba(255,0,255,0.45)'
-                    : 'var(--shadow)',
-                }}
-                {...createHover}
+          {/* ── Mode switcher: entry buttons <-> dedicated join page ────────── */}
+          <AnimatePresence mode="wait">
+            {!mode && (
+              <motion.div
+                key="entry"
+                variants={childVariants}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0, y: -6 }}
+                className="mt-[2rem] flex flex-wrap items-center justify-center gap-[0.75rem]"
               >
-                <Plus className="h-4 w-4" />
-                CREATE
-              </motion.button>
-            </MagneticButton>
+                {/* Create */}
+                <MagneticButton disabled={isBusy}>
+                  <motion.button
+                    type="button"
+                    onClick={onCreateRoom}
+                    disabled={isBusy}
+                    className={btnBase}
+                    style={{
+                      borderRadius: 'var(--radius)',
+                      background: 'var(--primary)',
+                      color: isArcade ? '#000' : 'var(--surface)',
+                      boxShadow: isArcade
+                        ? '0 0 16px var(--primary), 0 0 32px rgba(255,0,255,0.45)'
+                        : 'var(--shadow)',
+                    }}
+                    {...createHover}
+                  >
+                    <Plus className="h-4 w-4" />
+                    CREATE
+                  </motion.button>
+                </MagneticButton>
 
-            {/* Join toggle */}
-            <MagneticButton disabled={isBusy}>
-              <motion.button
-                type="button"
-                onClick={() => setIsJoinOpen((v) => !v)}
-                disabled={isBusy}
-                className={`${btnBase} border`}
-                style={{
-                  borderRadius: 'var(--radius)',
-                  borderColor: 'var(--ring)',
-                  background: isArcade ? 'transparent' : 'var(--surface-strong)',
-                  color: 'var(--foreground)',
-                  ...(isArcade ? { boxShadow: '0 0 12px rgba(0,255,255,0.10)' } : {}),
-                }}
-                {...joinHover}
-              >
-                <LogIn className="h-4 w-4" />
-                JOIN
-              </motion.button>
-            </MagneticButton>
-          </motion.div>
+                {/* Join */}
+                <MagneticButton disabled={isBusy}>
+                  <motion.button
+                    type="button"
+                    onClick={() => setMode('join')}
+                    disabled={isBusy}
+                    className={`${btnBase} border`}
+                    style={{
+                      borderRadius: 'var(--radius)',
+                      borderColor: 'var(--ring)',
+                      background: isArcade ? 'transparent' : 'var(--surface-strong)',
+                      color: 'var(--foreground)',
+                      ...(isArcade ? { boxShadow: '0 0 12px rgba(0,255,255,0.10)' } : {}),
+                    }}
+                    {...joinHover}
+                  >
+                    <LogIn className="h-4 w-4" />
+                    JOIN
+                  </motion.button>
+                </MagneticButton>
+              </motion.div>
+            )}
 
-          {/* Join form */}
-          <AnimatePresence>
-            {isJoinOpen && (
-              <motion.form
-                onSubmit={submitJoin}
-                className="mx-auto mt-[1.25rem] grid max-w-[24rem] gap-[0.75rem] border p-[0.75rem] sm:grid-cols-[1fr_auto]"
-                style={{
-                  borderColor: 'var(--divider)',
-                  borderRadius: 'var(--radius)',
-                  background: 'var(--surface-strong)',
-                }}
-                initial={{ opacity: 0, height: 0, y: -8 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -8 }}
+            {/* Join page */}
+            {mode === 'join' && (
+              <motion.div
+                key="join"
+                className="mt-[1.75rem] text-left"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               >
-                <input
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="min-h-[3rem] border px-[1rem] text-center text-lg font-bold uppercase tracking-[0.2em] outline-none transition focus:ring-2 focus:ring-[color:var(--ring)]"
-                  style={{
-                    borderColor: 'var(--divider)',
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--surface)',
-                    color: 'var(--foreground)',
-                  }}
-                  maxLength={6}
-                  placeholder="ROOM"
-                  aria-label="Room code"
-                />
-                <motion.button
-                  type="submit"
-                  disabled={isBusy || joinCode.trim().length < 4}
-                  className={btnBase}
-                  style={{
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--primary)',
-                    color: isArcade ? '#000' : 'var(--surface)',
-                  }}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                >
-                  {isArcade ? 'JOIN' : 'Join'}
-                </motion.button>
-              </motion.form>
+                <p className="mb-[0.625rem] text-[0.68rem] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>
+                  {isArcade ? 'ENTER ROOM CODE' : 'enter room code'}
+                </p>
+                <form onSubmit={submitJoin} className="mx-auto flex max-w-[24rem] gap-[0.625rem]">
+                  <button
+                    type="button"
+                    onClick={back}
+                    className={`${btnBase} border`}
+                    style={{
+                      borderRadius: 'var(--radius)',
+                      borderColor: 'var(--divider)',
+                      background: 'transparent',
+                      color: 'var(--muted)',
+                      minWidth: 0,
+                      padding: '0.625rem 1rem',
+                    }}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <input
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    className="min-h-[3rem] flex-1 border px-[1rem] text-center text-lg font-bold uppercase tracking-[0.2em] outline-none transition focus:ring-2 focus:ring-[color:var(--ring)]"
+                    style={{
+                      borderColor: 'var(--divider)',
+                      borderRadius: 'var(--radius)',
+                      background: 'var(--surface)',
+                      color: 'var(--foreground)',
+                    }}
+                    maxLength={6}
+                    placeholder="ROOM"
+                    aria-label="Room code"
+                    autoFocus
+                  />
+                  <motion.button
+                    type="submit"
+                    disabled={isBusy || joinCode.trim().length < 4}
+                    className={btnBase}
+                    style={{
+                      borderRadius: 'var(--radius)',
+                      background: 'var(--primary)',
+                      color: isArcade ? '#000' : 'var(--surface)',
+                      minWidth: 0,
+                      padding: '0.625rem 1.25rem',
+                    }}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                  >
+                    {isArcade ? 'JOIN' : 'Join'}
+                  </motion.button>
+                </form>
+              </motion.div>
             )}
           </AnimatePresence>
 

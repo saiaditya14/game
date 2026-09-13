@@ -318,6 +318,7 @@ const WordRaceLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) =>
               <RoomCodeDisplay roomCode={roomCode} isArcade={isArcade} />
             )}
 
+
             {/* ── JOIN flow ────────────────────────────────────────────────── */}
             {mode === 'join' && (
               <motion.div

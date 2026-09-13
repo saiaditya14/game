@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Flag } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 import { STARTING_LIVES } from './VerbalMemoryRules';
 
 // ─── Lives row — own lives only, never the opponent's ──────────────────────────
@@ -147,7 +148,7 @@ const VerbalMemoryDuelBoard = ({ room, playerNumber, wordSequence, onSubmitAnswe
         }}
       >
         <p style={{ color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '0.68rem' }}>
-          Room {room.code}
+          Room <RoomCodeCopy code={room.code} />
         </p>
         <button
           type="button"

@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Gamepad2, Home, LogOut, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { Check, Copy, Gamepad2, Home, LogOut, Maximize2, Minimize2, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { MonopolyBoard } from './MonopolyBoard';
 import { MonopolyLobby } from './MonopolyLobby';
@@ -35,6 +35,7 @@ export const PastelMonopoly = () => {
   const [showLandingCard, setShowLandingCard] = useState(false);
   const [tradeOpen, setTradeOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRoomCodeCopied, setIsRoomCodeCopied] = useState(false);
 
   const players = playersOf(room);
   const currentPlayer = room?.status === 'playing' ? players[room.current_player_index] : null;
@@ -136,6 +137,13 @@ export const PastelMonopoly = () => {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
+  const copyRoomCode = () => {
+    if (!room?.code) return;
+    navigator.clipboard?.writeText(room.code);
+    setIsRoomCodeCopied(true);
+    window.setTimeout(() => setIsRoomCodeCopied(false), 1400);
+  };
+
   const leaveRoom = async () => {
     const id = room?.id;
     setRoom(null);
@@ -205,7 +213,12 @@ export const PastelMonopoly = () => {
         <Link className="sugaropoly-brand-link" to="/"><span className="sugaropoly-brand-mark"><Gamepad2 /></span><span className="sugaropoly-brand-copy"><span>Lovelyland</span><small>minigame hub</small></span></Link>
         <div className="sugaropoly-title-lockup"><Sparkles /><span>Faerie Kingdom Quest</span></div>
         <div className="sugaropoly-topbar-actions">
-          {room ? <button className="sugaropoly-room-pill" type="button" onClick={() => navigator.clipboard?.writeText(room.code)}>{room.code}</button> : null}
+          {room ? (
+            <button className="sugaropoly-room-pill" type="button" onClick={copyRoomCode} aria-label="Copy room code">
+              <span className="sugaropoly-room-pill-code">{room.code}</span>
+              {isRoomCodeCopied ? <Check /> : <Copy />}
+            </button>
+          ) : null}
           {currentPlayer ? <span className={`sugaropoly-turn-pill ${isLocalTurn ? 'is-yours' : ''}`}>{isLocalTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}</span> : null}
           {room ? <button className="sugaropoly-nav-icon-button" type="button" onClick={leaveRoom}><LogOut /></button> : null}
           <Link className="sugaropoly-nav-icon-button" to="/"><Home /></Link>

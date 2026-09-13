@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { LogIn, Plus, Users, Copy, Check } from 'lucide-react';
+import { LogIn, Plus, Users, Copy, Check, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 import DecryptedText from '../../components/reactbits/DecryptedText';
 import ConnectFourLanterns from './ConnectFourLanterns';
@@ -112,13 +112,14 @@ const ConnectFourLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
   const isCozy = theme === 'theme-cozy';
-  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [mode, setMode] = useState(null);
   const [joinCode, setJoinCode] = useState('');
 
   const submitJoin = (event) => {
     event.preventDefault();
     onJoinRoom(joinCode);
   };
+  const back = () => setMode(null);
 
   return (
     <main className="relative mx-auto flex min-h-[calc(100vh-5rem)] max-w-[56rem] items-center px-[1rem] py-[2.5rem] text-foreground">
@@ -201,76 +202,99 @@ const ConnectFourLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
             : 'Drop pieces into the grid and be the first player to connect four horizontally, vertically, or diagonally.'}
         </p>
 
-        <div className="mx-auto mt-[2rem] flex max-w-[36rem] flex-wrap items-center justify-center gap-[0.75rem]">
-          <MagneticButton disabled={!isArcade || isBusy}>
-            <motion.button
-              type="button"
-              onClick={onCreateRoom}
-              disabled={isBusy}
-              className={`${buttonBase} bg-[color:var(--primary)] text-[color:var(--surface)]`}
-              style={{
-                borderRadius: 'var(--radius)',
-                boxShadow: isArcade ? '0 0 11px var(--primary), 0 0 23px rgba(255,0,255,0.32)' : 'var(--shadow)',
-                color: isArcade ? '#000' : undefined,
-              }}
-              whileHover={isArcade ? { scale: 1.04 } : { y: -2 }}
-              whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
+        <AnimatePresence mode="wait">
+          {!mode && (
+            <motion.div
+              key="entry"
+              className="mx-auto mt-[2rem] flex max-w-[36rem] flex-wrap items-center justify-center gap-[0.75rem]"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
             >
-              <Plus className="h-4 w-4" />
-              CREATE
-            </motion.button>
-          </MagneticButton>
+              <MagneticButton disabled={!isArcade || isBusy}>
+                <motion.button
+                  type="button"
+                  onClick={onCreateRoom}
+                  disabled={isBusy}
+                  className={`${buttonBase} bg-[color:var(--primary)] text-[color:var(--surface)]`}
+                  style={{
+                    borderRadius: 'var(--radius)',
+                    boxShadow: isArcade ? '0 0 11px var(--primary), 0 0 23px rgba(255,0,255,0.32)' : 'var(--shadow)',
+                    color: isArcade ? '#000' : undefined,
+                  }}
+                  whileHover={isArcade ? { scale: 1.04 } : { y: -2 }}
+                  whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
+                >
+                  <Plus className="h-4 w-4" />
+                  CREATE
+                </motion.button>
+              </MagneticButton>
 
-          <MagneticButton disabled={!isArcade || isBusy}>
-            <motion.button
-              type="button"
-              onClick={() => setIsJoinOpen((value) => !value)}
-              disabled={isBusy}
-              className={`${buttonBase} border bg-[color:var(--surface-strong)]`}
-              style={{
-                borderColor: 'var(--ring)',
-                borderRadius: 'var(--radius)',
-                background: isArcade ? 'transparent' : undefined,
-                boxShadow: isArcade ? '0 0 8px rgba(0,255,255,0.07)' : undefined,
-                color: 'var(--foreground)',
-              }}
-              whileHover={isArcade ? { scale: 1.04 } : { y: -2 }}
-              whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
-            >
-              <LogIn className="h-4 w-4" />
-              JOIN
-            </motion.button>
-          </MagneticButton>
-        </div>
+              <MagneticButton disabled={!isArcade || isBusy}>
+                <motion.button
+                  type="button"
+                  onClick={() => setMode('join')}
+                  disabled={isBusy}
+                  className={`${buttonBase} border bg-[color:var(--surface-strong)]`}
+                  style={{
+                    borderColor: 'var(--ring)',
+                    borderRadius: 'var(--radius)',
+                    background: isArcade ? 'transparent' : undefined,
+                    boxShadow: isArcade ? '0 0 8px rgba(0,255,255,0.07)' : undefined,
+                    color: 'var(--foreground)',
+                  }}
+                  whileHover={isArcade ? { scale: 1.04 } : { y: -2 }}
+                  whileTap={isArcade ? { scale: 0.96 } : { scale: 0.98 }}
+                >
+                  <LogIn className="h-4 w-4" />
+                  JOIN
+                </motion.button>
+              </MagneticButton>
+            </motion.div>
+          )}
 
-        <AnimatePresence>
-          {isJoinOpen && (
-            <motion.form
-              onSubmit={submitJoin}
-              className="mx-auto mt-[1.25rem] flex max-w-[36rem] flex-wrap gap-[0.75rem] border bg-[color:var(--surface-strong)] p-[0.75rem]"
-              style={{ borderColor: 'var(--divider)', borderRadius: 'var(--radius)' }}
-              initial={{ opacity: 0, height: 0, y: -8 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -8 }}
+          {mode === 'join' && (
+            <motion.div
+              key="join"
+              className="mx-auto mt-[1.75rem] max-w-[36rem] text-left"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.26 }}
             >
-              <input
-                value={joinCode}
-                onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
-                className="min-h-[3rem] border bg-[color:var(--surface)] px-[1rem] text-center text-lg font-bold uppercase tracking-[0.2em] outline-none transition placeholder:text-[color:var(--muted)] focus:ring-2 focus:ring-[color:var(--ring)]"
-                style={{ borderColor: 'var(--divider)', borderRadius: 'var(--radius)', flex: '1 1 12rem', color: 'var(--foreground)' }}
-                maxLength={6}
-                placeholder="ROOM"
-                aria-label="Room code"
-              />
-              <button
-                type="submit"
-                disabled={isBusy || joinCode.trim().length < 4}
-                className={`${buttonBase} bg-[color:var(--primary)] text-[color:var(--surface)]`}
-                style={{ borderRadius: 'var(--radius)', color: isArcade ? '#000' : undefined }}
-              >
-                {isArcade ? 'JOIN' : 'Join'}
-              </button>
-            </motion.form>
+              <p className="mb-[0.625rem] text-[0.68rem] font-bold uppercase tracking-[0.2em] text-[color:var(--primary)]">
+                {isArcade ? 'ENTER ROOM CODE' : 'Enter room code'}
+              </p>
+              <form onSubmit={submitJoin} className="flex flex-wrap gap-[0.75rem]">
+                <button
+                  type="button"
+                  onClick={back}
+                  className={`${buttonBase} border`}
+                  style={{ borderColor: 'var(--divider)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--muted)', minHeight: '3rem', paddingInline: '1rem' }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <input
+                  value={joinCode}
+                  onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                  className="min-h-[3rem] border bg-[color:var(--surface)] px-[1rem] text-center text-lg font-bold uppercase tracking-[0.2em] outline-none transition placeholder:text-[color:var(--muted)] focus:ring-2 focus:ring-[color:var(--ring)]"
+                  style={{ borderColor: 'var(--divider)', borderRadius: 'var(--radius)', flex: '1 1 12rem', color: 'var(--foreground)' }}
+                  maxLength={6}
+                  placeholder="ROOM"
+                  aria-label="Room code"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={isBusy || joinCode.trim().length < 4}
+                  className={`${buttonBase} bg-[color:var(--primary)] text-[color:var(--surface)]`}
+                  style={{ borderRadius: 'var(--radius)', color: isArcade ? '#000' : undefined }}
+                >
+                  {isArcade ? 'JOIN' : 'Join'}
+                </button>
+              </form>
+            </motion.div>
           )}
         </AnimatePresence>
 

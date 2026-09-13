@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion';
-import { Check, Copy, Crown, LogIn, LogOut, Plus, Sparkles, Users } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Crown, LogIn, LogOut, Plus, Sparkles, Users } from 'lucide-react';
 import SplitText from '../../../components/reactbits/SplitText';
 import { containerVariants, childVariants, DecoIcon } from './monopolyMotion';
 
@@ -43,7 +43,7 @@ export const MonopolyLobby = ({
   isBusy,
   error,
 }) => {
-  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [mode, setMode] = useState(null);
   const [joinCode, setJoinCode] = useState('');
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const players = Array.isArray(room?.players) ? room.players : [];
@@ -54,6 +54,7 @@ export const MonopolyLobby = ({
     event.preventDefault();
     onJoinRoom(joinCode);
   };
+  const back = () => setMode(null);
 
   const copyRoomCode = () => {
     navigator.clipboard?.writeText(room.code);
@@ -106,49 +107,69 @@ export const MonopolyLobby = ({
           <motion.div variants={childVariants}>
           {!room ? (
           <>
-            <div className="sugaropoly-lobby-actions">
-              <MagneticButton disabled={isBusy}>
-                <motion.button
-                  type="button"
-                  onClick={onCreateRoom}
-                  disabled={isBusy}
-                  className={`${lobbyButtonClass} sugaropoly-lobby-primary`}
-                  {...lobbySpring}
+            <AnimatePresence mode="wait">
+              {!mode && (
+                <motion.div
+                  key="entry"
+                  className="sugaropoly-lobby-actions"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22 }}
                 >
-                  <Plus className="h-4 w-4" />
-                  CREATE
-                </motion.button>
-              </MagneticButton>
+                  <MagneticButton disabled={isBusy}>
+                    <motion.button
+                      type="button"
+                      onClick={onCreateRoom}
+                      disabled={isBusy}
+                      className={`${lobbyButtonClass} sugaropoly-lobby-primary`}
+                      {...lobbySpring}
+                    >
+                      <Plus className="h-4 w-4" />
+                      CREATE
+                    </motion.button>
+                  </MagneticButton>
 
-              <MagneticButton disabled={isBusy}>
-                <motion.button
-                  type="button"
-                  onClick={() => setIsJoinOpen((value) => !value)}
-                  disabled={isBusy}
-                  className={`${lobbyButtonClass} sugaropoly-lobby-secondary`}
-                  {...lobbySpring}
-                >
-                  <LogIn className="h-4 w-4" />
-                  JOIN
-                </motion.button>
-              </MagneticButton>
-            </div>
+                  <MagneticButton disabled={isBusy}>
+                    <motion.button
+                      type="button"
+                      onClick={() => setMode('join')}
+                      disabled={isBusy}
+                      className={`${lobbyButtonClass} sugaropoly-lobby-secondary`}
+                      {...lobbySpring}
+                    >
+                      <LogIn className="h-4 w-4" />
+                      JOIN
+                    </motion.button>
+                  </MagneticButton>
+                </motion.div>
+              )}
 
-            <AnimatePresence>
-              {isJoinOpen && (
+              {mode === 'join' && (
                 <motion.form
+                  key="join"
                   onSubmit={submitJoin}
                   className="sugaropoly-join-form"
-                  initial={{ opacity: 0, height: 0, y: -8 }}
-                  animate={{ opacity: 1, height: 'auto', y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.26 }}
                 >
+                  <button
+                    type="button"
+                    onClick={back}
+                    aria-label="Back"
+                    className="sugaropoly-nav-icon-button"
+                  >
+                    <ArrowLeft />
+                  </button>
                   <input
                     value={joinCode}
                     onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
                     maxLength={6}
                     placeholder="ROOM"
                     aria-label="Room code"
+                    autoFocus
                   />
                   <motion.button
                     type="submit"

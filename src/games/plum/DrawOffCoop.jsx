@@ -7,6 +7,7 @@ import { getRandomWord } from './coopWords';
 import { motion } from 'framer-motion';
 import { Trophy, Clock, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 const PLAYER_ID_KEY = 'lovelyland-drawoff-player-id';
 
@@ -350,7 +351,7 @@ const DrawOffCoop = () => {
           </span>
           <span aria-hidden="true" style={{ width: '1px', height: '0.9rem', background: 'var(--divider)' }} />
           <span>
-            Room <span style={{ color: 'var(--primary)' }}>{room.code}</span>
+            Room <RoomCodeCopy code={room.code} style={{ color: 'var(--primary)' }} />
           </span>
         </div>
       )}

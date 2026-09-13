@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RotateCcw, XCircle } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 import GameExitScreen from './GameExitScreen';
 import ConnectFourLanterns from './ConnectFourLanterns';
 
@@ -107,7 +108,7 @@ const ConnectFourBoard = ({ room, playerNumber, onDropPiece, onAbortGame, onPlay
           transition={isArcade && isMyTurn ? { repeat: Infinity, duration: 2.4, ease: 'easeInOut' } : {}}
         >
           <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-[color:var(--primary)]">
-            {isArcade ? 'ROOM' : 'room'} {room?.code}
+            {isArcade ? 'ROOM' : 'room'} <RoomCodeCopy code={room?.code} />
           </p>
           <h1
             className="mt-[0.25rem] font-black uppercase"

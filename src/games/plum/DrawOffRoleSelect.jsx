@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { PenTool, Keyboard } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 // Tailwind's preflight reset is not active in this project, so `box-sizing` is
 // content-box everywhere, and the spacing scale generates no CSS at all. Any box
@@ -55,7 +56,9 @@ const RoomCode = ({ code, glow }) => (
     }}
   >
     Room code{' '}
-    <span
+    <RoomCodeCopy
+      code={code}
+      idleColor="var(--primary)"
       style={{
         marginLeft: '0.75rem',
         fontSize: '1.15rem',
@@ -63,9 +66,7 @@ const RoomCode = ({ code, glow }) => (
         color: 'var(--primary)',
         filter: glow('var(--primary)', '8px'),
       }}
-    >
-      {code}
-    </span>
+    />
   </div>
 );
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, RotateCcw, Trophy } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 // ─── Per-theme copy ───────────────────────────────────────────────────────────
 
@@ -167,7 +168,7 @@ const QuickMathsBoard = ({
                 share this code
               </p>
               <p className="mt-[0.125rem] font-black tracking-[0.18em]" style={{ color: 'var(--foreground)', fontSize: '2rem', lineHeight: 1.1 }}>
-                {room?.code}
+                <RoomCodeCopy code={room?.code} gap="0.3em" />
               </p>
               <p className="text-[0.62rem] uppercase tracking-[0.12em]" style={{ color: 'var(--muted)', marginTop: '0.2rem' }}>
                 waiting for player 2
@@ -176,7 +177,7 @@ const QuickMathsBoard = ({
           ) : (
             <>
               <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--primary)' }}>
-                {isArcade ? 'ROOM ' : 'room '}{room?.code}
+                {isArcade ? 'ROOM ' : 'room '}<RoomCodeCopy code={room?.code} />
               </p>
               <p className="mt-[0.25rem] text-xl font-black" style={{ color: 'var(--foreground)' }}>
                 {copy.roundLabel(Math.min(currentRound, totalRounds), totalRounds)}

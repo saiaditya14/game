@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, RotateCcw } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
+import RoomCodeCopy from '../../components/RoomCodeCopy';
 
 // ─── Cell centers for the win-line SVG (viewBox 0 0 3 3) ─────────────────────
 
@@ -251,7 +252,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                 className="mt-[0.125rem] font-black tracking-[0.18em]"
                 style={{ color: 'var(--foreground)', fontSize: '2rem', lineHeight: 1.1 }}
               >
-                {room?.code}
+                <RoomCodeCopy code={room?.code} gap="0.3em" />
               </p>
               <p
                 className="text-[0.68rem] uppercase tracking-[0.12em]"
@@ -266,7 +267,7 @@ const TicTacToeBoard = ({ room, playerNumber, onPlaceMarker, onPlayAgain, onAbor
                 className="text-[0.68rem] font-bold uppercase tracking-[0.2em]"
                 style={{ color: 'var(--primary)' }}
               >
-                room {room?.code}
+                room <RoomCodeCopy code={room?.code} />
               </p>
               <h1
                 className="mt-[0.125rem] text-lg font-black uppercase sm:text-xl"

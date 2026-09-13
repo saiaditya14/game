@@ -203,6 +203,38 @@ npm run build
 
 The economy migration revokes direct client inserts/updates/deletes on `monopoly_rooms`, keeps member-only Realtime reads, and grants authenticated users only the validated Sugaropoly RPC actions.
 
+### NEXT UP (2026-09-12) — do these ASAP, rest of the todolist below can wait
+
+**Cross-game / infrastructure**
+- Extract `GameExitScreen` from Quick Maths into a shared component, retrofit Tic-Tac-Toe + future games.
+- Randomize who starts each game, not just the room creator — Tic-Tac-Toe also needs X/O randomized.
+- [IN PROGRESS — see `.claude/handoff-room-code-copy.md`] Room code copy button on all games. Turns out bigger than "add a button": in TicTacToe/QuickMaths/ConnectFour/WordRace/CategoryBlitz the room code disappears entirely once the game starts (not passed to the Board at all), not just missing a copy button. Verbal Memory shows it in-game as plain text with no copy. Lobby screens already have a good copy pattern in most games — reuse that, don't redo it.
+- Reconnect behavior: let a returning browser resume its existing player from localStorage more visibly. (Nice-to-have, not required.)
+
+**Tic-Tac-Toe**
+- Make it a 4x4 board instead of the current "too easy" 3x3.
+
+**Gambling Corner**
+- Dice Poker: small-screen layout is in but doesn't fully match the vision yet — revisit.
+- Hold'em: exit icon + room code chip overlap in the table status bar — fix.
+
+**Card art**
+- Replace Sugaropoly's placeholder card art (deed/property cards, Chance/Chest) with the user's custom card art — needs the asset files.
+
+**Pink theme button copy**
+- Remove hearts (♡) and tildes (~) from pink-theme button/copy text across the site — reads as over-the-top. Confirmed present in 13 files (CategoryBlitz, QuickMaths, TicTacToe, VerbalMemory, WordRace, Gambling Corner, HomePage) — this is a real cross-cutting cleanup, not a one-line fix.
+
+**Home page "Your Turn" section**
+- The "Your Turn" section (`src/pages/HomePage.jsx`, renders `turnGames`) is usually empty/placeholder-looking when nothing's pending. Add two extra cards there: one "randomly pick a game" (Explore/surprise-me action), one "suggest something" card.
+
+**Hide two Draw Off modes + Sugaropoly from the home page (temporarily)**
+- Hide Sugaropoly's home page card.
+- Hide Draw Off's "Single Player" (AI/agentic-judged) and "BYOK Testing" cards from `DrawOffHub.jsx` — keep only Co-op visible there.
+- "Hide" = remove the card from its grid only. Routes (`/monopoly`, `/draw-off-single`, `/draw-off-byok`) stay fully working via direct link/URL. User will unhide later.
+
+**Security pass**
+- Brief concurrency/input-safety check across the other games' input-taking fields (room codes, chat/guess inputs, etc.) — not a deep pentest, just make sure minor concurrent input doesn't crash anything.
+
 Todolist:
 Extract GameExitScreen from QuickMathsDuel into a shared component; retrofit Tic-Tac-Toe + future games.
 [DONE 2026-08-26] Overhaul of button UI in draw off - COMPLETE, every mode/screen: hub, single-player, co-op (lobby, role select, canvas, status bar, victory) and BYOK (landing + in-game). All on the site's token/clamp pattern; canvas backing-store/DPR bug fixed in all three canvases.
@@ -244,6 +276,8 @@ quick maths, timer would be nice
 
 category blitz expanded to multiplayer but only one vote per person (allow 2)
 
+category blitz - anonymize the vote page. keep player identity tracked on our end (scoring/backend), but don't display whose submission is whose while people are voting.
+
 Verbal memory but competitive
 
 Emotes (the sticker babie wated)
@@ -251,7 +285,7 @@ Emotes (the sticker babie wated)
 QUICK MATHS - instead of 5 rounds -> change it to first to 5 wins OR keep only odd number of rounds (we cant have 10 and 20 round games)
 	    - when abording game or quitting game, we need to go back to the game main page, not the website home page.
 
-on the home page of pink theme the top line of the game cards is getting cut off when hovering over a card
+[DONE] on the home page of pink theme the top line of the game cards is getting cut off when hovering over a card
 
 TIC-TAK-TOE - change the players colors to match that of connect 4.
 	    - change the end game box to match that of other games.

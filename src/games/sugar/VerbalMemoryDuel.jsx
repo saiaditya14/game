@@ -154,7 +154,7 @@ const VerbalMemoryDuel = () => {
 
     const { data, error: joinError } = await supabase
       .from(TABLE)
-      .update({ player_two: playerId })
+      .update({ player_two: playerId, status: 'playing', started_at: new Date().toISOString() })
       .eq('id', existing.id)
       .is('player_two', null)
       .select()

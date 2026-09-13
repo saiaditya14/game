@@ -254,7 +254,7 @@ const WordRace = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (!room || !playerNumber) {
+  if (!room || !playerNumber || !room.player_two) {
     return (
       <WordRaceLobby
         onCreateRoom={createRoom}

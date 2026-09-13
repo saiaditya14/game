@@ -281,7 +281,7 @@ const ConnectFour = () => {
     setRoom(data);
   };
 
-  if (!room || !playerNumber) {
+  if (!room || !playerNumber || !room.player_two) {
     return <ConnectFourLobby onCreateRoom={createRoom} onJoinRoom={joinRoom} isBusy={isBusy} error={error} roomCode={room?.code} />;
   }
 

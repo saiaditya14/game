@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, Plus, Users } from 'lucide-react';
+import { LogIn, Plus, Users, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 
 // Tailwind's preflight reset is not active in this project, so `box-sizing` is
@@ -41,7 +41,7 @@ const secondaryButtonStyle = {
 };
 
 const DrawOffCoopLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode }) => {
-  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [mode, setMode] = useState(null);
   const [joinCode, setJoinCode] = useState('');
 
   const { theme } = useTheme();
@@ -52,6 +52,7 @@ const DrawOffCoopLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
     event.preventDefault();
     onJoinRoom(joinCode);
   };
+  const back = () => setMode(null);
 
   return (
     <main
@@ -155,65 +156,85 @@ const DrawOffCoopLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
           Team up! One player draws while the other guesses. Guess 3 words to win.
         </p>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))',
-            gap: '0.75rem',
-            marginTop: 'clamp(1.5rem, 4vw, 2rem)',
-          }}
-        >
-          <motion.button
-            type="button"
-            onClick={onCreateRoom}
-            disabled={isBusy}
-            className={buttonClass}
-            style={primaryButtonStyle}
-            whileHover={isBusy ? undefined : { y: -2 }}
-            whileTap={isBusy ? undefined : { scale: 0.98 }}
-          >
-            <Plus className="h-4 w-4" />
-            CREATE
-          </motion.button>
-
-          <motion.button
-            type="button"
-            onClick={() => setIsJoinOpen((value) => !value)}
-            disabled={isBusy}
-            className={buttonClass}
-            style={secondaryButtonStyle}
-            aria-expanded={isJoinOpen}
-            whileHover={isBusy ? undefined : { y: -2 }}
-            whileTap={isBusy ? undefined : { scale: 0.98 }}
-          >
-            <LogIn className="h-4 w-4" />
-            JOIN
-          </motion.button>
-        </div>
-
-        <AnimatePresence initial={false}>
-          {isJoinOpen && (
-            <motion.form
-              onSubmit={submitJoin}
-              style={{ overflow: 'hidden' }}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        <AnimatePresence mode="wait" initial={false}>
+          {!mode && (
+            <motion.div
+              key="entry"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))',
+                gap: '0.75rem',
+                marginTop: 'clamp(1.5rem, 4vw, 2rem)',
+              }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
             >
-              <div
+              <motion.button
+                type="button"
+                onClick={onCreateRoom}
+                disabled={isBusy}
+                className={buttonClass}
+                style={primaryButtonStyle}
+                whileHover={isBusy ? undefined : { y: -2 }}
+                whileTap={isBusy ? undefined : { scale: 0.98 }}
+              >
+                <Plus className="h-4 w-4" />
+                CREATE
+              </motion.button>
+
+              <motion.button
+                type="button"
+                onClick={() => setMode('join')}
+                disabled={isBusy}
+                className={buttonClass}
+                style={secondaryButtonStyle}
+                whileHover={isBusy ? undefined : { y: -2 }}
+                whileTap={isBusy ? undefined : { scale: 0.98 }}
+              >
+                <LogIn className="h-4 w-4" />
+                JOIN
+              </motion.button>
+            </motion.div>
+          )}
+
+          {mode === 'join' && (
+            <motion.div
+              key="join"
+              style={{ marginTop: '0.9rem', textAlign: 'left' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p
+                className="font-bold uppercase"
+                style={{ marginBottom: '0.5rem', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--accent)' }}
+              >
+                Enter room code
+              </p>
+              <form
+                onSubmit={submitJoin}
                 style={{
                   ...BORDER_BOX,
                   display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  gridTemplateColumns: 'auto minmax(0, 1fr) auto',
                   gap: '0.6rem',
-                  marginTop: '0.9rem',
                   padding: '0.7rem',
                   border: '1px solid var(--divider)',
                   borderRadius: 'var(--radius)',
                   background: 'var(--surface-strong)',
                 }}
               >
+                <button
+                  type="button"
+                  onClick={back}
+                  className={buttonClass}
+                  style={{ ...secondaryButtonStyle, width: 'auto', paddingInline: '1rem' }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
                 <input
                   value={joinCode}
                   onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
@@ -233,6 +254,7 @@ const DrawOffCoopLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
                   maxLength={6}
                   placeholder="ROOM"
                   aria-label="Room code"
+                  autoFocus
                 />
                 <button
                   type="submit"
@@ -242,8 +264,8 @@ const DrawOffCoopLobby = ({ onCreateRoom, onJoinRoom, isBusy, error, roomCode })
                 >
                   Join
                 </button>
-              </div>
-            </motion.form>
+              </form>
+            </motion.div>
           )}
         </AnimatePresence>
 
