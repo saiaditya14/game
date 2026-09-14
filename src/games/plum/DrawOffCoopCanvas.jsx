@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
-import { Eraser } from 'lucide-react';
+import { Eraser, Undo2 } from 'lucide-react';
 import { useTheme } from '../../components/ThemeProvider';
 
 // Tailwind's preflight reset is not active in this project, so `box-sizing` is
@@ -48,6 +48,14 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
   const [guessInput, setGuessInput] = useState('');
   const [feedbackText, setFeedbackText] = useState('Waiting for your guess...');
   const [brushSize, setBrushSize] = useState(DEFAULT_BRUSH_SIZE);
+  const [strokeCount, setStrokeCount] = useState(0);
+
+  // Full stroke history so a stroke can be undone by popping it and replaying
+  // everything that's left. Segments are stored normalized (0-1), same shape
+  // as the wire format, so replay works identically to `drawRemoteStroke`.
+  const strokesRef = useRef([]);
+  const currentStrokeRef = useRef([]);
+  const remoteCurrentStrokeRef = useRef([]);
 
   const { theme } = useTheme();
   const isArcade = theme === 'theme-arcade';
@@ -149,8 +157,21 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     if (role === 'guesser') {
       broadcastChannel.current.on('broadcast', { event: 'stroke' }, (payload) => {
         drawRemoteStroke(payload.payload);
+        remoteCurrentStrokeRef.current.push(payload.payload);
+      });
+      broadcastChannel.current.on('broadcast', { event: 'stroke-end' }, () => {
+        if (remoteCurrentStrokeRef.current.length > 0) {
+          strokesRef.current.push({ segments: remoteCurrentStrokeRef.current });
+          remoteCurrentStrokeRef.current = [];
+        }
+      });
+      broadcastChannel.current.on('broadcast', { event: 'undo' }, () => {
+        strokesRef.current.pop();
+        redrawFromHistory();
       });
       broadcastChannel.current.on('broadcast', { event: 'clear' }, () => {
+        strokesRef.current = [];
+        remoteCurrentStrokeRef.current = [];
         clearCanvasLocal();
       });
     }
@@ -162,11 +183,11 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     };
   }, [room?.id, role]);
 
-  // Payload stays normalized 0-1 (unchanged wire format), but it is now mapped
-  // to CSS pixels rather than backing-store pixels, because the context is
-  // pre-scaled by the device pixel ratio.
-  const drawRemoteStroke = ({ x0, y0, x1, y1, w, c }) => {
-    const canvas = canvasRef.current;
+  // Payload stays normalized 0-1 (unchanged wire format), but it is mapped to
+  // CSS pixels rather than backing-store pixels, because the context is
+  // pre-scaled by the device pixel ratio. Shared by live drawing (both roles)
+  // and history replay (undo), so all three stay visually identical.
+  const renderSegment = useCallback((canvas, { x0, y0, x1, y1, w, c }) => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
@@ -180,7 +201,22 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.closePath();
-  };
+  }, [getCanvasColors]);
+
+  const drawRemoteStroke = (segment) => renderSegment(canvasRef.current, segment);
+
+  // Canvas is immediate-mode, so "undoing" a stroke means clearing and
+  // replaying everything that's left in history — there's no other way to
+  // remove ink that's already been rasterized.
+  const redrawFromHistory = useCallback(() => {
+    clearCanvasLocal();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    strokesRef.current.forEach((stroke) => {
+      stroke.segments.forEach((segment) => renderSegment(canvas, segment));
+    });
+    setStrokeCount(strokesRef.current.length);
+  }, [clearCanvasLocal, renderSegment]);
 
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
@@ -205,6 +241,7 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     e.preventDefault();
     const { x, y } = getCoordinates(e);
     currentPos.current = { x, y };
+    currentStrokeRef.current = [];
     setIsDrawing(true);
   };
 
@@ -213,44 +250,50 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
     e.preventDefault();
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
     const { x, y } = getCoordinates(e);
 
-    ctx.beginPath();
-    ctx.moveTo(currentPos.current.x, currentPos.current.y);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.closePath();
+    const segment = {
+      x0: currentPos.current.x / rect.width,
+      y0: currentPos.current.y / rect.height,
+      x1: x / rect.width,
+      y1: y / rect.height,
+      w: brushSize,
+      c: brushColor,
+    };
 
-    // Broadcast stroke
+    renderSegment(canvas, segment);
+    currentStrokeRef.current.push(segment);
+
     if (broadcastChannel.current) {
-      broadcastChannel.current.send({
-        type: 'broadcast',
-        event: 'stroke',
-        payload: {
-          x0: currentPos.current.x / rect.width,
-          y0: currentPos.current.y / rect.height,
-          x1: x / rect.width,
-          y1: y / rect.height,
-          w: brushSize,
-          c: brushColor,
-        }
-      });
+      broadcastChannel.current.send({ type: 'broadcast', event: 'stroke', payload: segment });
     }
 
     currentPos.current = { x, y };
   };
 
   const stopDrawing = () => {
+    if (role === 'drawer' && currentStrokeRef.current.length > 0) {
+      strokesRef.current.push({ segments: currentStrokeRef.current });
+      currentStrokeRef.current = [];
+      setStrokeCount(strokesRef.current.length);
+      broadcastChannel.current?.send({ type: 'broadcast', event: 'stroke-end', payload: {} });
+    }
     setIsDrawing(false);
+  };
+
+  const undoLastStroke = () => {
+    if (role !== 'drawer' || strokesRef.current.length === 0) return;
+    strokesRef.current.pop();
+    redrawFromHistory();
+    broadcastChannel.current?.send({ type: 'broadcast', event: 'undo', payload: {} });
   };
 
   const clearCanvas = () => {
     if (role !== 'drawer') return;
+    strokesRef.current = [];
+    currentStrokeRef.current = [];
+    setStrokeCount(0);
     clearCanvasLocal();
     if (broadcastChannel.current) {
       broadcastChannel.current.send({
@@ -263,6 +306,10 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
 
   // When word changes, clear canvas automatically
   useEffect(() => {
+    strokesRef.current = [];
+    currentStrokeRef.current = [];
+    remoteCurrentStrokeRef.current = [];
+    setStrokeCount(0);
     clearCanvasLocal();
     setGuessInput('');
     setFeedbackText('Waiting for your guess...');
@@ -401,29 +448,58 @@ const DrawOffCoopCanvas = ({ room, role, onGuessCorrect, currentWord }) => {
           />
 
           {isDrawer && (
-            <motion.button
-              onClick={clearCanvas}
-              className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+            <div
               style={{
-                ...BORDER_BOX,
                 position: 'absolute',
                 bottom: '0.85rem',
                 right: '0.85rem',
-                display: 'grid',
-                placeItems: 'center',
-                width: '2.75rem',
-                height: '2.75rem',
-                border: '1px solid var(--divider)',
-                borderRadius: 'var(--radius)',
-                background: 'var(--surface-strong)',
-                color: 'var(--foreground)',
+                display: 'flex',
+                gap: '0.5rem',
               }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.94 }}
-              aria-label="Clear canvas"
             >
-              <Eraser className="h-5 w-5" />
-            </motion.button>
+              <motion.button
+                onClick={undoLastStroke}
+                disabled={strokeCount === 0}
+                className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] disabled:cursor-not-allowed disabled:opacity-40"
+                style={{
+                  ...BORDER_BOX,
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: '2.75rem',
+                  height: '2.75rem',
+                  border: '1px solid var(--divider)',
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--surface-strong)',
+                  color: 'var(--foreground)',
+                }}
+                whileHover={strokeCount > 0 ? { y: -2 } : {}}
+                whileTap={strokeCount > 0 ? { scale: 0.94 } : {}}
+                aria-label="Undo last stroke"
+              >
+                <Undo2 className="h-5 w-5" />
+              </motion.button>
+
+              <motion.button
+                onClick={clearCanvas}
+                className="transition focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
+                style={{
+                  ...BORDER_BOX,
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: '2.75rem',
+                  height: '2.75rem',
+                  border: '1px solid var(--divider)',
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--surface-strong)',
+                  color: 'var(--foreground)',
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.94 }}
+                aria-label="Clear canvas"
+              >
+                <Eraser className="h-5 w-5" />
+              </motion.button>
+            </div>
           )}
         </div>
       </div>

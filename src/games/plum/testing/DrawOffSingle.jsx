@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles } from 'lucide-react';
+import { CheckCircle2, Eraser, Loader2, Play, Send, Sparkles, Undo2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useTheme } from '../../../components/ThemeProvider';
 
@@ -155,6 +155,13 @@ const DrawOffSingle = () => {
   const hasAutoClearedOnVisitRef = useRef(false);
   const resizeObserverRef = useRef(null);
 
+  // Full stroke history so a stroke can be undone by popping it and replaying
+  // everything left. Canvas is immediate-mode — there's no other way to
+  // remove ink that's already been rasterized.
+  const strokesRef = useRef([]);
+  const currentStrokeRef = useRef([]);
+  const [strokeHistoryCount, setStrokeHistoryCount] = useState(0);
+
   const [targetWord, setTargetWord] = useState(null);
   const [score, setScore] = useState(0);
   const [targetScore] = useState(3);
@@ -303,9 +310,50 @@ const DrawOffSingle = () => {
     inkBoundsRef.current = getInitialInkBounds();
     inkDistanceRef.current = 0;
     strokeCountRef.current = 0;
+    strokesRef.current = [];
+    currentStrokeRef.current = [];
+    setStrokeHistoryCount(0);
     setAiFeedback(feedback);
     setIsJudging(false);
   }, [prepareCanvas]);
+
+  // Clears the backing store and replays every stroke still in history,
+  // recomputing ink bounds/distance the same way `draw()` builds them up live.
+  const redrawFromHistory = useCallback(() => {
+    prepareCanvas();
+    inkBoundsRef.current = getInitialInkBounds();
+    inkDistanceRef.current = 0;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    strokesRef.current.forEach((stroke) => {
+      stroke.segments.forEach((segment) => {
+        if (ctx) {
+          ctx.strokeStyle = segment.c;
+          ctx.lineWidth = segment.w;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(segment.x0, segment.y0);
+          ctx.lineTo(segment.x1, segment.y1);
+          ctx.stroke();
+        }
+        trackInk({ x: segment.x0, y: segment.y0 }, { x: segment.x1, y: segment.y1 });
+      });
+    });
+
+    hasInkRef.current = strokesRef.current.length > 0;
+    strokeCountRef.current = strokesRef.current.length;
+    setStrokeHistoryCount(strokesRef.current.length);
+  }, [prepareCanvas, trackInk]);
+
+  const undoLastStroke = useCallback(() => {
+    if (strokesRef.current.length === 0) return;
+    window.clearTimeout(debounceTimer.current);
+    judgeRequestRef.current += 1;
+    strokesRef.current.pop();
+    redrawFromHistory();
+  }, [redrawFromHistory]);
 
   useEffect(() => () => window.clearTimeout(debounceTimer.current), []);
 
@@ -457,6 +505,7 @@ const DrawOffSingle = () => {
     isDrawingRef.current = true;
     strokeCountRef.current += 1;
     lastPointRef.current = getCanvasPoint(event);
+    currentStrokeRef.current = [];
   };
 
   const draw = (event) => {
@@ -478,6 +527,7 @@ const DrawOffSingle = () => {
     ctx.lineTo(point.x, point.y);
     ctx.stroke();
 
+    currentStrokeRef.current.push({ x0: lastPoint.x, y0: lastPoint.y, x1: point.x, y1: point.y, w: brushSize, c: brushColor });
     trackInk(lastPoint, point);
     lastPointRef.current = point;
     hasInkRef.current = true;
@@ -490,6 +540,11 @@ const DrawOffSingle = () => {
 
     canvasRef.current?.releasePointerCapture?.(event.pointerId);
     isDrawingRef.current = false;
+    if (currentStrokeRef.current.length > 0) {
+      strokesRef.current.push({ segments: currentStrokeRef.current });
+      currentStrokeRef.current = [];
+      setStrokeHistoryCount(strokesRef.current.length);
+    }
   };
 
   const isArcade = theme === 'theme-arcade';
@@ -978,9 +1033,22 @@ const DrawOffSingle = () => {
             >
               <motion.button
                 type="button"
+                onClick={undoLastStroke}
+                disabled={strokeHistoryCount === 0}
+                className={`${actionButtonClass} disabled:cursor-not-allowed disabled:opacity-40`}
+                style={{ ...secondaryActionStyle, flex: '1 1 10rem' }}
+                whileHover={strokeHistoryCount === 0 ? undefined : { y: -2 }}
+                whileTap={strokeHistoryCount === 0 ? undefined : { scale: 0.99 }}
+              >
+                <Undo2 className="h-5 w-5" />
+                Undo
+              </motion.button>
+
+              <motion.button
+                type="button"
                 onClick={() => clearCanvas()}
                 className={actionButtonClass}
-                style={{ ...secondaryActionStyle, flex: '1 1 12rem' }}
+                style={{ ...secondaryActionStyle, flex: '1 1 10rem' }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.99 }}
               >

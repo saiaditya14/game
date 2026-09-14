@@ -205,6 +205,9 @@ The economy migration revokes direct client inserts/updates/deletes on `monopoly
 
 ### NEXT UP (2026-09-12) — do these ASAP, rest of the todolist below can wait
 
+**Draw Off**
+- [DONE 2026-09-14] Undo button added next to Clear on all three canvases (Single Player, Co-op, BYOK) — undoes the most recent pen stroke, not just full-clear. Canvas is immediate-mode (no vector layer), so undo works by keeping a per-stroke history and replaying everything left after popping the last one. The real complexity was Co-op: drawer and guesser are separate browsers synced over a Supabase realtime channel that previously only knew "draw this segment" / "clear everything" — added a `stroke-end` boundary event and a new `undo` broadcast event so the guesser's canvas removes the same stroke, not just the drawer's. Verified with a two-context Playwright test (create → join → pick Drawer role → draw two strokes → Undo): second stroke removed on both the drawer's and guesser's canvas, first stroke preserved on both, confirming the realtime sync works, not just the local undo.
+
 **Cross-game / infrastructure**
 - [DONE 2026-09-13] `GameExitScreen` shared component now used by Tic-Tac-Toe too (abort mid-game shows the shared "Game Aborted / Returning home…" screen and auto-redirects, instead of the win/draw play-again overlay).
 - [DONE 2026-09-13] Tic-Tac-Toe and Connect Four: starting player is now randomized each game (room creation + play-again), not always the room creator. Tic-Tac-Toe also randomizes X/O (new `x_player` column, migrated locally); X still moves first per the classic rule, so randomizing X also randomizes who starts. Verified with Playwright across multiple games (badge labels, turn order, and win overlay all track the randomized assignment correctly). Other games (Quick Maths, Word Race, Verbal Memory, Category Blitz, Gambling Corner) don't have a single hardcoded "player 1 always starts" turn order, so no change needed there.
