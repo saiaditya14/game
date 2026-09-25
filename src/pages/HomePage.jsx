@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Disc, Hash, Calculator, Type, Brain, ListChecks, Coins } from 'lucide-react';
+import { Disc, Hash, Calculator, Type, Brain, ListChecks, Coins, CupSoda } from 'lucide-react';
 import { animate } from 'animejs';
 import { GameCard } from '../components/GameCard';
 import { useTheme } from '../components/ThemeProvider';
@@ -101,6 +101,15 @@ const gamesList = [
     category: 'Bluff',
     meta: '2-8 players',
     icon: Coins,
+  },
+  {
+    path: '/juice-bar',
+    title: 'Juice Bar',
+    description: 'One preps blind, one holds the order.',
+    badge: 'New',
+    category: 'Co-op',
+    meta: '2 player live',
+    icon: CupSoda,
   },
 ];
 

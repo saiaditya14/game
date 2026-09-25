@@ -16,6 +16,7 @@ import WordRace from './games/sugar/WordRace';
 import VerbalMemoryDuel from './games/sugar/VerbalMemoryDuel';
 import CategoryBlitz from './games/sugar/CategoryBlitz';
 import GamblingCorner from './games/sugar/gambling/GamblingCorner';
+import JuiceBar from './games/sugar/juicebar/JuiceBar';
 
 const ThemeScene = lazy(() => import('./components/ThemeScene'));
 
@@ -45,6 +46,7 @@ function App() {
             <Route path="/verbal-memory" element={<VerbalMemoryDuel />} />
             <Route path="/category-blitz" element={<CategoryBlitz />} />
             <Route path="/gambling-corner" element={<GamblingCorner />} />
+            <Route path="/juice-bar" element={<JuiceBar />} />
             <Route path="/monopoly" element={<PastelMonopoly />} />
           </Routes>
         </div>
