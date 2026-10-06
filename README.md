@@ -1,6 +1,6 @@
 # Lovelyland
 
-A cute asynchronous minigame hub built with Vite, React, Tailwind CSS, Framer Motion, and Lucide icons.
+A cute minigame hub built with Vite, React, Tailwind CSS, Framer Motion, and Lucide icons.
 
 ## Requirements
 
